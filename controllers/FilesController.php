@@ -3,21 +3,24 @@
 namespace nitm\filemanager\controllers;
 
 use Yii;
-use nitm\filemanager\models\Files;
-use nitm\filemanager\models\FilesSearch;
 use yii\base\InvalidConfigException;
+use yii\helpers\FileHelper;
 use yii\web\NotFoundHttpException;
 use yii\web\HttpException;
 use yii\web\Response;
 use yii\web\view;
-use yii\filters\VerbFilter;
 use yii\web\UploadedFile;
+use yii\filters\VerbFilter;
 use Aws\S3\S3Client;
-use yii\imagine\Image;
+use nitm\filemanager\helpers\ImageHelper;
 use nitm\filemanager\assets\FilemanagerAssets;
+use nitm\filemanager\models\Image;
+use nitm\filemanager\models\File;
+use nitm\filemanager\models\search\File as FileSearch;
+
 
 /**
- * FilesController implements the CRUD actions for Files model.
+ * FileController implements the CRUD actions for File model.
  */
 class FilesController extends \nitm\controllers\DefaultController
 {
@@ -27,19 +30,28 @@ class FilesController extends \nitm\controllers\DefaultController
 	public function init() 
 	{
 		parent::init();
-		$this->model = new Files();
+		$this->model = new File();
 	}
     
     public function behaviors()
     {
         return array_merge_recursive(parent::behaviors(), [
-            'verbs' => [
-                'class' => VerbFilter::className(),
-                'actions' => [
-                    'delete' => ['post'],
-                    'upload' => ['post'],
-                ],
-            ],
+			'access' => [
+				'rules' => [
+					[
+						'actions' => [
+							'upload',
+						],
+						'allow' => true,
+						'roles' => ['@'],
+					],
+				],
+			],
+			'verbs' => [
+				'actions' => [
+					'upload' => ['post'],
+				],
+			],
         ]);
     }
     
@@ -50,36 +62,41 @@ class FilesController extends \nitm\controllers\DefaultController
      * @param mixed $action
      * @return void
      */
-    public function beforeAction($action) {
-        
+    public function beforeAction($action) 
+	{
+		switch($action->id)
+		{
+			case 'upload':
+			$this->enableCsrfValidation = false;
+			break;
+		}
         $result = parent::beforeAction($action);
-        
+		
         $options = [
            'tinymce'             => \Yii::$app->urlManager->createUrl('/filemanager/files/tinymce'),
            'properties'          => \Yii::$app->urlManager->createUrl('/filemanager/files/properties'),
         ];
         $this->getView()->registerJs("filemanager.init(".json_encode($options).");", \yii\web\View::POS_END, 'my-options');
-        
         return $result;
     }
 
     /**
-     * Lists all Files models.
+     * Lists all File models.
      * @return mixed
      */
     public function actionIndex()
     {
         FilemanagerAssets::register($this->view);
-		return parent::actionIndex(FilesSearch::className(), [
+		return parent::actionIndex(FileSearch::className(), [
 			'with' => [
-				'user'
+				'author', 'icon'
 			],
 			'defaultParams' => [$this->model->formName() => ['deleted' => 0]]
 		]);
     }
 
     /**
-     * Lists all Files models.
+     * Lists all File models.
      * @return mixed
      */
     public function actionTinymce()
@@ -89,9 +106,9 @@ class FilesController extends \nitm\controllers\DefaultController
 
         FilemanagerAssets::register($this->view);
         
-        $searchModel = new FilesSearch();
+        $searchModel = new FileSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $model = new Files();
+        $model = new File();
         
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -112,9 +129,9 @@ class FilesController extends \nitm\controllers\DefaultController
 
         FilemanagerAssets::register($this->view);
         
-        $searchModel = new FilesSearch();
+        $searchModel = new FileSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $model = new Files();
+        $model = new File();
         
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -123,7 +140,8 @@ class FilesController extends \nitm\controllers\DefaultController
         ]);
     }
     
-    public function actionGetimage($id){
+    public function actionGetimage($id)
+	{
         
         Yii::$app->response->getHeaders()->set('Vary', 'Accept');
         Yii::$app->response->format = Response::FORMAT_JSON;
@@ -147,48 +165,61 @@ class FilesController extends \nitm\controllers\DefaultController
      * @access public
      * @return string JSON
      */
-    public function actionUpload()
+    public function actionUpload($type=null, $id=null)
     {
         Yii::$app->response->getHeaders()->set('Vary', 'Accept');
         Yii::$app->response->format = Response::FORMAT_JSON;
+		
+        $model = new File();
         
-        $model = new Files();
-        
-        $path       = $this->module->path;
-        $url        = $this->module->url;
-        $awsConfig  = $this->module->aws;
-        $thumbnails = $this->module->thumbnails;
-        
+		$type = !$type ? $model->isWhat() : $type;
+		$id = !$id ? 0 : $id;
+		
         $file = UploadedFile::getInstance($model,'file_name');
         
-        $name = time().'-'.md5($file->name).$this->module->getExtension($file->type);
-        
-        //Upload file
-            if($awsConfig['enable']){
-                $this->uploadAws($file,$name);
-            }else{
-                $file->saveAs($path.$name);
-            }
-        
-        //Create Thumbnails
-            if(!empty($thumbnails) && ($file->type == 'image/gif' || $file->type == 'image/jpeg' || $file->type == 'image/png')){
-                $this->createThumbnails($file,$name); 
-            }
-        
-        
-        $model->user_id         = 0;
-        $model->url             = $path.$name;
-        $model->thumbnail_url   = $path.'thumbnails/'.$name;
+		$baseType =	$this->module->getBaseType($this->module->getExtension($file->type));
+        $path       = $this->module->getPath($baseType).DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.$id;
+        $url        = $this->module->url;
+        $thumbnails = $this->module->thumbnails;
+		
+        $name = File::getSafeName($file->getBaseName()).'.'.$file->getExtension();
+
+        $model->url             = FileHelper::normalizePath($path, $this->module->directorySeparator).$this->module->directorySeparator.$name;
         $model->file_name       = $name;
+		$model->hash	= File::getHash($file->tempName);
         $model->title           = $file->name;
         $model->type            = $file->type;
         $model->title           = $file->name;
         $model->size            = $file->size;
+		$model->html_icon = 'file-'.$baseType.'-o';
+		$model->remote_type = $model->isWhat();
+		$model->base_type		= $baseType;
+		
         /*$model->width         = $size[0];
         $model->height          = $size[1];*/
-        
-        if($model->save()){
-        
+		
+		//if(1){
+        if(\nitm\filemanager\helpers\Storage::move($file->tempName, $model->url, true) && $model->save())
+		{
+			if($model->base_type == 'image') {
+				$size = getimagesize($model->getRealpath());
+				$imageModel = new Image([
+					'remote_type' => $model->isWhat(),
+					'remote_id' => $model->getId(),
+					'type' => $model->type,
+					'url' => $model->url,
+					'is_default' => true,
+					'hash' => $model->hash,
+					'width' => $size[0],
+					'height' => $size[1],
+					'size' => $model->size,
+					'file_name' => $file->name,
+					'slug' => $model->isWhat().'-'.$file->name
+				]);
+				if($imageModel->save()) {
+					ImageHelper::createThumbnails($imageModel);
+				}
+			}
             $response['files'][] = [
                 'url'           => $url.$model->url,
                 'thumbnailUrl'  => $url.$model->thumbnail_url,
@@ -211,7 +242,7 @@ class FilesController extends \nitm\controllers\DefaultController
     }
 
     /**
-     * Displays a single Files model.
+     * Displays a single File model.
      * @param integer $id
      * @return mixed
      */
@@ -224,13 +255,13 @@ class FilesController extends \nitm\controllers\DefaultController
     }
 
     /**
-     * Creates a new Files model.
+     * Creates a new File model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
     public function actionCreate($type=null, $inull)
     {
-        $model = new Files([
+        $model = new File([
 			'remote_type' => $type,
 			'remote_id' => $id
 		]);
@@ -245,7 +276,7 @@ class FilesController extends \nitm\controllers\DefaultController
     }
 
     /**
-     * Updates an existing Files model.
+     * Updates an existing File model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
      * @return mixed
@@ -264,7 +295,7 @@ class FilesController extends \nitm\controllers\DefaultController
     }
 
     /**
-     * Deletes an existing Files model.
+     * Deletes an existing File model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
      * @return mixed
@@ -274,34 +305,15 @@ class FilesController extends \nitm\controllers\DefaultController
         Yii::$app->response->getHeaders()->set('Vary', 'Accept');
         Yii::$app->response->format = Response::FORMAT_JSON;
         
-        $model = $this->findModel($id);
+		$model = $this->findModel(File::className(), $id, ['metadata', 'icon']);
         
-        $awsConfig = $this->module->aws;
-        
-        $files = [
-            ['Key' => $model->url],
-            /*['Key' => $model->thumbnail_url],*/
+		Image::deleteImages($model->icon());
+		
+        $result = [
+            'success' => Storage::delete($model->getPath()),
         ];
-                
-        if($awsConfig['enable']){
-        
-            $this->deleteAws($files);
-            
-        }else{
-            
-            foreach($files as $f){
-                
-                unlink($f);
-                
-            }
-            
-        }
         
         $model->delete();
-        
-        $result = [
-            'success' => 'true',
-        ];
         
         return $result;
     }
@@ -314,179 +326,20 @@ class FilesController extends \nitm\controllers\DefaultController
 
 
     /**
-     * Finds the Files model based on its primary key value.
+     * Finds the File model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return Files the loaded model
+     * @return File the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Files::findOne($id)) !== null) {
+        if (($model = File::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
-    }
-    
-    
-    
-    protected function createThumbnails($file,$name = null)
-    {
-        
-        if(is_null($name)){
-            $name = $file->name;
-        }
-        
-        $awsConfig = $this->module->aws;
-        
-        $thumbnails = $this->module->thumbnails;
-        
-        $path = $this->module->path;
-        
-        if($awsConfig['enable']){
-            $path = $awsConfig['url'].$path;
-        }
-        
-        foreach($thumbnails as $tn){
-            
-            $thumb = Image::thumbnail($path.$name, $tn[0], $tn[1], \Imagine\Image\ManipulatorInterface::THUMBNAIL_INSET);
-            
-            //Upload file
-            if($awsConfig['enable']){
-                
-                if (!file_exists('temp')) {
-                    mkdir('temp', 0777, true);
-                }
-                
-                $thumb->save('temp/'.$name);
-                
-                $fileInfo = pathinfo($file);
-                
-                $fc             = new \stdClass();
-                $fc->tempName   = 'temp/'.$name;
-                $fc->type       = $this->module->getType($fileInfo['extension']);
-                
-                $this->uploadAws($fc,$name,true);
-                
-                unlink($fc->tempName);
-                
-            }else{
-                
-                if (!file_exists($path.'thumbnails')) {
-                    mkdir($path.'thumbnails', 0777, true);
-                }
-                
-                $thumb->save($path.'thumbnails/'.$name);
-                
-            }
-            
-        }
-        
-        return true;
-    }
-    
-    
-    
-    
-    protected function awsInit(){
-        
-        $awsConfig = $this->module->aws;
-        
-        if($awsConfig['key'] == ''){
-            throw new InvalidConfigException('Key cannot be empty!');
-        }
-        if($awsConfig['secret'] == ''){
-            throw new InvalidConfigException('Secret cannot be empty!');
-        }
-        if($awsConfig['bucket'] == ''){
-            throw new InvalidConfigException('Bucket cannot be empty!');
-        }
-        
-        $config = [
-            'key'    => $awsConfig['key'],
-            'secret' => $awsConfig['secret'],
-        ];
-        $aws = S3Client::factory($config);
-        
-        return $aws;
-    }
-    
-    
-    
-    
-    protected function uploadAws($file,$name = null,$thumb = false,$path = null){
-        
-        if(is_null($path)){
-            $path = $this->module->path;
-        }
-        
-        if(is_null($name)){
-            $name = $file->name;
-        }
-        
-        if($thumb){
-            $path = $path.'thumbnails/';
-        }
-        
-        $awsConfig = $this->module->aws;
-        
-        $aws = $this->awsInit();
-        
-        $aws->get('S3');
-        
-        $aws->putObject([
-            'Key' => $path.$name,
-            'Bucket' => $awsConfig['bucket'],
-            'SourceFile' => $file->tempName,
-            'ContentType' => $file->type,
-        ]);
-        
-    }
-    
-    
-    
-    
-    protected function deleteAws($files){
-        
-        $awsConfig = $this->module->aws;
-        
-        $aws = $this->awsInit();
-        
-        $aws->get('S3');
-        
-        $aws->deleteObjects([
-            'Bucket' => $awsConfig['bucket'],
-            'key' => $files[0],
-        ]);
-        
-    }
-    
-    
-    
-    
-    protected function convertPHPSizeToBytes($sSize)  
-    {  
-        if ( is_numeric( $sSize) ) {
-           return $sSize;
-        }
-        $sSuffix = substr($sSize, -1);  
-        $iValue = substr($sSize, 0, -1);  
-        switch(strtoupper($sSuffix)){  
-        case 'P':  
-            $iValue *= 1024;  
-        case 'T':  
-            $iValue *= 1024;  
-        case 'G':  
-            $iValue *= 1024;  
-        case 'M':  
-            $iValue *= 1024;  
-        case 'K':  
-            $iValue *= 1024;  
-            break;  
-        }  
-        return $iValue;  
-    }  
+    } 
 
     protected function getMaximumFileUploadSize()  
     {  

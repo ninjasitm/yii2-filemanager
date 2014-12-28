@@ -4,14 +4,16 @@ use yii\grid\GridView;
 use dosamigos\fileupload\FileUploadUI;
 use yii\widgets\LinkPager;
 use yii\widgets\ActiveForm;
-use linchpinstudios\filemanager\helpers\Html;
+use yii\widgets\ListView;
+use nitm\filemanager\helpers\Html;
+use nitm\filemanager\widgets\Thumbnail;
 
 
 /* @var $this yii\web\View */
-/* @var $searchModel linchpinstudios\filemanager\models\FilesSearch */
+/* @var $searchModel linchpinstudios\filemanager\models\FileSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Files';
+$this->title = 'File';
 $this->params['breadcrumbs'][] = $this->title;
 
 $awsConfig = $this->context->module->aws;
@@ -24,7 +26,7 @@ if($awsConfig['enable']){
 
 ?>
 
-<div class="filemanager-default-index">
+<div class="filemanager-default-index col-lg-12 col-md-12">
 
     <div class="panel panel-default">
         <div class="panel-heading">
@@ -37,7 +39,9 @@ if($awsConfig['enable']){
             $form = ActiveForm::begin([
                 'id' => 'file-search-form',
                 'method' => 'get',
-                'options' => ['class' => 'navbar-form navbar-right'],
+                'options' => [
+					'class' => 'navbar-form navbar-right'
+				],
             ]);
                 echo Html::beginTag('div',['class' => 'form-group']);
                     echo $form->field($searchModel, 'title')->textInput(['class' => 'form-control', 'placeholder' => 'Search']);
@@ -57,17 +61,31 @@ if($awsConfig['enable']){
         <div class="panel-body">
             <div class="display-images" id="fileGridManager">
                 <div class="row">
-                    <?php
-                        
-                        $models = $dataProvider->getModels();
-                        
-                        foreach($models as $m){
-                            
-                            echo '<div class="col-xs-6 col-sm-4 col-md-3 image-thumbnail" data-id="'.$m->id.'">';
-                                echo Html::a(Html::tag('span',$m->id).'<img src="'.$path.$m->thumbnail_url.'" style="height:'.$this->context->module->thumbnails[0][1].'px;">',Html::FileOutput($m->id,[],true),['class'=>'thumbnail']);
-                            echo '</div>';
-                            
-                        }
+                    <?=
+						ListView::widget([
+							'options' => [
+								'id' => 'files'
+							],
+							'dataProvider' => $dataProvider,
+							'itemOptions' => [
+								'class' => 'item'
+							],
+							'itemView' => function($model, $key, $index, $widget) {
+								return $this->render('view', [
+									'index' => $index,
+									'model' => $model,
+									'noBreadcrumbs' => true
+								]);
+							},
+							'pager' => [
+								'class' => \nitm\widgets\ias\ScrollPager::className(),
+								'overflowContainer' => '#files-ias-container',
+								'container' => '#files',
+								'item' => ".item",
+								'negativeMargin' => 150,
+								'delay' => 500,
+							]
+						]);
                     ?>
                 </div>
             </div>
@@ -75,10 +93,10 @@ if($awsConfig['enable']){
                 <?= FileUploadUI::widget([
                     'model' => $model,
                     'attribute' => 'file_name',
-                    'url' => ['files/upload'], // your url, this is just for demo purposes,
+                    'url' => ['/files/upload'],
                     'options' => [
-                        'accept' => 'image/*',
                         'done'   => 'filemanager',
+						//'enctype' => 'multipart/form-data'
                     ],
                     'clientOptions' => [
                         'maxFileSize' => 2000000,

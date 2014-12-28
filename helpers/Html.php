@@ -29,11 +29,11 @@ use nitm\filemanager\models\Files;
     public static function FileOutput($id = 0,$options = [],$urlOnly = false)
     {
         
-        $awsConfig = \Yii::$app->getModule('filemanager')->aws;
+        $awsConfig = \Yii::$app->getModule('nitm-files')->aws;
         
-        $url = \Yii::$app->getModule('filemanager')->url;
+        $url = \Yii::$app->getModule('nitm-files')->url;
         
-        $path = \Yii::$app->getModule('filemanager')->path;
+        $path = \Yii::$app->getModule('nitm-files')->path;
         
         if($id == 0){
             throw new \Exception('Please set ID');

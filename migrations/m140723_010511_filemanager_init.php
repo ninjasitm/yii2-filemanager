@@ -15,7 +15,8 @@ class m140723_010511_filemanager_init extends Migration
 
         $this->createTable('{{%files}}', [
             'id' => Schema::TYPE_PK,
-            'user_id' => Schema::TYPE_INTEGER . ' DEFAULT 0',
+            'author_id' => Schema::TYPE_INTEGER . ' DEFAULT 0',
+            'editor_id' => Schema::TYPE_INTEGER . ' DEFAULT 0',
             'url' => Schema::TYPE_STRING . '(555) NULL',
             'thumbnail_url' => Schema::TYPE_STRING . '(555) NULL',
             'file_name' => Schema::TYPE_STRING . '(555) NULL',
@@ -27,6 +28,7 @@ class m140723_010511_filemanager_init extends Migration
             'width' => Schema::TYPE_INTEGER  . ' NULL',
             'height' => Schema::TYPE_INTEGER  . ' NULL',
             'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
+            'updated_at' => Schema::TYPE_TIMESTAMP  . '',
             'date' => Schema::TYPE_DATETIME  . ' NULL',
             'date_gmt' => Schema::TYPE_DATETIME  . ' NULL',
             'update' => Schema::TYPE_DATETIME  . ' NULL',
@@ -36,24 +38,27 @@ class m140723_010511_filemanager_init extends Migration
             'deleted' => Schema::TYPE_BOOLEAN  . ' NULL',
         ], $tableOptions);
 
-        $this->createTable('{{%file_terms}}', [
+        $this->createTable('{{%files_metadata}}', [
             'id' => Schema::TYPE_PK,
-            'file_id' => Schema::TYPE_INTEGER . ' NULL',
-            'type' => Schema::TYPE_STRING . '(45) NULL',
+            'file_id' => Schema::TYPE_INTEGER . '(11) NOT NULL',
+            'key' => Schema::TYPE_STRING . '(45) NULL',
             'value' => Schema::TYPE_TEXT . ' NULL',
+            'author_id' => Schema::TYPE_INTEGER . '(11) NULL',
+            'editor_id' => Schema::TYPE_INTEGER . '(11) NULL',
+            'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
+            'updated_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT 0',
         ], $tableOptions);
         
-        $this->addForeignKey('FK_files_terms','{{%file_terms}}','file_id','{{%files}}','id');
-        $this->addForeignKey('FK_files_users','{{%files}}','author_id','{{%user}}','id');
+        $this->addForeignKey('FK_files_metadata','{{%files_metadata}}','file_id','{{%files}}','id');
+        $this->addForeignKey('FK_files_users','{{%files}}','user_id','{{%user}}','id');
         
     }
 
     public function down()
     {
-        $this->dropForeignKey('FK_files_terms','{{%file_terms}}');
+        $this->dropForeignKey('FK_files_terms','{{%files_metadata}}');
         $this->dropForeignKey('FK_files_users','{{%files}}');
         $this->dropTable('{{%files}}');
-        $this->dropTable('{{%file_terms}}');
-        
+        $this->dropTable('{{%files_metadata}}');   
     }
 }

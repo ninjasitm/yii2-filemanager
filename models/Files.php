@@ -36,6 +36,12 @@ class Files extends \nitm\models\Entity
     public function behaviors()
     {
         return [
+			'blamable' => [
+				'class' => \yii\behaviors\BlameableBehavior::className(),
+				'attributes' => [
+					ActiveRecord::EVENT_BEFORE_INSERT => 'user_id',
+				],
+			],
             'modified' => [
                 'class' => TimestampBehavior::className(),
                 'attributes' => [
@@ -135,6 +141,6 @@ class Files extends \nitm\models\Entity
      */
     public function getUser()
     {
-        return $this->hasOne(\Yii::$app->user->identityClass, ['id' => 'user_id']);
+        return $this->hasOne(\nitm\models\User::className(), ['id' => 'user_id']);
     }
 }
