@@ -22,6 +22,7 @@ class m140723_010511_filemanager_init extends Migration
             'file_name' => Schema::TYPE_STRING . '(555) NULL',
             'remote_id' => Schema::TYPE_INTEGER . ' NOT NULL',
             'remote_type' => Schema::TYPE_STRING . '(45) NULL',
+            'remote_class' => Schema::TYPE_STRING . '(45) NULL',
             'type' => Schema::TYPE_STRING . '(45) NULL',
             'title' => Schema::TYPE_STRING . '(45) NULL',
             'size' => Schema::TYPE_INTEGER . ' NULL',

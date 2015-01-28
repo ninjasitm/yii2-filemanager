@@ -158,7 +158,7 @@ class ImageController extends \nitm\controllers\DefaultController
 		}
 	}
 	
-	/*public function actionDelete($id)
+	public function actionDelete($id)
 	{
 		$this->setResponseFormat('json');
 		$model = $this->findModel(Image::className(), $id);
@@ -174,6 +174,6 @@ class ImageController extends \nitm\controllers\DefaultController
 			}
 			break;
 		}
-	}*/
+	}
 
 }

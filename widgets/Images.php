@@ -9,11 +9,11 @@ namespace nitm\filemanager\widgets;
 use Yii;
 use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
+use kartik\widgets\FileInput;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\helpers\Storage;
 use nitm\helpers\Helper;
-use kartik\widgets\FileInput;
-use kartik\icons\Icon;
+use nitm\helpers\Icon;
 
 /**
  * Extends the kartik\widgets\FileInput widget.
@@ -152,7 +152,7 @@ class Images extends \yii\base\Widget
     {
 		$defaultImage = $this->getDefaultImage();
 		$extraImages = $this->getExtraImages();
-		$initScript = \Yii::$app->request->isAjax ? Html::script("\$nitm.module('nitm\filemanager:images').init();", ['type' => 'text/javascript']) : '';
+		$initScript = \Yii::$app->request->isAjax ? Html::script("\$nitm.onModuleLoad('nitm-file-manager:images', function (module) {module.init();});", ['type' => 'text/javascript']) : '';
 		echo Html::tag("div", $defaultImage.$extraImages.$initScript, $this->options);
     }
 
@@ -203,7 +203,7 @@ class Images extends \yii\base\Widget
     public function registerAssets()
     {
         $view = $this->getView();
-        assets\ImagesAsset::register($view);
+        \nitm\filemanager\assets\ImagesAsset::register($view);
     }
 	
 	public function getActions()

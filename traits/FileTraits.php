@@ -11,6 +11,12 @@ use nitm\filemanager\models\Image;
  */
 trait FileTraits
 {
+	public function getRemoteClass()
+	{
+		$class = $this->remote_class;
+		return class_exists($class) ? $class::className() : \nitm\models\Data::className();
+	}
+	
 	public function getSize()
 	{
 		return \yii::$app->formatter->asShortSize($this->size);
@@ -75,23 +81,7 @@ trait FileTraits
 	 */
 	public function getImages($thumbnails=false, $default=false)
 	{
-        $ret_val = $this->hasMany(Image::className(), ['content_id' => 'id']);
-		$with = [];
-		switch($default === true)
-		{
-			case false:
-			$ret_val->where('`is_default`=0');
-			break;
-		}
-		switch($thumbnails)
-		{
-			case true:
-			$with[] = 'metadata';
-			break;
-		}
-		$ret_val->with($with);
-		$ret_val->andWhere(['remote_type' => $this->isWhat()]);
-		return $ret_val;
+        return Image::getImagesFor($this, $thumbnails, $default);
 	}
 	
 	/**
@@ -99,10 +89,7 @@ trait FileTraits
 	 */
 	public function getIcon()
 	{
-        return $this->hasOne(Image::className(), ['remote_id' => 'id'])->where([
-			'is_default' => 1,
-			'remote_type' => $this->isWhat()
-		]);
+        return Image::getIconFor($this);
 	}
 		
 	/**

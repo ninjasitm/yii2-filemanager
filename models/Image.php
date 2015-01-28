@@ -8,8 +8,8 @@ use Yii;
  * This is the model class for table "images".
  *
  * @property integer $id
- * @property integer $category_id
- * @property integer $content_id
+ * @property string $remote_type
+ * @property integer $remote_id
  * @property string $url
  * @property string $slug
  * @property string $created
@@ -53,12 +53,46 @@ class Image extends \nitm\filemanager\models\File
     {
         return [
             'id' => Yii::t('app', 'ID'),
-            'category_id' => Yii::t('app', 'Category ID'),
-            'content_id' => Yii::t('app', 'Content ID'),
+            'remote_id' => Yii::t('app', 'Content ID'),
             'url' => Yii::t('app', 'Src'),
             'slug' => Yii::t('app', 'Slug'),
             'created' => Yii::t('app', 'Created'),
             'updated' => Yii::t('app', 'Updated'),
         ];
+	}
+	
+	/**
+	 * Get all the images for this entity
+	 * @param boolean $thumbnails Get thumbnails as well?
+	 * @param boolean $default Get the default image as well?
+	 */
+	public static function getImagesFor($model, $thumbnails=false, $default=false)
+	{
+        $ret_val = $model->hasMany(Image::className(), ['remote_id' => 'id']);
+		$with = [];
+		switch($default === true)
+		{
+			case false:
+			$ret_val->andWhere('is_default=true');
+			break;
+		}
+		switch($thumbnails)
+		{
+			case true:
+			$with[] = 'metadata';
+			break;
+		}
+		$ret_val->with($with);
+		$ret_val->andWhere(['remote_type' => $model->isWhat()]);
+		return $ret_val;
+	}
+	
+	/**
+	 * Get the main icon for this entity
+	 */
+	public static function getIconFor($model)
+	{
+        return $model->hasOne(Image::className(), ['remote_id' => 'id'])->where(['remote_type' => $model->isWhat()])
+		->andWhere('is_default=true');
 	}
 }

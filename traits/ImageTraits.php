@@ -12,8 +12,7 @@ use nitm\filemanager\models\Image;
  * This is the model class for table "images".
  *
  * @property integer $id
- * @property integer $category_id
- * @property integer $content_id
+ * @property integer $remote_id
  * @property string $url
  * @property string $slug
  * @property string $created
@@ -100,6 +99,6 @@ trait ImageTraits
 	
 	public function isDefault()
 	{
-		return ($this->is_default == 1);
+		return ((bool)$this->is_default === true);
 	}
 }
