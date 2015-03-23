@@ -7,11 +7,11 @@ class m141107_062947_update_titles extends Migration
 {
     public function up()
     {
-        $this->alterColumn( '{{%files}}', 'title', Schema::TYPE_STRING . '(555) NULL' );
+        //$this->alterColumn( '{{%files}}', 'title', Schema::TYPE_STRING . '(255) NULL' );
     }
 
     public function down()
     {
-        $this->alterColumn( '{{%files}}', 'title', Schema::TYPE_STRING . '(45) NULL' );
+        //$this->alterColumn( '{{%files}}', 'title', Schema::TYPE_STRING . '(45) NULL' );
     }
 }

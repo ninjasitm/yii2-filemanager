@@ -21,19 +21,24 @@ class m141216_193808_create_images_table extends Migration
             'remote_id' => Schema::TYPE_INTEGER . ' NULL',
             'author_id' => Schema::TYPE_INTEGER . '(11) NULL',
             'editor_id' => Schema::TYPE_INTEGER . '(11) NULL',
+            'owner_id' => Schema::TYPE_INTEGER . ' NULL',
             'type' => Schema::TYPE_STRING . '(45) NULL',
             'src' => Schema::TYPE_STRING . '(45) NULL',
             'html_icon' => Schema::TYPE_STRING . ' NULL',
             'width' => Schema::TYPE_INTEGER  . ' NULL',
             'height' => Schema::TYPE_INTEGER  . ' NULL',
             'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
-            'updated_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT 0',
+            'updated_at' => Schema::TYPE_TIMESTAMP  . ' NULL',
             'signature' => Schema::TYPE_STRING  . ' ',
-            'is_default' => Schema::TYPE_BOOLEAN  . ' DEFAULT 0',
+            'is_default' => Schema::TYPE_BOOLEAN  . ' DEFAULT false',
             'deleted_by' => Schema::TYPE_INTEGER  . ' NULL',
             'deleted_at' => Schema::TYPE_DATETIME  . ' NULL',
             'deleted' => Schema::TYPE_BOOLEAN  . ' NULL',
         ], $tableOptions);
+		
+		$this->createIndex('images_unique', '{{%files}}', [
+			'remote_id', 'remote_type', 'author_id', 'signature'
+		], true);
 
         $this->createTable('{{%images_metadata}}', [
             'id' => Schema::TYPE_PK,
@@ -43,11 +48,11 @@ class m141216_193808_create_images_table extends Migration
             'author_id' => Schema::TYPE_INTEGER . '(11) NULL',
             'editor_id' => Schema::TYPE_INTEGER . '(11) NULL',
             'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
-            'updated_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT 0',
+            'updated_at' => Schema::TYPE_TIMESTAMP  . ' NULL',
         ], $tableOptions);
         
         $this->addForeignKey('FK_images_metadata','{{%images_metadata}}','image_id','{{%images}}','id');
-        $this->addForeignKey('FK_images_users','{{%images}}','author_id','{{%user}}','id');
+        $this->addForeignKey('FK_images_author','{{%images}}','author_id','{{%user}}','id');
         
     }
 

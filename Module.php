@@ -45,16 +45,9 @@ class Module extends \yii\base\Module
     public $thumbPath = 'thumb/';
     
     public $url = '/';
-    
-	/**
-	 * The AmazonAWS configuration
-	 */
-    public $aws = [
-        'enable' => false,
-        'key' => ' => ',
-        'secret' => ' => ',
-    	'bucket' => ' => ',
-    ];
+	
+	protected $settings = [
+	];
 	
 	public $allowedTypes = [
 	];
@@ -62,6 +55,7 @@ class Module extends \yii\base\Module
 	private $_storageEngines = [
 		'local' => 'Local',
 		'aws' => 'AmazonAWS',
+		'youtube' => 'YouTube',
 	];
     
     public function init()
@@ -160,6 +154,11 @@ class Module extends \yii\base\Module
 			return ' => ';
 	}
 	
+	public function isSupportedProvider($for, $provider)
+	{
+		return isset($this->settings[$for]) && isset($this->settings[$for][$provider]);
+	}
+	
 	private function defaultPermissions() 
 	{
 		return [
@@ -174,6 +173,10 @@ class Module extends \yii\base\Module
 				'group' => 'nogroup'
 			],
 		];
+	}
+	
+	public function setSettings($settings) {
+		$this->settings = $settings;
 	}
 	
 	private function getExtensionMap()
@@ -259,6 +262,11 @@ class Module extends \yii\base\Module
 			'mov' => 'video',
 			'flv' => 'video',
 		];
+	}
+	
+	public function setting($setting=null)
+	{
+		return \yii\helpers\ArrayHelper::getValue($this->settings, $setting, null);
 	}
 }
 

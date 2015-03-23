@@ -15,8 +15,9 @@ class m140723_010511_filemanager_init extends Migration
 
         $this->createTable('{{%files}}', [
             'id' => Schema::TYPE_PK,
-            'author_id' => Schema::TYPE_INTEGER . ' DEFAULT 0',
-            'editor_id' => Schema::TYPE_INTEGER . ' DEFAULT 0',
+            'author_id' => Schema::TYPE_INTEGER,
+            'editor_id' => Schema::TYPE_INTEGER . ' NULL',
+            'owner_id' => Schema::TYPE_INTEGER . ' NULL',
             'url' => Schema::TYPE_STRING . '(555) NULL',
             'thumbnail_url' => Schema::TYPE_STRING . '(555) NULL',
             'file_name' => Schema::TYPE_STRING . '(555) NULL',
@@ -28,8 +29,9 @@ class m140723_010511_filemanager_init extends Migration
             'size' => Schema::TYPE_INTEGER . ' NULL',
             'width' => Schema::TYPE_INTEGER  . ' NULL',
             'height' => Schema::TYPE_INTEGER  . ' NULL',
+            'signature' => Schema::TYPE_STRING  . ' ',
             'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
-            'updated_at' => Schema::TYPE_TIMESTAMP  . '',
+            'updated_at' => Schema::TYPE_TIMESTAMP  . ' NULL',
             'date' => Schema::TYPE_DATETIME  . ' NULL',
             'date_gmt' => Schema::TYPE_DATETIME  . ' NULL',
             'update' => Schema::TYPE_DATETIME  . ' NULL',
@@ -38,6 +40,10 @@ class m140723_010511_filemanager_init extends Migration
             'deleted_at' => Schema::TYPE_DATETIME  . ' NULL',
             'deleted' => Schema::TYPE_BOOLEAN  . ' NULL',
         ], $tableOptions);
+		
+		$this->createIndex('files_unique', '{{%files}}', [
+			'remote_id', 'remote_type', 'author_id', 'signature'
+		], true);
 
         $this->createTable('{{%files_metadata}}', [
             'id' => Schema::TYPE_PK,
@@ -47,11 +53,11 @@ class m140723_010511_filemanager_init extends Migration
             'author_id' => Schema::TYPE_INTEGER . '(11) NULL',
             'editor_id' => Schema::TYPE_INTEGER . '(11) NULL',
             'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
-            'updated_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT 0',
+            'updated_at' => Schema::TYPE_TIMESTAMP  . ' NULL',
         ], $tableOptions);
         
         $this->addForeignKey('FK_files_metadata','{{%files_metadata}}','file_id','{{%files}}','id');
-        $this->addForeignKey('FK_files_users','{{%files}}','user_id','{{%user}}','id');
+        $this->addForeignKey('FK_files_author','{{%images}}','author_id','{{%user}}','id');
         
     }
 

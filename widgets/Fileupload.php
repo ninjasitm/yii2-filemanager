@@ -60,7 +60,7 @@ use yii\widgets\InputWidget;
         } else {
             echo Html::hiddenInput($this->name, $this->value, $this->options);
         }
-        echo Html::tag('div',Html::a('Select Image',['filemanager/files/filemodal'],['class' => 'btn btn-success','data-toggle' => 'modal','data-target' => '#filePickModal_'.$randomId]));
+        echo Html::tag('div',Html::a('Select File',['filemanager/files/filemodal'],['class' => 'btn btn-success','data-toggle' => 'modal','data-target' => '#filePickModal_'.$randomId]));
         
         echo $this->generateModal($randomId);
         //$this->registerClientScript();

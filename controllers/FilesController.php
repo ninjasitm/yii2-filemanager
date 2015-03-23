@@ -259,7 +259,7 @@ class FilesController extends \nitm\controllers\DefaultController
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
-    public function actionCreate($type=null, $inull)
+    public function actionCreate($type=null, $id=null)
     {
         $model = new File([
 			'remote_type' => $type,
