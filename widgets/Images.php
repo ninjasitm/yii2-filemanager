@@ -250,7 +250,7 @@ class Images extends \yii\base\Widget
 		$this->pluginOptions['pluginOptions']['uploadUrl'] = '/image/save/'.$this->model->isWhat().'/'.$this->model->getId();
 		$this->pluginOptions['model'] = $this->model;
 		return [
-			"view" => "/image/view", 
+			"view" => "@nitm/filemanager/views/image/view", 
 			"options" => [
 				'model' => !$this->model->icon ? new Image() : $this->model->icon,
 				'wrapperOptions' => $this->defaultWrapperOptions,
@@ -269,7 +269,7 @@ class Images extends \yii\base\Widget
 		$this->pluginExtraOptions['pluginOptions']['uploadUrl'] = '/image/save/'.$this->model->isWhat().'/'.$this->model->getId();
 		$this->pluginExtraOptions['model'] = $this->model;
 		return  [
-			"view" => "/image/view", 
+			"view" => "@nitm/filemanager/views/image/view", 
 			"options" => [
 				'model' => $image,
 				'wrapperOptions' => $this->extraOptions,
@@ -287,7 +287,7 @@ class Images extends \yii\base\Widget
 		$this->pluginOptions['model'] = $this->model;
 		$this->pluginOptions['options']['id'] = $this->getInputId($model);
 		$this->defaultWrapperOptions['id'] = "default-image";
-		return \Yii::$app->getView()->render("/image/view", [
+		return \Yii::$app->getView()->render("@nitm/filemanager/views/image/view", [
 			'model' => $model,
 			'wrapperOptions' => $this->defaultWrapperOptions,
 			"actions" => $this->getActions(),
@@ -303,7 +303,7 @@ class Images extends \yii\base\Widget
 		$this->pluginExtraOptions['model'] = $this->model;
 		$this->pluginExtraOptions['options']['id'] = $this->getInputId($model);
 		$this->extraOptions['id'] = "extra-image".$model->getId();
-		return  \Yii::$app->getView()->render("/image/view", [
+		return  \Yii::$app->getView()->render("@nitm/filemanager/views/image/view", [
 			'model' => $model,
 			'wrapperOptions' => $this->extraOptions,
 			"actions" => $this->getActions(),

@@ -5,6 +5,7 @@ namespace nitm\filemanager\controllers;
 use yii\helpers\FileHelper;
 use yii\helpers\Html;
 use nitm\helpers\Response;
+use nitm\filemanager\helpers\ImageHelper;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\ImageMetadata;
 use nitm\filemanager\helpers\Storage;
@@ -93,13 +94,16 @@ class ImageController extends \nitm\controllers\DefaultController
 	public function actionSave($type, $id)
 	{
 		$ret_val = false;
-		$model = $this->findModel("\nitm\filemanager\models\\".static::properName($type), $id, ['metadata']);
-		switch(($imageModels = $model->saveImages($model, ($model->hasProperty('name') ? $model->name : $id))) != false)
+		if(is_null($class = \Yii::$app->getModule('nitm-files')->getModelClass($type)))
+			return false;
+		$model = $class::findOne($id);
+		$imageModels = ImageHelper::saveImages($model, $type, $id);
+		switch(is_array($imageModels) && $imageModels != [])
 		{
 			case true:
 			$ret_val['success'] = true;
 			$ret_val['data'] = '';
-			$imageWidget = new \nitm\filemanager\widgets\Images(['model' => $model]);
+			$imageWidget = new \nitm\filemanager\widgets\Images(['model' => array_pop($imageModels)]);
 			$renderer = \Yii::$app->request->isAjax ? 'renderAjax' : 'render';
 			foreach($imageModels as $image)
 			{
@@ -116,19 +120,19 @@ class ImageController extends \nitm\controllers\DefaultController
 				$renderOpts['options']['withActions'] = true;
 				$ret_val['data'] .= $this->$renderer("/image/thumbnail", $renderOpts['options']);
 			}
-			Response::$viewOptions = [
+			Response::viewOptions([
 				"view" => 'index', 
 				"args" => [
 					"dataProvider" => new \yii\data\ArrayDataProvider(["allModels" => $imageModels]),
 				]
-			];
+			]);
 			break;
 			
 			default:
 			break;
 		}
 		$this->setResponseFormat(\Yii::$app->request->isAjax ? 'json' : 'html');
-		return $this->renderResponse($ret_val, Response::$viewOptions, \Yii::$app->request->isAjax);
+		return $this->renderResponse($ret_val, Response::viewOptions(), \Yii::$app->request->isAjax);
 	}
 	
 	public function actionDefault($id)

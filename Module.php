@@ -31,13 +31,11 @@ class Module extends \yii\base\Module
 	/**
 	 * The custom path map for different file types
 	 */
-    public $pathMap = [
-		'image' => '@media/images/',
-		'audio' => '@media/audio/',
-		'video' => '@media/videos/',
-		'text' => '@media/documents/',
-		'application' => '@media/applications/',
-		'unknown' => '@media/unknown/'
+    	
+	public $namespaceMap = [
+	];
+	
+	public $engineMap = [
 	];
 	
 	public $engine = 'local';
@@ -48,6 +46,8 @@ class Module extends \yii\base\Module
 	
 	protected $settings = [
 	];
+	
+	protected $pathMap;
 	
 	public $allowedTypes = [
 	];
@@ -102,9 +102,20 @@ class Module extends \yii\base\Module
 		return (count($this->allowedTypes) == 0) ? array_keys($this->getBaseTypeMap()) : array_intersect(array_keys($this->getBaseTypeMap()), $this->allowedTypes);
 	}
 	
+	protected function resolveEngine($engine=nullll)
+	{
+		if(!is_null($engine) && isset($this->engineMap[$engine]))
+			return $this->engineMap[$engine];
+		else
+			return is_null($engine) ? $this->engine : $engine;
+	}
+	
+	/**
+	 * Select the engie to use. This can be either an index map for the engineMap, a tring specifying the engine or null, which will use the current engine 
+	 **/
 	public function getEngine($engine=null)
 	{
-		$engine = is_null($engine) ? $this->engine : $engine;
+		$engine = $this->resolveEngine($engine);		
 		if(isset($this->_storageEngines[$engine]))
 			return $this->_storageEngines[$engine];
 		else
@@ -113,10 +124,8 @@ class Module extends \yii\base\Module
 	
 	public function getEngineClass($engine=null)
 	{
-		$engine = is_null($engine) ? $this->engine : $engine;
-		
+		$engine = $this->resolveEngine($engine);
 		$class = "\\nitm\\filemanager\helpers\storage\\".$this->getEngine($engine);
-		
 		switch(class_exists($class))
 		{
 			case true:
@@ -198,6 +207,29 @@ class Module extends \yii\base\Module
 			'xml' => 'text/xml',
 		];
 	}
+	
+	public function getPathMap($index=null)
+	{
+		if(!isset($this->pathMap))
+			$this->setPathMap([]);
+			
+		if(is_null($index))
+			return $this->pathMap;
+		else
+			return ArrayHelper::getValue($this->pathMap, $index, null);
+	}
+	
+	public function setPathMap($paths)
+	{
+		$this->pathMap = array_merge([
+			'image' => '@media/images/',
+			'audio' => '@media/audio/',
+			'video' => '@media/videos/',
+			'text' => '@media/documents/',
+			'application' => '@media/applications/',
+			'unknown' => '@media/unknown/'
+		], (array) $paths);
+	}
 
 	private function getTypeMap()
 	{
@@ -262,6 +294,17 @@ class Module extends \yii\base\Module
 			'mov' => 'video',
 			'flv' => 'video',
 		];
+	}
+	
+	public function getModelClass($modelName)
+	{
+		foreach($this->namespaceMap as $namespace)
+		{
+			$class = rtrim($namespace, '\\').'\\'.ucfirst(strtolower($modelName));
+			if(class_exists($class))
+				return $class;
+		}
+		return null;
 	}
 	
 	public function setting($setting=null)

@@ -57,7 +57,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 	
 	public function getDirectory($getAlias=false)
 	{
-		$dir = \Yii::$app->getModule('nitm-files')->getPath('images');
+		$dir = \Yii::$app->getModule('nitm-files')->getPath('image');
 		if($getAlias)
 			$dir = \Yii::getAlias($dir);
 		return $dir;
@@ -68,11 +68,12 @@ class ImageHelper extends \yii\helpers\FileHelper
 	 * @param Entity $model The model images are being saved for
 	 * @param string $name
 	 */
-	public static function saveImages($model, $name)
+	public static function saveImages($model, $name, $id=null)
 	{
 		// retrieve all uploaded files for name images
 		$ret_val = false;
-		$name = self::getSafeName($name);
+		$id = md5(is_null($id) ? uniqid() : $id);
+		$name = Image::getSafeName($name);
 		$uploads = UploadedFile::getInstances($model, 'images');
 		foreach($uploads as $idx=>$uploadedFile) 
 		{
@@ -80,17 +81,33 @@ class ImageHelper extends \yii\helpers\FileHelper
 			{
 				case false:
 				$image = new Image(['scenario' => 'create']);
-				$directory = static::getDirectory().$model->isWhat()."/".$name."/";
-				$image->is_default = @($_FILES[$model->formName()]['tmp_name']['images']['default'] == $uploadedFile->tempName) ? 1 : 0;
-				$image->url = $directory.($image->is_default ?  'default' : 'extra')."-image-".md5($uploadedFile->name).".".$uploadedFile->getExtension();
-				$image->hash = Image::getHash($uploadedFile->tempName);
-				$model->size = $uploadedFile->size;
-				$image->parent_type = $model->isWhat();
+				$directory = rtrim(implode(DIRECTORY_SEPARATOR, array_filter([rtrim(static::getDirectory(), DIRECTORY_SEPARATOR), $name, $id])), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+				$size = getimagesize($uploadedFile->tempName);
+				
+				$image->setAttributes([
+					'width' => $size[0] || 0,
+					'height' => $size[1] || 0,
+					'type' => $uploadedFile->type,
+					'author_id' => \Yii::$app->user->getIdentity()->getId(),
+					'file_name' => $uploadedFile->name,
+					'remote_type' => $model->isWhat(),
+					'hash' => Image::getHash($uploadedFile->tempName),
+					'url' => $directory.implode('-', array_filter([($image->is_default ?  'default' : 'extra'), "image", md5($uploadedFile->name)])).".".$uploadedFile->getExtension(),
+					'is_default' => @($_FILES[$model->formName()]['tmp_name']['images']['default'] == $uploadedFile->tempName) ? true : false,
+					'size' => $uploadedFile->size
+				], false);
+				
+				$originalPath = $image->url;
+				$tempImage = new Image([
+					'url' => $uploadedFile->tempName,
+					'type' => $uploadedFile->type
+				]);
+				
 				$existing = Image::find()->where([
 					"hash" => $image->hash,
-					'parent_type' => $model->isWhat()
+					'remote_type' => $model->isWhat()
 				])->one();
-				$idField = ($this instanceof Category) ? 'category_id' : 'content_id';
+				
 				switch($existing instanceof Image)
 				{
 					//If an image already exists for this file then swap images
@@ -100,8 +117,9 @@ class ImageHelper extends \yii\helpers\FileHelper
 						'warning',
 						"Found dangling ".$model->isWhat()." image ".$image->slug
 					);
-					self::createThumbnails($image);
-					$existing->$idField = $model->getId();
+					$tempImage->id = $image->getId();
+					self::createThumbnails($tempImage, $originalPath);
+					$existing->remote_id = $model->getId();
 					$existing->save();
 					$ret_val[] = $image;
 					break;
@@ -111,25 +129,35 @@ class ImageHelper extends \yii\helpers\FileHelper
 					{
 						//This image doesn't exist yet
 						case false:
-						$image->$idField = $model->id;
+						$image->remote_id = $model->getId();
 						switch($image->is_default)
 						{
 							//If we're replacing the default image then unset all the otehr default images
 							case true:
-							Image::updateAll(['is_default' => 0], [$idField => $this->id]);
+							Image::updateAll(['is_default' => false], [
+								'remote_id' => $model->getId(),
+								'remote_type' => $model->isWhat()
+							]);
 							break;
 						}
 						$image->slug = Image::getSafeName($name)."-image-$idx";
 						$imageDir = dirname($image->getRealPath());
-						switch(is_dir($imageDir))
+						
+						if(is_dir($imageDir))
+							Storage::createContainer($imageDir, true, [], 'image');
+						
+						$url = Storage::save($tempImage, $image->getRealPath(), [], false, $image->getRealPath(), 'image');
+						
+						if(filter_var($url, FILTER_VALIDATE_URL)) {
+							$proceed = true;
+							$image->url = $url;
+						} else if(file_exists($image->getRealPath()))
+							$proceed = true;
+						else
+							$proceed = false;
+						
+						if($proceed)
 						{
-							case false:
-							Storage::createContainer($imageDir, true);
-							break;
-						}
-						switch(Storage::move($uploadedFile->tempName, $image->getRealPath(), true))
-						{
-							case true:
 							switch($image->save())
 							{
 								case true:
@@ -137,7 +165,12 @@ class ImageHelper extends \yii\helpers\FileHelper
 									'success',
 									"Saved image ".$image->slug
 								);
-								self::createThumbnails($image);
+								
+								/**
+								 * Need top fix creating thumbnail sbefore uploading to AWS
+								 */
+								$tempImage->id = $image->getId();
+								self::createThumbnails($tempImage, $originalPath);
 								$ret_val[] = $image;
 								break;
 								
@@ -148,14 +181,11 @@ class ImageHelper extends \yii\helpers\FileHelper
 								);
 								break;
 							}
-							break;
-							
-							default:
+						} else {
 							\Yii::$app->getSession()->setFlash(
 								'alert',
 								"Unable to save physical file: ".$image->slug
 							);
-							break;
 						}
 						break;
 					}
@@ -163,6 +193,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 				}
 				break;
 			}
+			unlink($uploadedFile->tempName);
 		}
 		return $ret_val;
 	}
@@ -170,31 +201,40 @@ class ImageHelper extends \yii\helpers\FileHelper
 	/**
 	 * @param Image|string $path
 	 */
-	public static function createThumbnails(Image $image)
+	public static function createThumbnails(Image $image, $file=null)
 	{
-		switch(file_exists($image->getRealPath()))
+		switch(file_exists($image->getRealPath()) || filter_var($image->url, FILTER_VALIDATE_URL))
 		{
 			case true:
 			$sizes = empty(static::$sizes) ? self::$_sizes : array_intersect_key(self::$_sizes, self::$sizes);
 			//BaseImage::$cachePath = \Yii::getAlias('@media/cache/images');
 			foreach($sizes as $size=>$options)
 			{
-				$basename = pathinfo($image->getRealPath(), PATHINFO_BASENAME);
-				$filename = pathinfo($image->getRealPath(), PATHINFO_FILENAME);
+				$file = is_null($file) ?  $image->getRealPath() : $file;
+				$basename = pathinfo($file, PATHINFO_BASENAME);
+				$filename = pathinfo($file, PATHINFO_FILENAME);
 				$basePath = DIRECTORY_SEPARATOR.$filename.DIRECTORY_SEPARATOR.$size.'-'.$basename;
-				$thumbRealPath = dirname($image->getRealPath()).$basePath;
-				$thumbStoredPath = dirname($image->getPath()).$basePath;
+				$thumbRealPath = dirname($file).$basePath;
+				$thumbStoredPath = dirname($file).$basePath;
 				
-				if(!is_dir(dirname($thumbRealPath)))
-					Storage::createContainer(dirname($thumbRealPath), true);
+				if(!filter_var($image->url, FILTER_VALIDATE_URL) && !is_dir(dirname($thumbRealPath)))
+					Storage::createContainer(dirname($thumbRealPath), true, [], 'image');
 				
 				BaseImage::thumbnail($image->getRealPath(), $options['sizeX'], $options['sizeY'])
 					->save($thumbRealPath, ['quality' => $options['quality']]);
+				
+				echo $thumbRealPath." ".$thumbStoredPath;
+				exit;
+				$url = Storage::move($thumbRealPath, $thumbStoredPath, false, true);
+				
+				if(file_exists($thumbStoredPath))
+					$url = $thumbStoredPath;
+					
 				$metadata = new ImageMetadata([
 					'scenario' => 'create',
 					'image_id' => $image->getId(),
 					'key' => $size,
-					'value' => $thumbStoredPath,
+					'value' => $url,
 				]);
 				$metadata->save();
 			}

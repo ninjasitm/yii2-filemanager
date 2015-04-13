@@ -78,8 +78,11 @@ class VideoUpload extends \yii\base\Widget
 				echo $this->getButtons();
 			break;
 			
-			case 'upload':
+			case 'add':
 			//**Depending on the selected add method either show an  upload form or show a video search form for the PickledUp account.
+			break;
+			
+			case 'upload':
 			$this->getYouTubeUploadParams();
 			echo Html::tag('h3', $this->model->title);
 			echo Html::tag('p', $this->metadataModel->value);

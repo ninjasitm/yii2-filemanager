@@ -2,7 +2,9 @@
 
 namespace nitm\filemanager\helpers\storage;
 
+use yii\helpers\ArrayHelper;
 use nitm\filemanager\models\File;
+use nitm\helpers\Cache;
 
 class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInterface 
 {
@@ -21,11 +23,11 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
 		static::initClient();
     }
     
-    public function initClient()
+    public static function initClient()
 	{
-		if!isset(static::$_client))
+		if(!isset(static::$_client))
 		{
-			static::$_config = \Yii::$app->get('nitm-files')->aws;
+			static::$_config = \Yii::$app->getModule('nitm-files')->setting('aws.s3');
 		
 			if(static::$_config)
 			{
@@ -40,26 +42,39 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
 				}
 				
 				$config = [
-					'key'    => static::$_config['key'],
-					'secret' => static::$_config['secret'],
+					'credentials' => new \Aws\Common\Credentials\Credentials(static::$_config['key'], static::$_config['secret'])
 				];
-				static::$_client = S3Client::factory($config);
+				static::$_client = \Aws\S3\S3Client::factory($config);
 			}
 		}
     }
 	
 	public static function containers($specifically=null)
 	{
+        static::initClient();
 		//Need to get aWs containers here
 		//return \Yii::$app->get('nitm-files')->getPath($specifically);
+		$ret_val = [];
+		$key = implode('-', array_filter(['s3', 'buckets', $specifically]));
+		if(!Cache::exists($key))
+		{
+			foreach(static::$_client->getIterator('ListObjects', ['Bucket' => static::$_config['bucket']]) as $bucket)
+			{
+				$ret_val[$bucket['key']] = $bucket['key'];
+			}
+			Cache::cache()->set($key, $ret_val, 300);
+		}
+		else
+			$ret_val = Cache::cache()->get($key);
+		return $ret_val;
 	}
     
-    protected function save($file, $name = null, $thumb = false, $path = null)
+    public static function save($file, $name = null, $thumb=false, $path=null, $type=null)
 	{
         static::initClient();
 		
         if(is_null($path)){
-            $path = \Yii::$app->get('nitm-files')->path[$file->url];
+            $path = \Yii::$app->getModule('nitm-files')->path[$file->url];
         }
         
         if(is_null($name)){
@@ -67,17 +82,20 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
         }
         
         if($thumb){
-            $path = $path.'thumbnails/';
+            $path = $path.'thumbs/';
         }
         
         static::$_client->get('S3');
-        
-        static::$_client->putObject([
+		
+        $url =  static::$_client->putObject([
             'Key' => $path.$name,
             'Bucket' => static::$_config['bucket'],
             'SourceFile' => $file->url,
             'ContentType' => $file->type,
-        ]);
+			'ACL' => 'public-read',
+        ])->get('ObjectURL');
+		
+		return $url ? $url : false;
         
     }
 	
@@ -94,28 +112,22 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
         
     }
 	
-	public static function move($from, $to, $isUploaded=false)
+	public static function move($from, $to, $isUploaded=false, $thumb=false)
 	{
-		$to = self::getUrl($to);
-		$from = self::getUrl($from);
-		$ret_val = false;
-		switch(is_writable(dirname($to)))
-		{
-			case true:
-			$ret_val =  ($isUploaded === true) ? move_uploaded_file($from, $to) : rename($from, $to);
-			$oldUmask = umask(0);
-			chmod($to, self::FILE_MODE);
-			umask($oldUmask);
-			break;
+		$from = new \nitm\filemanager\models\File([
+			'url' => $from,
+			'type' => ArrayHelper::getValue(getImageSize($from), 'mime', 'binary/octet-stream')
+		]);
+		
+		$ret_val = static::save($from, basename($to), $thumb, dirname($to));
+				
+		if($ret_val)
+			unlink($from->url);
 			
-			default:
-			throw new \yii\base\Exception("The directory: ".dirname($to)." is not writable");
-			break;
-		}
 		return $ret_val;
 	}
 	
-	public static function createContainer($container, $recursive=true)
+	public static function createContainer($container, $recursive=true, $permissions=null)
 	{
 		/*$oldUmask = umask(0);
 		mkdir($container, self::DIR_MODE, $recursive);

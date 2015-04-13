@@ -26,10 +26,10 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param array $permissions
 	 * @return boolean
 	 */
-	public static function save($data, $to, $permissions=[])
+	public static function save($data, $to, $permissions=[], $thumb=false, $path=null, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
-		return $module::save($data, $to, static::parsePermissions($permissions));
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
+		return $module::save($data, $to, static::parsePermissions($permissions), $thumb, $path, $type);
 	}
 	
 	/**
@@ -40,9 +40,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param array $permissions
 	 * @return boolean
 	 */
-	public static function move($from, $to, $isUploaded=false)
+	public static function move($from, $to, $isUploaded=false, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::move($from, $to, $isUploaded);
 	}
 	
@@ -51,9 +51,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param string $of
 	 * @return string
 	 */
-	public static function getUrl($of)
+	public static function getUrl($of, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::getUrl($of);
 	}
 	
@@ -62,9 +62,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param string $path
 	 * @return boolean
 	 */
-	public static function exists($path)
+	public static function exists($path, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::exists($path); 
 	}
 	
@@ -73,9 +73,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param mixed $of
 	 * @return boolean
 	 */
-	public static function delete($path)
+	public static function delete($path, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::delete($path);
 	}
 	
@@ -84,9 +84,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param string $path
 	 * @return boolean
 	 */
-	public static function isWriteable($path)
+	public static function isWriteable($path, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::isWritable($path);
 	}
 	
@@ -95,9 +95,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param string $path
 	 * @return string Contents of the file
 	 */
-	public static function getContents($path)
+	public static function getContents($path, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::getContents($path);
 	}
 	
@@ -106,9 +106,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param string $container
 	 * @param boolean $resursive
 	 */
-	public static function createContainer($container, $recursive=true, $permissions=[])
+	public static function createContainer($container, $recursive=true, $permissions=[], $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::createContainer($container, $recursive, static::parsePermissions($permissions));
 	}
 	
@@ -117,10 +117,10 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param string $container
 	 * @param boolean $resursive
 	 */
-	public static function removeContainer($container, $options=[])
+	public static function removeContainer($container, $options=[], $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
-		return $module::removeContainer($container, $options);
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
+		return $module::removeContainer($container, $options, $type);
 	}
 	
 	/**
@@ -141,9 +141,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param array $permissions Permissions ['mode':mode, 'group':group, 'owner': owner]
 	 * @param string $type File or Directory permissions?
 	 */
-	protected static function applyPermissions($to, $permissions=[], $type='file')
+	protected static function applyPermissions($to, $permissions=[], $type='file', $fileType=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass();
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($fileType);
 		return $module::applyPermissions($to, $permissions, $type);
 	}
 	
