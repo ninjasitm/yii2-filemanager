@@ -1,5 +1,5 @@
 {
-	"name": "nitm/yii2-filemanager",
+	"name": "mhdevnet/yii2-filemanager",
 	"description": "Forked from linchpinstudios. A file manager for Yii2. Allow you to dynamically manager images and files from any location",
 	"type": "yii2-extension",
 	"keywords": ["yii2","extension","file","manager","aws"],
@@ -10,12 +10,12 @@
 			"email": "support@ninjasitm.com"
 		}
 	],
-      "require": {
-        "aws/aws-sdk-php": "2.*",
-        "2amigos/yii2-file-upload-widget" : "*",
-        "sweelix/yii2-image": "*",
-        "yiisoft/yii2-imagine": "*"
-      },
+	"require": {
+	"aws/aws-sdk-php": "2.*",
+	"2amigos/yii2-file-upload-widget" : "*",
+	"sweelix/yii2-image": "*",
+	"yiisoft/yii2-imagine": "*"
+	},
 	"autoload": {
 		"psr-4": {
 			"nitm\\filemanager\\": ""
