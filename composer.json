@@ -13,6 +13,7 @@
       "require": {
         "aws/aws-sdk-php": "2.*",
         "2amigos/yii2-file-upload-widget" : "*",
+        "sweelix/yii2-image": "*",
         "yiisoft/yii2-imagine": "*"
       },
 	"autoload": {
