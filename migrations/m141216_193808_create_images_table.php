@@ -7,7 +7,10 @@ class m141216_193808_create_images_table extends Migration
 {
     public function up()
     {
-        
+		$tableSchema = \Yii::$app->db->getTableSchema('images');
+		if($tableSchema)
+			return true;
+			
         $tableOptions = null;
         if ($this->db->driverName === 'mysql') {
             $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB';

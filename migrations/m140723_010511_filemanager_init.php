@@ -7,6 +7,9 @@ class m140723_010511_filemanager_init extends Migration
 {
     public function up()
     {
+		$tableSchema = \Yii::$app->db->getTableSchema('files');
+		if($tableSchema)
+			return true;
         
         $tableOptions = null;
         if ($this->db->driverName === 'mysql') {
@@ -57,7 +60,7 @@ class m140723_010511_filemanager_init extends Migration
         ], $tableOptions);
         
         $this->addForeignKey('FK_files_metadata','{{%files_metadata}}','file_id','{{%files}}','id');
-        $this->addForeignKey('FK_files_author','{{%images}}','author_id','{{%user}}','id');
+        $this->addForeignKey('FK_files_author','{{%files}}','author_id','{{%user}}','id');
         
     }
 
