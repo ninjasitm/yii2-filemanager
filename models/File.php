@@ -147,4 +147,23 @@ class File extends \nitm\models\Entity
 		}
 		return $ret_val;
 	}
+	
+	/**
+	 * Get all the files for this entity
+	 * @param boolean $metadata Get metadata as well?
+	 */
+	public static function getFilesFor($model, $metadata=false)
+	{
+        $ret_val = $model->hasMany(File::className(), ['remote_id' => 'id']);
+		$with = [];
+		switch($metadata)
+		{
+			case true:
+			$with[] = 'metadata';
+			break;
+		}
+		$ret_val->with($with);
+		$ret_val->andWhere(['remote_type' => $model->isWhat()]);
+		return $ret_val;
+	}
 }

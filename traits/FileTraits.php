@@ -19,7 +19,7 @@ trait FileTraits
 	
 	public function getSize()
 	{
-		return \yii::$app->formatter->asShortSize($this->size);
+		return \Yii::$app->formatter->asShortSize($this->size);
 	}
 	
 	public function getUrl($action='view')
