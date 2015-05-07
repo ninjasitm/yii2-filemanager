@@ -1,4 +1,4 @@
-x<?php
+<?php
 
 namespace nitm\filemanager\models;
 
