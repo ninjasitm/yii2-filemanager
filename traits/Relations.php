@@ -22,9 +22,27 @@ trait Relations
 	 * @param boolean $thumbnails Get thumbnails as well?
 	 * @param boolean $default Get the default image as well?
 	 */
-	public function getImages($thumbnails=false, $default=false)
+	public function getImages($thumbnails=false, $default=false, $limit=10)
 	{
-        return Image::getImagesFor($this, $thumbnails, $default);
+        return Image::getImagesFor($this, $thumbnails, $default, $limit);
+	}
+	
+	public function images()
+	{
+		return is_array($this->images) ? $this->images : [];
+	}
+	
+	public function imageList()
+	{
+		$ret_val = [];
+		foreach((array)$this->images as $img)
+		{
+			$ret_val[] = [
+				'title' => $img->file_name,
+				'url' => $img->url(),
+			];
+		}
+		return $ret_val;
 	}
 	
 	/**

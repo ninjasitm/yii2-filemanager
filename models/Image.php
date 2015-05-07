@@ -66,7 +66,7 @@ class Image extends \nitm\filemanager\models\File
 	 * @param boolean $thumbnails Get thumbnails as well?
 	 * @param boolean $default Get the default image as well?
 	 */
-	public static function getImagesFor($model, $thumbnails=false, $default=false)
+	public static function getImagesFor($model, $thumbnails=false, $default=false, $limit=10)
 	{
         $ret_val = $model->hasMany(Image::className(), ['remote_id' => 'id']);
 		$with = [];
@@ -83,6 +83,7 @@ class Image extends \nitm\filemanager\models\File
 			break;
 		}
 		$ret_val->with($with);
+		$ret_val->limit($limit);
 		$ret_val->andWhere(['remote_type' => $model->isWhat()]);
 		return $ret_val;
 	}
