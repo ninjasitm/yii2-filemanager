@@ -68,6 +68,22 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
 			$ret_val = Cache::cache()->get($key);
 		return $ret_val;
 	}
+	
+	protected static function getPutOptions($file, $type)
+	{
+		//If this is a resource, most likely a stream of data
+		if(is_string($file)) {
+			return $options = [
+				'ContentType' => $type,
+				'Body' => $file
+			];
+		}
+		else
+			return $options = [
+				'SourceFile' => $file->url,
+				'ContentType' => $file->type,
+			];
+	}
     
     public static function save($file, $name = null, $thumb=false, $path=null, $type=null)
 	{
@@ -86,14 +102,14 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
         }
         
         static::$_client->get('S3');
-		
-        $url =  static::$_client->putObject([
+				
+        $url =  static::$_client->putObject(array_merge([
             'Key' => $path.$name,
             'Bucket' => static::$_config['bucket'],
-            'SourceFile' => $file->url,
-            'ContentType' => $file->type,
 			'ACL' => 'public-read',
-        ])->get('ObjectURL');
+        ], static::getPutOptions($file, $type)))->get('ObjectURL');
+		
+		echo "URll is $url";
 		
 		return $url ? $url : false;
         
@@ -112,17 +128,26 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
         
     }
 	
-	public static function move($from, $to, $isUploaded=false, $thumb=false)
+	public static function move($from, $to, $isUploaded=false, $thumb=false, $type=null)
 	{
-		$from = new \nitm\filemanager\models\File([
-			'url' => $from,
-			'type' => ArrayHelper::getValue(getImageSize($from), 'mime', 'binary/octet-stream')
-		]);
+		try {
+			if(file_exists(static::getUrl($from)))
+				$from = new \nitm\filemanager\models\File([
+					'url' => $from,
+					'type' => (is_null($type) ? ArrayHelper::getValue(getImageSize($from), 'mime', 'binary/octet-stream') : $type)
+				]);
+		} catch(\Exception $e) {}
 		
-		$ret_val = static::save($from, basename($to), $thumb, dirname($to));
+		$ret_val = static::save($from, basename($to), $thumb, dirname($to), $type);
 				
-		if($ret_val)
-			unlink($from->url);
+		if($ret_val) {
+			if(is_object($from))
+				unlink($from->url);
+			else if(filter_var($from, FILTER_VALIDATE_URL))
+				unlink($from);
+			else
+				unset($from);
+		}
 			
 		return $ret_val;
 	}

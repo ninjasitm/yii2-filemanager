@@ -73,7 +73,7 @@ class Image extends \nitm\filemanager\models\File
 		switch($default === true)
 		{
 			case false:
-			$ret_val->andWhere('is_default=true');
+			$ret_val->andWhere(['is_default' => true]);
 			break;
 		}
 		switch($thumbnails)

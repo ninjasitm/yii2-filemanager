@@ -118,7 +118,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 						"Found dangling ".$model->isWhat()." image ".$image->slug
 					);
 					$tempImage->id = $image->getId();
-					self::createThumbnails($tempImage, $originalPath);
+					self::createThumbnails($tempImage, $image->type, $originalPath);
 					$existing->remote_id = $model->getId();
 					$existing->save();
 					$ret_val[] = $image;
@@ -170,7 +170,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 								 * Need top fix creating thumbnail sbefore uploading to AWS
 								 */
 								$tempImage->id = $image->getId();
-								self::createThumbnails($tempImage, $originalPath);
+								self::createThumbnails($tempImage, $image->type, $originalPath);
 								$ret_val[] = $image;
 								break;
 								
@@ -201,7 +201,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 	/**
 	 * @param Image|string $path
 	 */
-	public static function createThumbnails(Image $image, $file=null)
+	public static function createThumbnails(Image $image, $type, $file=null)
 	{
 		switch(file_exists($image->getRealPath()) || filter_var($image->url, FILTER_VALIDATE_URL))
 		{
@@ -219,13 +219,22 @@ class ImageHelper extends \yii\helpers\FileHelper
 				
 				if(!filter_var($image->url, FILTER_VALIDATE_URL) && !is_dir(dirname($thumbRealPath)))
 					Storage::createContainer(dirname($thumbRealPath), true, [], 'image');
+				/**
+				 * To save we're using ob contents to get the outputed image from memory
+				 */
+				ob_start();
+				$thumb = BaseImage::thumbnail($image->getRealPath(), $options['sizeX'], $options['sizeY'])
+					->save(null, [
+						'quality' => $options['quality'],
+						'format' => pathinfo($thumbStoredPath, \PATHINFO_EXTENSION)
+					]);
+				$thumb = ob_get_contents();
+				ob_end_clean();
 				
-				BaseImage::thumbnail($image->getRealPath(), $options['sizeX'], $options['sizeY'])
-					->save($thumbRealPath, ['quality' => $options['quality']]);
-				
-				echo $thumbRealPath." ".$thumbStoredPath;
-				exit;
-				$url = Storage::move($thumbRealPath, $thumbStoredPath, false, true);
+				/**
+				 * The Storage engine should understand how to save a stream to a file;
+				 */
+				$url = Storage::move($thumb, $thumbStoredPath, false, true, $type, 'image');
 				
 				if(file_exists($thumbStoredPath))
 					$url = $thumbStoredPath;

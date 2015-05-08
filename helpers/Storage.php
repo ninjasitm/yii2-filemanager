@@ -40,10 +40,10 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 * @param array $permissions
 	 * @return boolean
 	 */
-	public static function move($from, $to, $isUploaded=false, $type=null)
+	public static function move($from, $to, $isUploaded=false, $thumb=false, $fileType=null, $type=null)
 	{
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::move($from, $to, $isUploaded);
+		return $module::move($from, $to, $isUploaded, $thumb, $fileType);
 	}
 	
 	/**

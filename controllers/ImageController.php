@@ -61,22 +61,11 @@ class ImageController extends \nitm\controllers\DefaultController
 		{
 			case true:
 			$image = $model->getIcon($size);
-			switch(file_exists($image->getRealPath()))
+			\Yii::$app->response->getHeaders()->set('Content-Type', $image->type);
+			switch(1)
 			{
-				case true:
-				\Yii::$app->response->getHeaders()->set('Content-Type', $image->type);
-				$contents = file_get_contents($image->getRealPath());
-				switch(\Yii::$app->request->get('__format') == 'raw')
-				{
-					//We should display the image rather than the raw contents
-					case false:
-					return '<img url="'."data:".$image->type.";base64,".base64_encode($contents).'"/>';
-					break;
-					
-					default:
-					return $contents;
-					break;
-				}
+				case file_exists($image->getRealPath()):
+				return $this->getContents($image);
 				break;
 				
 				default:
@@ -86,6 +75,22 @@ class ImageController extends \nitm\controllers\DefaultController
 			break;
 		}
     }
+	
+	protected function getContents($image)
+	{
+		$contents = file_get_contents($image->getRealPath());
+		switch(\Yii::$app->request->get('__format') == 'raw')
+		{
+			//We should display the image rather than the raw contents
+			case false:
+			return '<img url="'."data:".$image->type.";base64,".base64_encode($contents).'"/>';
+			break;
+			
+			default:
+			return $contents;
+			break;
+		}
+	}
 	
 	/**
 	 * Save images for a model

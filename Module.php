@@ -102,7 +102,7 @@ class Module extends \yii\base\Module
 		return (count($this->allowedTypes) == 0) ? array_keys($this->getBaseTypeMap()) : array_intersect(array_keys($this->getBaseTypeMap()), $this->allowedTypes);
 	}
 	
-	protected function resolveEngine($engine=nullll)
+	protected function resolveEngine($engine=null)
 	{
 		if(!is_null($engine) && isset($this->engineMap[$engine]))
 			return $this->engineMap[$engine];
@@ -117,7 +117,7 @@ class Module extends \yii\base\Module
 	{
 		$engine = $this->resolveEngine($engine);		
 		if(isset($this->_storageEngines[$engine]))
-			return $this->_storageEngines[$engine];
+			return $this->_storageEngines[$engine];	
 		else
 			throw new \yii\base\Exception("Engine: $engine is not supported");
 	}
@@ -300,7 +300,7 @@ class Module extends \yii\base\Module
 	{
 		foreach($this->namespaceMap as $namespace)
 		{
-			$class = rtrim($namespace, '\\').'\\'.ucfirst(strtolower($modelName));
+			$class = rtrim($namespace, '\\').'\\'.\nitm\helpers\ClassHelper::properClassName($modelName); 
 			if(class_exists($class))
 				return $class;
 		}

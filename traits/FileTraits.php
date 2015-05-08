@@ -99,7 +99,7 @@ trait FileTraits
 	 */
 	public function icon()
 	{
-		return \nitm\helpers\Relations::getRelatedRecord('icon', $this, Image::className());
+		return \nitm\helpers\Relations::cachedRelation('id', false, Image::className(), 'icon', [], $this, 120);
 	}	
 		
 	/**
