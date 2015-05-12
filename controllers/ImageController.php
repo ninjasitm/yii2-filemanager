@@ -147,20 +147,13 @@ class ImageController extends \nitm\controllers\DefaultController
 		switch($model instanceof Image)
 		{
 			case true:
-			switch(1)
-			{
-				case !is_null($model->content_id):
-				$idField = 'content_id';
-				break;
-				
-				default:
-				$idField = 'category_id';
-				break;
-			}
 			Image::updateAll([
 				'is_default' => 0
-			], [$idField => $model->$idField]);
-			$model->setScenario('delete');
+			], [
+				'remote_type' => $model->remote_type,
+				'remote_id' => $model->remote_id
+			]);
+			$model->setScenario('update');
 			$model->is_default = 1;
 			return $model->save();
 			break;
@@ -183,6 +176,20 @@ class ImageController extends \nitm\controllers\DefaultController
 			}
 			break;
 		}
+	}
+	
+	/*
+	 * Get the forms associated with this controller
+	 * @param string $param What are we getting this form for?
+	 * @param int $unique The id to load data for
+	 * @param array $options
+	 * @return string | json
+	 */
+	public function actionForm($type, $remoteType, $remoteId)
+	{
+		return parent::actionForm($type, $remoteId, [
+			'modelClass' => \Yii::$app->getModule('nitm-files')->getModelClass($remoteType)
+		]);
 	}
 
 }

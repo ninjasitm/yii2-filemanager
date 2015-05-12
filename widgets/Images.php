@@ -9,6 +9,7 @@ namespace nitm\filemanager\widgets;
 use Yii;
 use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
+use yii\widgets\ListView;
 use kartik\widgets\FileInput;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\helpers\Storage;
@@ -27,11 +28,6 @@ class Images extends \yii\base\Widget
 	public $withForm;
 	
     /**
-     * @var Number of extra images supported.
-     */
-    public $extraImages = 6;
-	
-    /**
      * @var string the title for the alert. If set to empty or null, will not be
      * displayed.
      */
@@ -46,26 +42,26 @@ class Images extends \yii\base\Widget
     /**
      * @var array the HTML attributes for the defualt image wrapper.
      */
-    public $defaultOptions = ['class' => 'well text-center'];
-
-    /**
-     * @var array the HTML attributes for the defualt image.
-     */
-    public $defaultWrapperOptions = ['class' => 'col-md-4 col-lg-4 images-default', 'id' => 'default-image', 'role' => 'imageContainer'];
-
-    /**
-     * @var array the HTML attributes for the extra image.
-     */
-    public $extraOptions = ['class' => 'well text-center col-md-4 col-lg-4 images-extra', 'role' => 'imageContainer'];
+    public $defaultOptions = [
+		'class' => 'text-center col-md-3 col-lg-3 col-sm-6',
+		'role' => 'imageContainer'
+	];
+	
+	public $buttonOptions = [
+	];
 
     /**
      * @var array the HTML attributes for the extra image wrapper.
      */
-    public $extraWrapperOptions = ['class' => 'col-md-8 col-lg-8'];
+	public $infoOptions = [
+		'class' => 'col-md-4 col-lg-4',
+		'role' => 'infoContainer'
+	];
 	
 	public $options = [
-		'class' => 'well col-md-12 col-lg-12 clearfix',
-		'role' => 'imagesContainer'
+		'class' => 'col-md-8 col-lg-8',
+		'role' => 'imagesContainer',
+		'id' => 'images'
 	];
 	
 	public $pluginOptions = [
@@ -143,6 +139,7 @@ class Images extends \yii\base\Widget
 	public function init()
 	{
 		$this->registerAssets();
+		$this->options['id'] .= $this->model->getId();
 	}
 
     /**
@@ -150,12 +147,35 @@ class Images extends \yii\base\Widget
      */
     public function run()
     {
-		$defaultImage = $this->getDefaultImage();
-		$extraImages = $this->getExtraImages();
+		$images = $this->getImages();
 		$initScript = \Yii::$app->request->isAjax ? Html::script("\$nitm.onModuleLoad('nitm-file-manager:images', function (module) {module.init();});", ['type' => 'text/javascript']) : '';
-		echo Html::tag("div", $defaultImage.$extraImages.$initScript, $this->options);
+		$info = $this->getInfoPane();
+		return $images.$initScript.$info;
     }
-
+	
+	protected function getInfoPane()
+	{
+		return Html::tag('div', Html::tag('div', $this->getUploadButton()), $this->infoOptions);
+	}
+	
+	protected function getUploadButton()
+	{
+		$text = \yii\helpers\ArrayHelper::remove($this->buttonOptions, 'text', 'Add Images');
+		$options = array_replace_recursive([
+			'size' => 'large',
+			'toggleButton' => [
+				'tag' => 'a',
+				'label' => Icon::forAction('plus')." ".$text, 
+				'href' => \Yii::$app->urlManager->createUrl(['/image/form/create/'.$this->model->isWhat().'/'.$this->model->getId(), '__format' => 'modal']),
+				'title' => \Yii::t('yii', $text),
+				'role' => 'dynamicAction createAction disabledOnClose',
+				'class' => 'btn btn-primary'
+			],
+		], (array)$this->buttonOptions);
+		
+		return \nitm\widgets\modal\Modal::widget($options);
+	}
+	
     /**
      * Gets the title section
      *
@@ -211,101 +231,37 @@ class Images extends \yii\base\Widget
 		return $this->_actions;
 	}
 	
-	public function getExtraImages()
+	public function getImages()
 	{
 		//Use smaller preview images for extra images
 		$pluginOptions = $this->pluginOptions;
 		$pluginOptions['pluginOptions']['previewClass'] = 'file-preview-sm';
-		$extraImages = '';
-		if($this->extraImages > 0)
-		{
-			for($i=0;$i<$this->extraImages;$i++)
-			{
-				switch(isset($this->model->images[$i]))
-				{
-					case true:
-					$img = $this->model->images[$i];
-					break;
-					
-					default:
-					$img = new Image();
-					break;
-				}
-				$extraImage[] = $this->getExtraImage($img, $i);
+		return ListView::widget([
+			'options' => $this->options,
+			'dataProvider' => new \yii\data\ArrayDataProvider([
+				'allModels' => $this->model->images
+			]),
+			'itemOptions' => [
+				'tag' => false
+			],
+			'itemView' => function ($model, $key, $index, $widget) {
+				return $this->getImage($model);
 			}
-			$extraImages = Html::tag("div",
-				implode('', $extraImage),
-				$this->extraWrapperOptions
-			);
-		}
-		return $extraImages;
-	}
-	
-	/**
-	 * This is used by the controller to render an image
-	 */
-	public function getDefaultImageRenderOptions($image)
-	{
-		$this->pluginOptions['attribute'] = 'images[default]';
-		$this->pluginOptions['pluginOptions']['uploadUrl'] = '/image/save/'.$this->model->isWhat().'/'.$this->model->getId();
-		$this->pluginOptions['model'] = $this->model;
-		return [
-			"view" => "@nitm/filemanager/views/image/view", 
-			"options" => [
-				'model' => !$this->model->icon ? new Image() : $this->model->icon,
-				'wrapperOptions' => $this->defaultWrapperOptions,
-				"actions" => $this->getActions(),
-				'pluginOptions' => $this->pluginOptions
-			]
-		];
-	}
-	
-	/**
-	 * This is used by the controller to render an image
-	 */
-	public function getExtraImageRenderOptions($image, $counter)
-	{	
-		$this->pluginExtraOptions['attribute'] = 'images[extra]['.$counter.']';
-		$this->pluginExtraOptions['pluginOptions']['uploadUrl'] = '/image/save/'.$this->model->isWhat().'/'.$this->model->getId();
-		$this->pluginExtraOptions['model'] = $this->model;
-		return  [
-			"view" => "@nitm/filemanager/views/image/view", 
-			"options" => [
-				'model' => $image,
-				'wrapperOptions' => $this->extraOptions,
-				"actions" => $this->getActions(),
-				'pluginOptions' => $this->pluginExtraOptions
-			]
-		];
-	}
-	
-	public function getDefaultImage()
-	{
-		$model = $this->model->icon instanceof Image ? $this->model->icon : new Image();
-		$this->pluginOptions['attribute'] = 'images[default]';
-		$this->pluginOptions['pluginOptions']['uploadUrl'] = '/image/save/'.$this->model->isWhat().'/'.$this->model->getId();
-		$this->pluginOptions['model'] = $this->model;
-		$this->pluginOptions['options']['id'] = $this->getInputId($model);
-		$this->defaultWrapperOptions['id'] = "default-image";
-		return \Yii::$app->getView()->render("@nitm/filemanager/views/image/view", [
-			'model' => $model,
-			'wrapperOptions' => $this->defaultWrapperOptions,
-			"actions" => $this->getActions(),
-			'pluginOptions' => $this->pluginOptions
 		]);
 	}
 	
-	public function getExtraImage($image, $counter)
-	{	
-		$model = $image instanceof Image ? $image : new Image();
-		$this->pluginExtraOptions['attribute'] = 'images[extra]['.$counter.']';
+	public function getImage($image)
+	{
+		$id = $this->getInputId($image);
+		$this->pluginExtraOptions['attribute'] = 'images['.$id.']';
 		$this->pluginExtraOptions['pluginOptions']['uploadUrl'] = '/image/save/'.$this->model->isWhat().'/'.$this->model->getId();
 		$this->pluginExtraOptions['model'] = $this->model;
-		$this->pluginExtraOptions['options']['id'] = $this->getInputId($model);
-		$this->extraOptions['id'] = "extra-image".$model->getId();
-		return  \Yii::$app->getView()->render("@nitm/filemanager/views/image/view", [
-			'model' => $model,
-			'wrapperOptions' => $this->extraOptions,
+		$this->pluginExtraOptions['options']['id'] = $id;
+		$this->defaultOptions['id'] = $id;
+		$this->defaultOptions['role'] .= ' '.($image->is_default ? 'defaultImage' : 'extraImage');
+		return \Yii::$app->getView()->render("@nitm/filemanager/views/image/view", [
+			'model' => $image,
+			'wrapperOptions' => $this->defaultOptions,
 			"actions" => $this->getActions(),
 			'pluginOptions' => $this->pluginExtraOptions
 		]);

@@ -109,8 +109,6 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
 			'ACL' => 'public-read',
         ], static::getPutOptions($file, $type)))->get('ObjectURL');
 		
-		echo "URll is $url";
-		
 		return $url ? $url : false;
         
     }

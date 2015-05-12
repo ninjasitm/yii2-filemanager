@@ -19,10 +19,10 @@ function NitmFileManagerImages () {
 	};
 	
 	this.containers = {
-		defaultImage: 'default-image',
-		extraImage: 'extra-image',
-		imageContainer: 'imageContainer',
-		imagesContainer: 'imagesContainer',
+		defaultImage: "[role~='defaultImage']",
+		extraImage: "[role~='extraImage']",
+		imageContainer: "[role~='imageContainer']",
+		imagesContainer: "[role~='imagesContainer']",
 		uploadFile: "imageFile"
 	};
 	
@@ -56,7 +56,7 @@ function NitmFileManagerImages () {
 	}
 	
 	this.initAjaxUpload = function (containerId) {
-		var container = $nitm.getObj((containerId == undefined) ? '[role="'+self.containers.imagesContainer+'"]' : containerId);
+		var container = $nitm.getObj((containerId == undefined) ? self.containers.imagesContainer : containerId);
 		setTimeout(function () {
 			$.map(self.buttons.upload, function (v, k) {
 				container.find(v).each(function() {
@@ -64,7 +64,7 @@ function NitmFileManagerImages () {
 					$(this).on('click', function(e) {
 						e.preventDefault();
 						var button = $(this);
-						var buttonContainer = button.parents('[role="'+self.containers.imageContainer+'"]');
+						var buttonContainer = button.parents(self.containers.imageContainer);
 						var postUrl = $(this).attr('href');
 						var formData = new FormData();
 						var input = $(this).parent().find(':file');
@@ -124,8 +124,8 @@ function NitmFileManagerImages () {
 		switch(result != false)
 		{
 			case true:
-			var container = _form.parents('[role="'+self.containers.imageContainer+'"]');
-			var existing = container.find('[id="existing\-image"]');
+			var container = _form.parents(self.containers.imageContainer);
+			var existing = container.find(self.containers.extraImage);
 			switch(result.success)
 			{
 				case true:
@@ -148,36 +148,19 @@ function NitmFileManagerImages () {
 	}
 	
 	this.setDefault = function (elem) {
-		var element = $(elem);
-		$.post(element.attr('href'), function(result) {
+		var $element = $(elem);
+		$.post($element.attr('href'), function(result) {
 			switch(result)
 			{
 				case true:
 				//swap out the default and new default images
-				var defaultParent = $nitm.getObj(self.containers.defaultImage);
-				var swappedParent = $nitm.getObj(element.data('parent'));
-				var currentDefault = defaultParent.html();
-				var newDefault = swappedParent.html();
-				switch(currentDefault == "")
-				{
-					case true:
-					defaultParent.html(newDefault);
-					swappedParent.parent().html('');
-					self.initImageActions('#'+self.containers.defaultImage);
-					self.setupParent(defaultParent, true);
-					break;
-					
-					default:
-					//Swap the data-parent values in the remove and setDefault activators
-					self.swapMeta(defaultParent, swappedParent);
-					swappedParent.html(currentDefault);
-					defaultParent.html(newDefault);
-					self.initImageActions('#'+self.containers.defaultImage);
-					self.initImageActions(element.data('parent'));
-					self.setupParent(defaultParent, true);
-					self.setupParent(swappedParent);
-					break;
-				}
+				var newDefault = $nitm.getObj($element.data('parent'));
+				var existingDefault = $nitm.getObj(self.containers.imagesContainer).find(self.containers.defaultImage);
+				existingDefault.find('.file-preview').removeClass('default');
+				newDefault.find('.file-preview').addClass('default');
+				self.initImageActions(newDefault);
+				self.setupParent(existingDefault, false);
+				self.setupParent(newDefault, true);
 				break;
 			}
 		});
@@ -185,16 +168,15 @@ function NitmFileManagerImages () {
 	}
 	
 	this.deleteImage = function (elem) {
-		var element = $(elem);
+		var $element = $(elem);
 		switch(confirm("Are you sure you want to delete this image?"))
 		{
 			case true:
-			$.post(element.attr('href'), function(result) {
+			$.post($element.attr('href'), function(result) {
 				switch(result != false)
 				{
 					case true:
-					element.parents('[role="'+self.containers.imageContainer+'"]').find('[role="'+self.containers.uploadFile+'"]').fadeIn();
-					element.parents('[role="'+self.containers.imageContainer+'"]').find('[id="existing\-image"]').html('');
+					$(element.data('parent')).remove();
 					break;
 				}
 			});
@@ -204,26 +186,19 @@ function NitmFileManagerImages () {
 	}
 	
 	this.setupParent = function (elem, isDefault) {
-		var element = $(elem);
-		var setDefault = element.find("[role~='"+self.buttons.roles.setDefault+"']");
-		var deleteImage = element.find("[role~='"+self.buttons.roles.deleteImage+"']");
+		var $element = $(elem);
+		var setDefault = $element.find("[role~='"+self.buttons.roles.setDefault+"']");
+		var deleteImage = $element.find("[role~='"+self.buttons.roles.deleteImage+"']");
 		switch(isDefault)
 		{
 			case true:
 			setDefault.addClass('hidden');
-			setDefault.attr('data-parent', 'default-image');
-			deleteImage.attr('data-parent', 'default-image');
-			element.find('[class="file\-preview\-sm"]').attr('class', 'file-preview');
-			element.attr('id', self.containers.defaultImage);
+			$element.attr('role', 'defaultImage');
 			break;
 			
 			default:
-			var parentId = self.containers.extraImage+setDefault.data('id');
 			setDefault.removeClass('hidden');
-			setDefault.attr('data-parent', parentId);
-			deleteImage.attr('data-parent', parentId);
-			element.find('[class="file\-preview"]').attr('class', 'file-preview-sm');
-			element.attr('id', parentId);
+			$element.attr('role', 'extraImage');
 			break;
 		}
 	}

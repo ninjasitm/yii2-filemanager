@@ -38,7 +38,7 @@ foreach($actions as $name=>$action)
 			$action['options']['class'] .= ' hidden';
 		}
 		$action['options']['id'] = $action['options']['id'].$model->id;
-		$action['options']['data-parent'] = '#'.($model->isDefault() ? 'default-image' : 'extra-image'.$model->id);
+		$action['options']['data-parent'] = '#'.$options['id'];
 		$action['options']['data-id'] = $model->id;
 		$modelActions .= Html::a(
 			Html::tag(

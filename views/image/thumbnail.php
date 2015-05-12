@@ -29,7 +29,7 @@ $placeholder = isset($placeholder) ? $placeholder : false;
         break;
         
         default:
-        switch($model instanceof Image)
+        switch($model instanceof \nitm\filemanager\models\Image)
         {
             case false:
             $preview = Html::tag('div', '', [
@@ -39,21 +39,16 @@ $placeholder = isset($placeholder) ? $placeholder : false;
             break;
             
             default:
-            $icon = $model->getIcon();
-            $img = Html::img('/image/get/'.$icon->id.'/medium?__format=raw', [
-                'class' => ($model->isDefault() ? 'file-preview-image-sm' : 'file-preview-image-sm'),
-                'title' => $type."-image-".$icon->id,
-            ]);
-            $frame = Html::tag('div', $img, [
-                'class' => ($model->isDefault() ? 'file-preview-frame-sm' : 'file-preview-frame-sm'),
-            ]);
-            $thumbnail = Html::tag('div', $frame, ['class' => 'file-preview-thumbnails']);
-            $status = Html::tag('div', '', ['class' => 'file-preview-status text-center text-success']);
-            $clear = Html::tag('div', '', ['class' => 'clearfix']);
+            $icon = $model->getIcon('medium');
+            $img = Html::a(Html::img($icon->url, [
+                'class' => 'image '.($model->isDefault() ? 'default' : 'extra'),
+                'title' => $type."-image-".$icon->getId(),
+            ]), $model->url);
+            $thumbnail = Html::tag('div', $img, ['class' => 'file-preview-thumbnails']);
             $preview = Html::tag('div', 
-                $status.$thumbnail.$clear,
+                $thumbnail.$clear,
                 [
-                    'class' => ($model->isDefault() ? 'file-preview' : 'file-preview-sm'),
+                    'class' => 'file-preview '.($model->isDefault() ? 'default' : ''),
                     //'id' => ($model->isDefault() ? 'default-image' : 'extra-image'.$model->id),
                 ]
             );
@@ -61,7 +56,8 @@ $placeholder = isset($placeholder) ? $placeholder : false;
 			{
 				$preview .= $this->render("actions", [
 					'model' => $model,
-					'actions' => $actions
+					'actions' => $actions,
+					'options' => $options
 				]);
 			}
             break;

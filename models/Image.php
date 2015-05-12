@@ -72,7 +72,7 @@ class Image extends \nitm\filemanager\models\File
 		$with = [];
 		switch($default === true)
 		{
-			case false:
+			case true:
 			$ret_val->andWhere(['is_default' => true]);
 			break;
 		}
