@@ -15,6 +15,7 @@ class ImagesAsset extends AssetBundle
 {
 	public $sourcePath = "@nitm/filemanager/assets/";
 	public $css = [
+		'css/images.css'
 	];
 	public $js = [
 		'js/images.js'

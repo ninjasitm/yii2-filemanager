@@ -236,6 +236,7 @@ class Images extends \yii\base\Widget
 		//Use smaller preview images for extra images
 		$pluginOptions = $this->pluginOptions;
 		$pluginOptions['pluginOptions']['previewClass'] = 'file-preview-sm';
+		$this->options['data-id'] = $this->model->getId();
 		return ListView::widget([
 			'options' => $this->options,
 			'dataProvider' => new \yii\data\ArrayDataProvider([
@@ -257,12 +258,13 @@ class Images extends \yii\base\Widget
 		$this->pluginExtraOptions['pluginOptions']['uploadUrl'] = '/image/save/'.$this->model->isWhat().'/'.$this->model->getId();
 		$this->pluginExtraOptions['model'] = $this->model;
 		$this->pluginExtraOptions['options']['id'] = $id;
+        $this->defaultOptions['class'] .= ' image';
 		$this->defaultOptions['id'] = $id;
-		$this->defaultOptions['role'] .= ' '.($image->is_default ? 'defaultImage' : 'extraImage');
+		$this->defaultOptions['role'] .= ' '.($image->isDefault() ? 'defaultImage' : 'extraImage');
 		return \Yii::$app->getView()->render("@nitm/filemanager/views/image/view", [
 			'model' => $image,
-			'wrapperOptions' => $this->defaultOptions,
 			"actions" => $this->getActions(),
+			'wrapperOptions' => $this->defaultOptions,
 			'pluginOptions' => $this->pluginExtraOptions
 		]);
 	}

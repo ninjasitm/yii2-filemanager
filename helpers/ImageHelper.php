@@ -71,7 +71,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 	public static function saveImages($model, $name, $id=null)
 	{
 		// retrieve all uploaded files for name images
-		$ret_val = false;
+		$ret_val = [];
 		$id = md5(is_null($id) ? uniqid() : $id);
 		$name = Image::getSafeName($name);
 		$uploads = UploadedFile::getInstances($model, 'images');
@@ -253,23 +253,26 @@ class ImageHelper extends \yii\helpers\FileHelper
 	
 	public static function deleteImages($images)
 	{
-		$this->setResponseFormat('json');
-		$images = (array) $images;
+		$images = is_object($images) ? [$images] : $images;
 		foreach($images as $image)
 		{
-			switch($image instanceof Image)
-			{
-				case true:
-				$metadata = $image->getMetadata()->all();
-				foreach($metadata as $data)
-				{
-					Storage::delete($data->value);
-				}
-				ImageMetadata::deleteAll(['image_id' => $image->getId()]);
-				if($image->delete())
-					return Storage::delete($image->getPath());
-				break;
-			}
+			static::deleteImage($image);
 		}
+		return true;
+	}
+	
+	public static function deleteImage($image)
+	{
+		if($image instanceof Image) {
+			$metadata = $image->getMetadata()->all();
+			foreach($metadata as $data)
+			{
+				Storage::delete($data->value);
+			}
+			ImageMetadata::deleteAll(['image_id' => $image->getId()]);
+			if($image->delete())
+				return Storage::delete($image->getPath());
+		}
+		return false;
 	}
 }

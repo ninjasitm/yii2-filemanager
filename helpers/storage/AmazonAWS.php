@@ -123,7 +123,7 @@ class AmazonAWS extends \nitm\filemanager\helpers\Storage implements StorageInte
 				'key' => $file->url,
 			]);
 		}
-        
+		return true;
     }
 	
 	public static function move($from, $to, $isUploaded=false, $thumb=false, $type=null)

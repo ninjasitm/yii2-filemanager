@@ -82,9 +82,10 @@ class Image extends \nitm\filemanager\models\File
 			$with[] = 'metadata';
 			break;
 		}
-		$ret_val->with($with);
-		$ret_val->limit($limit);
-		$ret_val->andWhere(['remote_type' => $model->isWhat()]);
+		$ret_val->with($with)
+			->limit($limit)
+			->andWhere(['remote_type' => $model->isWhat()])
+			->orderBy(['is_default' => SORT_DESC]);
 		return $ret_val;
 	}
 	

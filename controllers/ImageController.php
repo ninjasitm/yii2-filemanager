@@ -98,7 +98,9 @@ class ImageController extends \nitm\controllers\DefaultController
 	 */
 	public function actionSave($type, $id)
 	{
-		$ret_val = false;
+		$ret_val = [
+			'remoteId' => $id
+		];
 		if(is_null($class = \Yii::$app->getModule('nitm-files')->getModelClass($type)))
 			return false;
 		$model = $class::findOne($id);
@@ -108,22 +110,23 @@ class ImageController extends \nitm\controllers\DefaultController
 			case true:
 			$ret_val['success'] = true;
 			$ret_val['data'] = '';
-			$imageWidget = new \nitm\filemanager\widgets\Images(['model' => array_pop($imageModels)]);
+			$imageWidget = new \nitm\filemanager\widgets\Images(['model' => $model]);
 			$renderer = \Yii::$app->request->isAjax ? 'renderAjax' : 'render';
 			foreach($imageModels as $image)
 			{
-				switch($image->isDefault())
-				{
-					case true:
-					$renderOpts = $imageWidget->getDefaultImageRenderOptions($image);
-					break;
-					
-					default:
-					$renderOpts = $imageWidget->getExtraImageRenderOptions($image, $image->id);
-					break;
-				}
-				$renderOpts['options']['withActions'] = true;
-				$ret_val['data'] .= $this->$renderer("/image/thumbnail", $renderOpts['options']);
+				$ret_val['files'][] = [
+					'name' => $image->file_name,
+					'size' => $image->size,
+					'url' => $image->url,
+					'thumbnailUrl' => $image->getIcon('medium')->url,
+					'deleteUrl' => implode(DIRECTORY_SEPARATOR, [
+						$this->id,
+						'delete',
+						$image->getId()
+					]),
+					'deleteType' => 'POST'
+				];
+				$ret_val['data'] .= $imageWidget->getImage($image);
 			}
 			Response::viewOptions([
 				"view" => 'index', 
@@ -144,9 +147,7 @@ class ImageController extends \nitm\controllers\DefaultController
 	{
 		$this->setResponseFormat('json');
 		$model = $this->findModel(Image::className(), $id, ['metadata']);
-		switch($model instanceof Image)
-		{
-			case true:
+		if($model instanceof Image) {
 			Image::updateAll([
 				'is_default' => 0
 			], [
@@ -156,7 +157,6 @@ class ImageController extends \nitm\controllers\DefaultController
 			$model->setScenario('update');
 			$model->is_default = 1;
 			return $model->save();
-			break;
 		}
 	}
 	
@@ -164,18 +164,10 @@ class ImageController extends \nitm\controllers\DefaultController
 	{
 		$this->setResponseFormat('json');
 		$model = $this->findModel(Image::className(), $id);
-		switch($model instanceof Image)
-		{
-			case true:
-			ImageMetadata::deleteAll(['image_id' => $model->id]);
-			switch($model->delete())
-			{
-				case true:
-				return Storage::delete($model->url);
-				break;
-			}
-			break;
+		if($model instanceof Image) {
+			return ImageHelper::deleteImages($model);
 		}
+		return false;
 	}
 	
 	/*

@@ -120,29 +120,27 @@ function NitmFileManagerImages () {
 	}
 	
 	this.afterUpload = function (form, result) {
-		var _form = $(form);
+		var $form = $(form);
 		switch(result != false)
 		{
 			case true:
-			var container = _form.parents(self.containers.imageContainer);
-			var existing = container.find(self.containers.extraImage);
 			switch(result.success)
 			{
 				case true:
-				_form.find("#progress").delay(500).fadeOut().attr('style', 'display:none');
-				container.find('[role="'+self.containers.uploadFile+'"]').fadeOut();
-				existing.html('').html($(result.data));
-				self.initImageActions(container.attr('id'));
+				var container = $(self.containers.imagesContainer+"[data-id='"+result.remoteId+"']");
+				var $newImage = $(result.data);
+				container.append($(result.data));
+				self.initImageActions($newImage.attr('id'));
 				break;
 				
 				default:
-				_form.find("#percent").html("<font color='red'>"+result.message+"</font>");
+				$form.find("#percent").html("<font color='red'>"+result.message+"</font>");
 				break;
 			}
 			break;
 			
 			default:
-			_form.find("#percent").html("<font color='red'>UUpload failed</font>");
+			$form.find("#percent").html("<font color='red'>Upload failed</font>");
 			break;
 		}
 	}
@@ -156,8 +154,8 @@ function NitmFileManagerImages () {
 				//swap out the default and new default images
 				var newDefault = $nitm.getObj($element.data('parent'));
 				var existingDefault = $nitm.getObj(self.containers.imagesContainer).find(self.containers.defaultImage);
-				existingDefault.find('.file-preview').removeClass('default');
-				newDefault.find('.file-preview').addClass('default');
+				existingDefault.find('.thumbnail').removeClass('default');
+				newDefault.find('.thumbnail').addClass('default');
 				self.initImageActions(newDefault);
 				self.setupParent(existingDefault, false);
 				self.setupParent(newDefault, true);
@@ -176,7 +174,7 @@ function NitmFileManagerImages () {
 				switch(result != false)
 				{
 					case true:
-					$(element.data('parent')).remove();
+					$($element.data('parent')).fadeOut().remove();
 					break;
 				}
 			});

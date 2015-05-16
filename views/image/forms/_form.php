@@ -29,12 +29,12 @@ use nitm\filemanager\models\Image;
 		// see: https://github.com/blueimp/jQuery-File-Upload/wiki/Options#processing-callback-options
 		'clientEvents' => [
 			'fileuploaddone' => 'function(e, data) {
+				$nitm.module("nitm-file-manager:images").afterUpload(e.target, data.result);
 			}',
 			'fileuploadfail' => 'function(e, data) {
-				$([role="fileUploadMessage"]).html(data.message);
+				$("[role=\'fileUploadMessage\']").html(data.message);
 			}',
 			'fileuploadadd' => 'function (e, data) {
-				//Only submit if the form is validated properly
 			}',
 			'fileuploadsubmit' => 'function(e, data) {
 			}'

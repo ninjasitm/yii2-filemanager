@@ -24,7 +24,7 @@ $placeholder = isset($placeholder) ? $placeholder : false;
     {
         case true:
         $img = Html::tag('div', Image::getPlaceHolder(), [
-            'class' => 'existing-image '.($model->isDefault() ? 'file-preview-image' : 'file-preview-image-sm'),
+            'class' => 'image '.($model->isDefault() ? 'default' : ''),
         ]);
         break;
         
@@ -33,7 +33,7 @@ $placeholder = isset($placeholder) ? $placeholder : false;
         {
             case false:
             $preview = Html::tag('div', '', [
-                'class' => ($model->isDefault() ? 'file-preview-image' : 'file-preview-image-sm'),
+                'class' => 'image '.($model->isDefault() ? 'default' : ''),
                 //'id' => ($model->isDefault() ? 'default-image' : 'extra-image'.$model->id)
             ]);
             break;
@@ -41,15 +41,12 @@ $placeholder = isset($placeholder) ? $placeholder : false;
             default:
             $icon = $model->getIcon('medium');
             $img = Html::a(Html::img($icon->url, [
-                'class' => 'image '.($model->isDefault() ? 'default' : 'extra'),
                 'title' => $type."-image-".$icon->getId(),
             ]), $model->url);
-            $thumbnail = Html::tag('div', $img, ['class' => 'file-preview-thumbnails']);
             $preview = Html::tag('div', 
-                $thumbnail.$clear,
+                $img,
                 [
-                    'class' => 'file-preview '.($model->isDefault() ? 'default' : ''),
-                    //'id' => ($model->isDefault() ? 'default-image' : 'extra-image'.$model->id),
+               	 	'class' => 'thumbnail '.($model->isDefault() ? 'default' : 'extra')
                 ]
             );
 			if(isset($withActions))

@@ -1,0 +1,36 @@
+.image {
+	height: 233px;
+}
+
+.image * img {
+	width: 100%;
+	max-width: 250px;
+	height: 250px;
+}
+
+.thumbnail.default {
+	border: solid medium #4EE06C;
+	border-radius: 5px;
+}
+
+.thumbnail {
+	padding: 0px;
+	heigth: auto;
+	vertical-align: middle;
+	margin: 0px;
+}
+
+.icon {
+}
+
+.icon-sm, .thumbnail-xs {
+	width: 44px;
+}
+
+.icon-sm, .thumbnail-sm {
+	width: 56px;
+}
+
+.icon-lg, .thumbnail-lg {
+	width: 72px;
+}
