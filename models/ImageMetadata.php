@@ -33,7 +33,7 @@ class ImageMetadata extends FileMetadata
     {
         return [
             [['image_id', 'key', 'value'], 'required'],
-            [['image_id'], 'integer'],
+            [['image_id', 'width', 'height', 'size'], 'integer'],
             [['created', 'updated'], 'safe'],
             [['image_id', 'key'], 'unique', 'targetAttribute' => ['image_id', 'key'], 'message' => 'The combination of Image ID and Key has already been taken.']
         ];
@@ -48,7 +48,7 @@ class ImageMetadata extends FileMetadata
 	{
 		return [
 			'create' => ['key', 'value', 'image_id'],
-			'update' => ['key', 'value'],
+			'update' => ['key', 'value', 'width', 'height', 'size'],
 		];
 	}
 

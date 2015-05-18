@@ -52,6 +52,9 @@ class m141216_193808_create_images_table extends Migration
             'editor_id' => Schema::TYPE_INTEGER . '(11) NULL',
             'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
             'updated_at' => Schema::TYPE_TIMESTAMP  . ' NULL',
+            'width' => Schema::TYPE_INTEGER . '(11) NULL',
+            'height' => Schema::TYPE_INTEGER . '(11) NULL',
+            'size' => Schema::TYPE_INTEGER . '(11) NULL',
         ], $tableOptions);
         
         $this->addForeignKey('FK_images_metadata','{{%images_metadata}}','image_id','{{%images}}','id');

@@ -66,10 +66,12 @@ class Image extends \nitm\filemanager\models\File
 	 * @param boolean $thumbnails Get thumbnails as well?
 	 * @param boolean $default Get the default image as well?
 	 */
-	public static function getImagesFor($model, $thumbnails=false, $default=false, $limit=10)
+	public static function getImagesFor($model, $thumbnails=false, $default=false, $queryOptions=null)
 	{
+		$queryOptions = is_null($queryOptions) ? ['where' => ['remote_type' => $model->isWhat()]] : $queryOptions;
         $ret_val = $model->hasMany(Image::className(), ['remote_id' => 'id']);
 		$with = [];
+		
 		switch($default === true)
 		{
 			case true:
@@ -79,22 +81,32 @@ class Image extends \nitm\filemanager\models\File
 		switch($thumbnails)
 		{
 			case true:
-			$with[] = 'metadata';
+			array_push($with, 'icon');
 			break;
 		}
-		$ret_val->with($with)
-			->limit($limit)
-			->andWhere(['remote_type' => $model->isWhat()])
-			->orderBy(['is_default' => SORT_DESC]);
+		
+		$queryOptions = array_merge([
+			'limit' => 10,
+			'orderBy' => ['is_default' => SORT_DESC],
+			'with' => $with
+		], $queryOptions);
+			
+		foreach($queryOptions as $option=>$params)
+			$ret_val->$option($params);
+			
 		return $ret_val;
 	}
 	
 	/**
 	 * Get the main icon for this entity
 	 */
-	public static function getIconFor($model)
+	public static function getIconFor($model, $queryOptions=null)
 	{
-        return $model->hasOne(Image::className(), ['remote_id' => 'id'])->where(['remote_type' => $model->isWhat()])
-		->andWhere('is_default=true');
+		$queryOptions = is_null($queryOptions) ? ['where' => ['remote_type' => $model->isWhat()]] : $queryOptions;
+        $query = $model->hasOne(Image::className(), ['remote_id' => 'id'])
+			->andWhere('is_default=true')->with('metadata');
+		foreach($queryOptions as $option=>$params)
+			$query->$option($params);
+		return $query;
 	}
 }

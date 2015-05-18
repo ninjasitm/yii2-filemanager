@@ -16,7 +16,7 @@ use yii\db\ActiveRecord;
  *
  * @property Images $image
  */
-class FileMetadata extends \yii\db\ActiveRecord
+class FileMetadata extends \nitm\models\Entity
 {
 	
     /**
@@ -34,7 +34,8 @@ class FileMetadata extends \yii\db\ActiveRecord
 				'class' => \yii\behaviors\TimestampBehavior::className(),
 				'attributes' => [
 					ActiveRecord::EVENT_BEFORE_UPDATE => 'updated_at',
-				]
+				],
+   				'value' => new \yii\db\Expression('NOW()'),
 			],
 			"blamable" => [
 				'class' => \yii\behaviors\BlameableBehavior::className(),

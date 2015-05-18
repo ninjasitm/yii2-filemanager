@@ -30,10 +30,17 @@ trait Relations
 	public function imageList()
 	{
 		return array_map(function ($image) {
+			$thumb = $image->getIcon('medium');
+			if(!$thumb->height || !$thumb->width)
+				$image->updateMetadataSizes('medium');
+			if(!$image->height || !$image->width)
+				$image->updateSizes();
 			return [
 				'title' => ucfirst($image->remote_type).' Image',
-				'thumb' => $image->getIcon('medium')->url,
+				'thumb' => $thumb->url,
 				'url' => $image->url,
+				'height' => $thumb->height,
+				'width' => $thumb->width
 				//s'description' => $image->metadata->description
 			];
 		}, $this->images);

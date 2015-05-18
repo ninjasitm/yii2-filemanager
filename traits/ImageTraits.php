@@ -4,6 +4,7 @@ namespace nitm\filemanager\traits;
 
 use Yii;
 use yii\helpers\Html;
+use yii\helpers\ArrayHelper;
 use yii\web\UploadedFile;
 use nitm\helpers\Icon;
 use nitm\filemanager\models\Image;
@@ -51,6 +52,18 @@ trait ImageTraits
 	 * Get the main icon for this entity
 	 * @param strin $size
 	 */
+	public function getIconNew($size='medium')
+	{
+		return $this->hasOne(\nitm\filemanager\models\ImageMetadata::className(), ['image_id', 'id'])
+			->where([
+				'key' => $size
+			]);
+	}
+	
+	/**
+	 * Get the main icon for this entity
+	 * @param strin $size
+	 */
 	public function getIcon($size='medium')
 	{
 		$ret_val = $this;
@@ -68,6 +81,9 @@ trait ImageTraits
 					'url' => $this->metadata[$size]->value,
 					'slug' => $this->metadata[$size]->key,
 					'id' => $this->metadata[$size]->image_id,
+					'width' => $this->metadata[$size]->width,
+					'height' => $this->metadata[$size]->height,
+					'size' => $this->metadata[$size]->size,
 				]);
 				break;
 			}
@@ -78,6 +94,59 @@ trait ImageTraits
 			break;
 		}
 		return $ret_val;
+	}
+	
+	/**
+	 * Dynamically update a thumb for an image
+	 */
+	public function updateSizes()
+	{
+		if(!$this->height || !$this->width && (strlen($this->getRealPath())>0)) {
+			list($x, $y, $size) = $this->getImageSize();
+			$this->height = $x;
+			$this->width = $y;
+			$this->size = $size;
+			$this->save();
+		}
+	}
+	
+	public function updateMetadataSizes($size='medium')
+	{
+		$metadata = ArrayHelper::getValue($this->metadata, $size, null);
+		if($metadata == null)
+			return;
+		if(!$metadata->height || !$metadata->width && (strlen(\Yi::getAlias($metadata->value))>0)) {
+			list($x, $y, $size) = $this->getImageSize($size);
+			$metadata->setScenario('update');
+			$metadata->height = $x;
+			$metadata->width = $y;
+			$metadata->size = $size;
+			$metadata->save();
+		}
+	}
+	
+	/**
+	 * Utry two methods of getting the height information for this image
+	 */
+	public function getImageSize($metadataSize=null)
+	{
+		$path = is_null($metadataSize) ? $this->getRealPath() : ArrayHelper::getValue($this->metadata, $metadataSize.'.value', $this->getRealPath());
+		
+		if(!$path)
+			return [0, 0, 0];
+		
+		try {
+			list($x, $y, $size) = getimagesize($path);
+		} catch (\Exception $e) {
+			$arrContextOptions = [
+				"ssl" => [
+					"verify_peer" => false,
+					"verify_peer_name" => false,
+				],
+			];
+			list($x, $y, $size) = getimagesizefromstring(file_get_contents($path, false, stream_context_create($arrContextOptions)));
+		}
+		return [$x, $y, $size];
 	}
 	
 	/**

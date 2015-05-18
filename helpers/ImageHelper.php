@@ -85,8 +85,8 @@ class ImageHelper extends \yii\helpers\FileHelper
 				$size = getimagesize($uploadedFile->tempName);
 				
 				$image->setAttributes([
-					'width' => $size[0] || 0,
-					'height' => $size[1] || 0,
+					'width' => $size[0],
+					'height' => $size[1],
 					'type' => $uploadedFile->type,
 					'author_id' => \Yii::$app->user->getIdentity()->getId(),
 					'file_name' => $uploadedFile->name,
@@ -238,12 +238,15 @@ class ImageHelper extends \yii\helpers\FileHelper
 				
 				if(file_exists($thumbStoredPath))
 					$url = $thumbStoredPath;
-					
+				
+				
 				$metadata = new ImageMetadata([
 					'scenario' => 'create',
 					'image_id' => $image->getId(),
 					'key' => $size,
 					'value' => $url,
+					'width' => $options['sizeX'],
+					'height' => $options['sizeY']
 				]);
 				$metadata->save();
 			}
