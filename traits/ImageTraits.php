@@ -132,19 +132,23 @@ trait ImageTraits
 	{
 		$path = is_null($metadataSize) ? $this->getRealPath() : ArrayHelper::getValue($this->metadata, $metadataSize.'.value', $this->getRealPath());
 		
-		if(!$path)
+		if(!file_exists($path))
 			return [0, 0, 0];
 		
 		try {
 			list($x, $y, $size) = getimagesize($path);
 		} catch (\Exception $e) {
-			$arrContextOptions = [
-				"ssl" => [
-					"verify_peer" => false,
-					"verify_peer_name" => false,
-				],
-			];
-			list($x, $y, $size) = getimagesizefromstring(file_get_contents($path, false, stream_context_create($arrContextOptions)));
+			if(file_exists($path)) {
+				$arrContextOptions = [
+					"ssl" => [
+						"verify_peer" => false,
+						"verify_peer_name" => false,
+					],
+				];
+				list($x, $y, $size) = getimagesizefromstring(file_get_contents($path, false, stream_context_create($arrContextOptions)));
+			} else {
+				$x = $y = $size = 0;
+			}
 		}
 		return [$x, $y, $size];
 	}

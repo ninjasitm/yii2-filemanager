@@ -34,7 +34,11 @@ trait FileTraits
 	
 	public function getRealPath()
 	{
-		return \Yii::getAlias($this->url);
+		try {
+			return \Yii::getAlias($this->url);
+		} catch (\Exception $e) {
+			return '';
+		}
 	}
 	
 	public function getPath()
