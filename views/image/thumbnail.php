@@ -41,6 +41,7 @@ $placeholder = isset($placeholder) ? $placeholder : false;
             default:
             $icon = $model->getIcon('medium');
             $img = Html::a(Html::img($icon->url, [
+				'target' => '_blank',
                 'title' => $type."-image-".$icon->getId(),
             ]), $model->url);
             $preview = Html::tag('div', 

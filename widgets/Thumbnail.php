@@ -26,6 +26,7 @@ class Thumbnail extends \yii\base\Widget
 	public $htmlIcon;
 	public $size = 'default';
 	public $model;
+	public $url;
 	
     /**
      * @var string the title for the thumbnail. If set to empty or null, will not be
@@ -89,6 +90,16 @@ class Thumbnail extends \yii\base\Widget
 			]
 		],
 	];
+	
+	public function init()
+	{
+		parent::init();
+		if(!$this->model && $this->url) {
+			$this->model = new Image([
+				'url' => $this->url
+			]);
+		}
+	}
 
 	public function run()
 	{
@@ -105,6 +116,11 @@ class Thumbnail extends \yii\base\Widget
 			case 'medium':
 			case 'normal':
 			$size = $this->_sizes[$this->size];
+			$this->size = 'medium';
+			break;
+			
+			case 'llarge':
+			$size = $this->_sizes[$this->size];
 			$this->size = 'large';
 			break;
 			
@@ -114,16 +130,28 @@ class Thumbnail extends \yii\base\Widget
 			break;
 		}
 		$this->options['class'] .= ' '.$size;
-		switch($this->model->getIsNewRecord())
+		$url = ArrayHelper::getValue($this->model->metadata, $this->size.'.value', false);
+		switch(true)
 		{
-			case true:
+			case $url && $this->model->getIsNewRecord() && !isset($this->htmlIcon):
+			$thumbnail = Html::tag('div', 
+				Html::img(
+					$url, 
+					$this->imageOptions
+				), 
+				$this->options
+			);
+			break;
+			
+			case !$url:
+			case $this->model->getIsNewRecord() && isset($this->htmlIcon):
 			$thumbnail = Html::tag('div', Image::getHtmlIcon($this->htmlIcon), $this->options);
 			break;
 			
 			default:
 			$thumbnail = Html::tag('div', 
 				Html::img(
-					'/image/get/'.$this->model->getId().'/'.$this->size."?__format=raw", 
+					$url, 
 					$this->imageOptions
 				), 
 				$this->options

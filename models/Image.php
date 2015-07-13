@@ -89,10 +89,11 @@ class Image extends \nitm\filemanager\models\File
 			'limit' => 10,
 			'orderBy' => ['is_default' => SORT_DESC],
 			'with' => $with
-		], $queryOptions);
+		], (array)$queryOptions);
 			
 		foreach($queryOptions as $option=>$params)
-			$ret_val->$option($params);
+			if($ret_val->hasMethod($option))
+				$ret_val->$option($params);
 			
 		return $ret_val;
 	}
