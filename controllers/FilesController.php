@@ -84,10 +84,17 @@ class FilesController extends \nitm\controllers\DefaultController
      * Lists all File models.
      * @return mixed
      */
-    public function actionIndex()
+    public function actionIndex($type, $id)
     {
         FilemanagerAssets::register($this->view);
+		$_GET['remote_type'] = $type;
+		$_GET['remote_id'] = $id;
+		unset($_GET['type'], $_GET['id']);
 		return parent::actionIndex(FileSearch::className(), [
+			'construct' => [
+				'inclusiveSearch' => false,
+				'booleanSearch' => false,
+			],
 			'with' => [
 				'author', 'icon'
 			],

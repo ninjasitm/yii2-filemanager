@@ -32,10 +32,8 @@ use yii\helpers\ArrayHelper;
  * @property User $user
  */
  
-class File extends \nitm\models\Entity
-{
-	use \nitm\filemanager\traits\FileTraits;
-	
+class File extends BaseFile
+{	
     public function behaviors()
     {
 		$behaviors = [
@@ -86,84 +84,4 @@ class File extends \nitm\models\Entity
             'update_gmt' => 'Update Gmt',
         ];
     }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getFileTerms()
-    {
-        return $this->hasMany(FileTerms::className(), ['file_id' => 'id']);
-    }
-	
-	/**
-	 * @param string file
-	 */
-	public function getHash($file=null)
-	{
-		if(!$file)
-			$file = $this->url;
-		return array_shift(explode(' ', exec("md5sum '".\Yii::getAlias($file)."'")));
-	}
-	
-	public function setHash($hash=null)
-	{
-		$this->hash = !$hash ? $this->getHash() : $hash;
-		return !empty($this->hash);
-	}
-	
-	/**
-	 * Add metadata for an image item
-	 * @param mixed $array
-	 * @return boolean
-	 */
-	public function addMetadata($array)
-	{
-		$ret_val = false;
-		switch(is_array($array))
-		{
-			case true:
-			$ret_val = true;
-			$metadataClass = $this->getMetadataClass();
-			$currentMetadata = $this->getMetadata()->indexBy('id')->all();
-			foreach($array as $key=>$value)
-			{
-				$id = isset($value['id']) ? $value['id'] : null;
-				switch(!is_null($id) && isset($currentMetadata[$id]))
-				{
-					case true:
-					$metadata = $currentMetadata[$id];
-					break;
-					
-					default:
-					$metadata = new $metadataClass;
-					break;
-				}
-				$metadata->reomte_id = $this->id;
-				$metadata->key = $key;
-				$metadata->value = $value;
-				$metadata->save();
-			}
-			break;
-		}
-		return $ret_val;
-	}
-	
-	/**
-	 * Get all the files for this entity
-	 * @param boolean $metadata Get metadata as well?
-	 */
-	public static function getFilesFor($model, $metadata=false)
-	{
-        $ret_val = $model->hasMany(File::className(), ['remote_id' => 'id']);
-		$with = [];
-		switch($metadata)
-		{
-			case true:
-			$with[] = 'metadata';
-			break;
-		}
-		$ret_val->with($with);
-		$ret_val->andWhere(['remote_type' => $model->isWhat()]);
-		return $ret_val;
-	}
 }

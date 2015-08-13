@@ -17,7 +17,7 @@ use yii\web\AssetBundle;
  */
 class FilemanagerAssets extends AssetBundle
 {
-    public $sourcePath = '@vendor/nitm/yii2-filemanager/assets';
+    public $sourcePath = '@vendor/mhdevnet/yii2-filemanager/assets';
     public $css = [
         'css/filemanager.css',
     ];

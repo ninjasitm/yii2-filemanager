@@ -31,7 +31,7 @@ use yii\helpers\ArrayHelper;
  * @property FileTerms[] $fileTerms
  * @property User $user
  */
-class Files extends \nitm\models\Entity
+class Files extends BaseFile
 {
     public function behaviors()
     {
@@ -126,21 +126,5 @@ class Files extends \nitm\models\Entity
             'update' => 'Update',
             'update_gmt' => 'Update Gmt',
         ];
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getFileTerms()
-    {
-        return $this->hasMany(FileTerms::className(), ['file_id' => 'id']);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getUser()
-    {
-        return $this->hasOne(\nitm\models\User::className(), ['id' => 'user_id']);
     }
 }

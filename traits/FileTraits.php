@@ -54,19 +54,6 @@ trait FileTraits
 		$s = (!empty($s)) ? $s : array("/([^a-zA-Z0-9\\+])/", "/([^a-zA-Z0-9]){1,}$/", "/([\s]){1,}/");
 		$r = (!empty($r)) ? $r : array("-", "", "-");
 		return substr(strtolower(preg_replace($s, $r, $subject)), 0, 254);
-	}
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getType()
-    {
-        return $this->hasOne(static::className(), ['id' => 'type_id']);
-    }
-	
-	public function type()
-	{
-		return $this->type instanceof static ? $this->type : new static;
 	}	
 
     /**
