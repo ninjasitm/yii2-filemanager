@@ -24,8 +24,8 @@ class BaseFile extends \nitm\models\Entity
 	use \nitm\widgets\traits\BaseWidget, \nitm\filemanager\traits\FileTraits;
 	
 	protected $link = [
-		'parent_type' => 'parent_type',
-		'parent_id' => 'parent_id'
+		'remote_type' => 'remote_type',
+		'remote_id' => 'remote_id'
 	];
 	
 	public function init()
@@ -37,6 +37,14 @@ class BaseFile extends \nitm\models\Entity
 		
 		if(is_object(static::currentUser()))
 			static::$userLastActive = date('Y-m-d G:i:s', strtotime(is_null(static::$userLastActive) ? static::currentUser()->lastActive() : static::$userLastActive));
+	}
+	
+	public function scenarios() {
+		return array_merge(parent::scenarios(), [
+			'create' => ['remote_id', 'remote_type', 'size', 'hash', 'url', 'file_name', 'title'],
+			'update' => ['remote_id', 'remote_type', 'size', 'hash', 'url', 'file_name', 'title'],
+			'delete' => ['remote_id', 'remote_type']
+		]);
 	}
 	
 	public static function has()

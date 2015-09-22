@@ -38,7 +38,6 @@
             url : _settings.fileUploadURL,
             autoUpload: true,
             done : function(e,data){
-                console.log(data);
                 filemanager.addToList(data.result.files[0]);
             },
         });

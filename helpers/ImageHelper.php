@@ -10,6 +10,7 @@ use yii\imagine\Image as BaseImage;
 use nitm\filemanager\helpers\Storage;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\ImageMetadata;
+use nitm\helpers\ArrayHelper;
 use Imagick;
 
 /**
@@ -72,9 +73,12 @@ class ImageHelper extends \yii\helpers\FileHelper
 	{
 		// retrieve all uploaded files for name images
 		$ret_val = [];
-		$id = md5(is_null($id) ? uniqid() : $id);
+		$id = is_null($id) ? uniqid() : $id;
 		$name = Image::getSafeName($name);
 		$uploads = UploadedFile::getInstances($model, 'images');
+		if($uploads == [])
+			$uploads = UploadedFile::getInstancesByName(ArrayHelper::getValue($_REQUEST, 'imageParam', 'images'));
+			
 		foreach($uploads as $idx=>$uploadedFile) 
 		{
 			switch(empty($uploadedFile->name) && file_exists($uploadedFile->tempName))
@@ -91,6 +95,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 					'author_id' => \Yii::$app->user->getIdentity()->getId(),
 					'file_name' => $uploadedFile->name,
 					'remote_type' => $model->isWhat(),
+					'remote_id' => $model->getId(),
 					'hash' => Image::getHash($uploadedFile->tempName),
 					'url' => $directory.implode('-', array_filter([($image->is_default ?  'default' : 'extra'), "image", md5($uploadedFile->name)])).".".$uploadedFile->getExtension(),
 					'is_default' => @($_FILES[$model->formName()]['tmp_name']['images']['default'] == $uploadedFile->tempName) ? true : false,
@@ -144,9 +149,9 @@ class ImageHelper extends \yii\helpers\FileHelper
 						$imageDir = dirname($image->getRealPath());
 						
 						if(is_dir($imageDir))
-							Storage::createContainer($imageDir, true, [], 'image');
+							Storage::createContainer($imageDir, true);
 						
-						$url = Storage::save($tempImage, $image->getRealPath(), [], false, $image->getRealPath(), 'image');
+						$url = Storage::save($tempImage, $image->getRealPath(), [], false, $image->getRealPath());
 						
 						if(filter_var($url, FILTER_VALIDATE_URL)) {
 							$proceed = true;
@@ -210,7 +215,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 			//BaseImage::$cachePath = \Yii::getAlias('@media/cache/images');
 			foreach($sizes as $size=>$options)
 			{
-				$file = is_null($file) ?  $image->getRealPath() : $file;
+				$file = is_null($file) ?  $image->getRealPath() : \Yii::getAlias($file);
 				$basename = pathinfo($file, PATHINFO_BASENAME);
 				$filename = pathinfo($file, PATHINFO_FILENAME);
 				$basePath = DIRECTORY_SEPARATOR.$filename.DIRECTORY_SEPARATOR.$size.'-'.$basename;
@@ -218,23 +223,20 @@ class ImageHelper extends \yii\helpers\FileHelper
 				$thumbStoredPath = dirname($file).$basePath;
 				
 				if(!filter_var($image->url, FILTER_VALIDATE_URL) && !is_dir(dirname($thumbRealPath)))
-					Storage::createContainer(dirname($thumbRealPath), true, [], 'image');
+					Storage::createContainer(dirname($thumbRealPath), true, []);
 				/**
 				 * To save we're using ob contents to get the outputed image from memory
 				 */
-				ob_start();
+				$extension = pathinfo($thumbStoredPath, PATHINFO_EXTENSION);
 				$thumb = BaseImage::thumbnail($image->getRealPath(), $options['sizeX'], $options['sizeY'])
-					->save(null, [
+					->get($extension, [
 						'quality' => $options['quality'],
-						'format' => pathinfo($thumbStoredPath, \PATHINFO_EXTENSION)
 					]);
-				$thumb = ob_get_contents();
-				ob_end_clean();
 				
 				/**
 				 * The Storage engine should understand how to save a stream to a file;
 				 */
-				$url = Storage::move($thumb, $thumbStoredPath, false, true, $type, 'image');
+				$url = Storage::move($thumb, $thumbStoredPath, false, true, $type);
 				
 				if(file_exists($thumbStoredPath))
 					$url = $thumbStoredPath;
@@ -246,7 +248,8 @@ class ImageHelper extends \yii\helpers\FileHelper
 					'key' => $size,
 					'value' => $url,
 					'width' => $options['sizeX'],
-					'height' => $options['sizeY']
+					'height' => $options['sizeY'],
+					'size' => filesize($thumbStoredPath)
 				]);
 				$metadata->save();
 			}

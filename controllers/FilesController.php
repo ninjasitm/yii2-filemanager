@@ -7,100 +7,65 @@ use yii\base\InvalidConfigException;
 use yii\helpers\FileHelper;
 use yii\web\NotFoundHttpException;
 use yii\web\HttpException;
-use yii\web\Response;
 use yii\web\view;
 use yii\web\UploadedFile;
 use yii\filters\VerbFilter;
 use Aws\S3\S3Client;
+use nitm\filemanager\helpers\Storage;
 use nitm\filemanager\helpers\ImageHelper;
 use nitm\filemanager\assets\FilemanagerAssets;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\File;
 use nitm\filemanager\models\search\File as FileSearch;
+use nitm\helpers\ArrayHelper;
+use nitm\helpers\Response;
 
 
 /**
  * FileController implements the CRUD actions for File model.
  */
-class FilesController extends \nitm\controllers\DefaultController
-{
-
-    public $page_size = 12;
-	
+class FilesController extends DefaultController
+{	
 	public function init() 
 	{
 		parent::init();
 		$this->model = new File();
 	}
-    
-    public function behaviors()
-    {
-        return array_merge_recursive(parent::behaviors(), [
-			'access' => [
-				'rules' => [
-					[
-						'actions' => [
-							'upload',
-						],
-						'allow' => true,
-						'roles' => ['@'],
+	
+	public function actionIndex($type, $id)
+	{
+		if(\Yii::$app->request->isAjax)
+			Response::viewOptions('js', 'initFileManager();');
+		$files = parent::actionIndex(FileSearch::className(), $type, $id, [
+			'construct' => [
+				'queryOptions' => [
+					'with' => [
+						'author'
 					],
 				],
 			],
-			'verbs' => [
-				'actions' => [
-					'upload' => ['post'],
-				],
-			],
-        ]);
-    }
-    
-    /**
-     * beforeAction function.
-     * 
-     * @access public
-     * @param mixed $action
-     * @return void
-     */
-    public function beforeAction($action) 
-	{
-		switch($action->id)
+		]);
+		switch($this->getResponseFormat())
 		{
-			case 'upload':
-			$this->enableCsrfValidation = false;
+			case 'json':
+			$files = array_map(function ($file) {
+				if($file) {
+					//if($image->metadata == []) {
+					//	\nitm\filemanager\helpers\ImageHelper::createThumbnails($image, $image->type);
+					//	print_r($image->metadata);
+					//}
+					return [
+						'link' => $file->url(),
+						'name' => $file['file_name'],
+						'title' => $file['file_name'],
+						'size' => $file->getSize()
+					];
+				}
+			}, $files);
 			break;
 		}
-        $result = parent::beforeAction($action);
-		
-        $options = [
-           'tinymce'             => \Yii::$app->urlManager->createUrl('/filemanager/files/tinymce'),
-           'properties'          => \Yii::$app->urlManager->createUrl('/filemanager/files/properties'),
-        ];
-        $this->getView()->registerJs("filemanager.init(".json_encode($options).");", \yii\web\View::POS_END, 'my-options');
-        return $result;
-    }
-
-    /**
-     * Lists all File models.
-     * @return mixed
-     */
-    public function actionIndex($type, $id)
-    {
-        FilemanagerAssets::register($this->view);
-		$_GET['remote_type'] = $type;
-		$_GET['remote_id'] = $id;
-		unset($_GET['type'], $_GET['id']);
-		return parent::actionIndex(FileSearch::className(), [
-			'construct' => [
-				'inclusiveSearch' => false,
-				'booleanSearch' => false,
-			],
-			'with' => [
-				'author', 'icon'
-			],
-			'defaultParams' => [$this->model->formName() => ['deleted' => 0]]
-		]);
-    }
+		return $files;
+	}
 
     /**
      * Lists all File models.
@@ -151,11 +116,11 @@ class FilesController extends \nitm\controllers\DefaultController
 	{
         
         Yii::$app->response->getHeaders()->set('Vary', 'Accept');
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        $this->setResponseFormat('json');
         
         $model = $this->findModel($id);
         
-        $awsConfig = $this->module->aws;
+        $awsConfig = $module->aws;
         
         if($awsConfig['enable']){
             $model->url = $awsConfig['url'].$model->url;
@@ -172,80 +137,94 @@ class FilesController extends \nitm\controllers\DefaultController
      * @access public
      * @return string JSON
      */
-    public function actionUpload($type=null, $id=null)
+    public function actionCreate($type=null, $id=null)
     {
-        Yii::$app->response->getHeaders()->set('Vary', 'Accept');
-        Yii::$app->response->format = Response::FORMAT_JSON;
+		$ret_val = [];
 		
-        $model = new File();
+        Yii::$app->response->getHeaders()->set('Vary', 'Accept');
+		$this->setResponseFormat('json');
+		$module = \Yii::$app->getModule('nitm-files');
+		
+        $model = new File(['scenario' => 'create']);
         
 		$type = !$type ? $model->isWhat() : $type;
 		$id = !$id ? 0 : $id;
 		
-        $file = UploadedFile::getInstance($model,'file_name');
-        
-		$baseType =	$this->module->getBaseType($this->module->getExtension($file->type));
-        $path       = $this->module->getPath($baseType).DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.$id;
-        $url        = $this->module->url;
-        $thumbnails = $this->module->thumbnails;
+        $files = UploadedFile::getInstance($model, ArrayHelper::getValue($_REQUEST, 'fileParam', 'file_name'));
+		if($files == [])
+			$files = UploadedFile::getInstancesByName(ArrayHelper::getValue($_REQUEST, 'fileParam', 'file_name'));
+		if($files == [])
+			$files = UploadedFile::getInstancesByName($model->formName());
 		
-        $name = File::getSafeName($file->getBaseName()).'.'.$file->getExtension();
-
-        $model->url             = FileHelper::normalizePath($path, $this->module->directorySeparator).$this->module->directorySeparator.$name;
-        $model->file_name       = $name;
-		$model->hash	= File::getHash($file->tempName);
-        $model->title           = $file->name;
-        $model->type            = $file->type;
-        $model->title           = $file->name;
-        $model->size            = $file->size;
-		$model->html_icon = 'file-'.$baseType.'-o';
-		$model->remote_type = $model->isWhat();
-		$model->base_type		= $baseType;
+		$files = is_array($files) ? $files : [$files];
 		
-        /*$model->width         = $size[0];
-        $model->height          = $size[1];*/
-		
-		//if(1){
-        if(\nitm\filemanager\helpers\Storage::move($file->tempName, $model->url, true) && $model->save())
+		foreach($files as $file)
 		{
-			if($model->base_type == 'image') {
-				$size = getimagesize($model->getRealpath());
-				$imageModel = new Image([
-					'remote_type' => $model->isWhat(),
-					'remote_id' => $model->getId(),
-					'type' => $model->type,
-					'url' => $model->url,
-					'is_default' => true,
-					'hash' => $model->hash,
-					'width' => $size[0],
-					'height' => $size[1],
-					'size' => $model->size,
-					'file_name' => $file->name,
-					'slug' => $model->isWhat().'-'.$file->name
-				]);
-				if($imageModel->save()) {
-					ImageHelper::createThumbnails($imageModel);
+			$baseType =	$module->getBaseType($module->getExtension($file->type));
+			$path       = $module->getPath($baseType).DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.$id;
+			$url        = $module->url;
+			$thumbnails = $module->thumbnails;
+			
+			$name = File::getSafeName($file->getBaseName()).'.'.$file->getExtension();
+	
+			$model->url             = FileHelper::normalizePath($path, $module->directorySeparator).$module->directorySeparator.$name;
+			$model->file_name       = $name;
+			$model->hash	= File::getHash($file->tempName);
+			$model->title           = $file->name;
+			$model->type            = $file->type;
+			$model->title           = $file->name;
+			$model->size            = $file->size;
+			$model->html_icon = 'file-'.$baseType.'-o';
+			$model->remote_type = $type;
+			$model->remote_id = $id;
+			$model->base_type		= $baseType;
+			
+			if($model->validate() && \nitm\filemanager\helpers\Storage::move($file->tempName, $model->getRealPath(), true) && $model->save())
+			{
+				if($model->base_type == 'image') {
+					$size = getimagesize($model->getRealpath());
+					$imageModel = new Image([
+						'remote_type' => $model->isWhat(),
+						'remote_id' => $model->getId(),
+						'type' => $model->type,
+						'url' => $model->url,
+						'is_default' => true,
+						'hash' => $model->hash,
+						'width' => $size[0],
+						'height' => $size[1],
+						'size' => $model->size,
+						'file_name' => $file->name,
+						'slug' => $model->isWhat().'-'.$file->name
+					]);
+					if($imageModel->save())
+						ImageHelper::createThumbnails($imageModel, $imageModel->type, $imageModel->getRealPath());
 				}
+				$result = [
+					'url'           => $url.$model->url,
+					'thumbnailUrl'  => $url.$model->thumbnail_url,
+					'name'          => $model->title,
+					'title'          => $model->title,
+					'type'          => $model->type,
+					'size'          => $model->size,
+					'deleteUrl'     => \Yii::$app->urlManager->createUrl(['filemanager/files/delete']),
+					'deleteType'    => 'POST',
+				];
+				
+			} else {
+				error_log(print_r($model->getErrors(),true));
+				$result = [
+					'error' 		=> implode('. ', array_unique(array_map(function ($error) {
+											return current($error);
+										}, $model->getErrors()))),
+					'name'          => $model->title,
+					'type'          => $model->type,
+					'size'          => $model->size,
+				];
 			}
-            $response['files'][] = [
-                'url'           => $url.$model->url,
-                'thumbnailUrl'  => $url.$model->thumbnail_url,
-                'name'          => $model->title,
-                'type'          => $model->type,
-                'size'          => $model->size,
-                'deleteUrl'     => \Yii::$app->urlManager->createUrl(['filemanager/files/delete']),
-                'deleteType'    => 'POST',
-            ];
-            
-            return $response;
-            
-        }else{
-            
-            error_log(print_r($model->getErrors(),true));
-            
-            return false;
-        }
+			$ret_val['files'][] = $result;
+		}
         
+		return $ret_val;
     }
 
     /**
@@ -262,46 +241,6 @@ class FilesController extends \nitm\controllers\DefaultController
     }
 
     /**
-     * Creates a new File model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
-     */
-    public function actionCreate($type=null, $id=null)
-    {
-        $model = new File([
-			'remote_type' => $type,
-			'remote_id' => $id
-		]);
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        } else {
-            return $this->render('create', [
-                'model' => $model,
-            ]);
-        }
-    }
-
-    /**
-     * Updates an existing File model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param integer $id
-     * @return mixed
-     */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        } else {
-            return $this->render('update', [
-                'model' => $model,
-            ]);
-        }
-    }
-
-    /**
      * Deletes an existing File model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
@@ -310,42 +249,30 @@ class FilesController extends \nitm\controllers\DefaultController
     public function actionDelete($id)
     {
         Yii::$app->response->getHeaders()->set('Vary', 'Accept');
-        Yii::$app->response->format = Response::FORMAT_JSON;
+        $this->setResponseFormat('json');
         
-		$model = $this->findModel(File::className(), $id, ['metadata', 'icon']);
+		$this->model = $this->findModel(File::className(), $id, ['metadata', 'icon']);
         
-		Image::deleteImages($model->icon());
+		ImageHelper::deleteImages($this->model->icon());
 		
         $result = [
-            'success' => Storage::delete($model->getPath()),
+            'success' => Storage::delete($this->model->getRealPath()),
+			'message' => 'Unable to delete '.$this->model->file_name,
+			'indicate' => 'warning',
+			'action' => 'delete'
         ];
-        
-        $model->delete();
-        
+		
+        if($result['success'] || !$this->model->getFileExists()) {
+			$result['message'] = 'Successfully deleted '.$this->model->file_name;
+			$result['indicate'] = 'success';
+        	$this->model->delete();
+		}
         return $result;
     }
     
     public function actionProperties()
     {
         return $this->renderPartial('_properties');
-    }
-    
-
-
-    /**
-     * Finds the File model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param integer $id
-     * @return File the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    protected function findModel($id)
-    {
-        if (($model = File::findOne($id)) !== null) {
-            return $model;
-        } else {
-            throw new NotFoundHttpException('The requested page does not exist.');
-        }
     } 
 
     protected function getMaximumFileUploadSize()  

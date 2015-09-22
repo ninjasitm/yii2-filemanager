@@ -4,35 +4,37 @@ use kartik\widgets\ActiveForm;
 use kartik\widgets\ActiveField;
 use kartik\grid\GridView;
 use nitm\helpers\Icon;
-$modelDataProvider = new \yii\data\ArrayDataProvider([
-	'allModels' => [$model]
-]);
 
 /**
  * @var yii\web\View $this
  * @var provisioning\models\ProvisioningFile $model
  */
 
-$this->title = $model->file_name;
-$this->params['breadcrumbs'][] = ['label' => 'Files', 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
-$dataProvider = isset($dataProvider) ? $dataProvider : new \yii\data\ArrayDataProvider(['allModels' => [$model]]);
+if(isset($model)) {
+	$this->title = $model->file_name;
+	$dataProvider = new \yii\data\ArrayDataProvider(['allModels' => [$model]]);
+	$this->params['breadcrumbs'][] = ['label' => 'Files', 'url' => ['index']];
+} else {
+	$this->title = 'Files';
+}
 
 ?>
 <?php 
-	if(!\Yii::$app->request->isAjax && !isset($noBreadcrumbs))
+	if(!isset($noBreadcrumbs) ||
+		(isset($noBreadcrumbs) && !$noBreadcrumbs))
 		echo \yii\widgets\Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]);
 ?>
 <?= GridView::widget([
 	'striped' => false,
-	'responsive' => false, 
-	'floatHeader'=> false,
-	'options' => [
-		"style" => "border-top:solid medium #CCC",
-		"class" => \nitm\helpers\Statuses::getIndicator($model->getStatus()),
-		'id' => 'file'.$model->getId(),
-		'role' => 'statusIndicator'.$model->getId()
-	],
+	'responsive' => true, 
+	'rowOptions' => function ($model) {
+		return [
+			"style" => "border-top:solid medium #CCC",
+			"class" => \nitm\helpers\Statuses::getIndicator($model->getStatus()),
+			'id' => 'file'.$model->getId(),
+			'role' => 'statusIndicator'.$model->getId()
+		];
+	},
 	'dataProvider' => $dataProvider,
 	'showFooter' => false,
 	'summary' => false,
@@ -61,36 +63,16 @@ $dataProvider = isset($dataProvider) ? $dataProvider : new \yii\data\ArrayDataPr
 		],
 		[
 			'format' => 'html',
-			'attribute' => 'icon',
-			'label' => 'Icon',
-			'value' => function ($model) {
-				return \nitm\filemanager\widgets\Thumbnail::widget([
-					'size' => 'small',
-					'model' => $model->icon(),
-					'htmlIcon' => $model->html_icon,
-				]);
-			},
-			'contentOptions' => [
-				'class' => 'text-center'
-			],
-			'headerOptions' => [
-				'class' => 'text-center col-md-1 col-lg-1 col-sm-2',
-			]
-		],
-		[
-			'format' => 'html',
 			'attribute' => 'file_name',
 			'label' => 'Name',
-		],
-		[
-			'format' => 'html',
-			'attribute' => 'type',
-			'label' => 'Type',
+			'value' => function ($model) {
+				return Html::tag('strong', $model->file_name);
+			}
 		],
 		[
 			'format' => 'html',
 			'attribute' => 'size',
-			'label' => 'size',
+			'label' => 'Size',
 			'value' => function ($model) {
 				return $model->getSize();
 			}
@@ -105,86 +87,49 @@ $dataProvider = isset($dataProvider) ? $dataProvider : new \yii\data\ArrayDataPr
 		// 'edits',
 		// 'edited',
 		// 'editor',
-		[
-			'label' => 'Created On',
-			'attribute' => 'created_at',
-			'format' => 'datetime',
-		],
-		[
-			'attribute' => 'author',
-			'label' => 'Author',
-			'format' => 'html',
-			'value' => function ($model, $index, $widget) {
-				return $model->author()->url(\Yii::$app->getModule('nitm')->useFullnames, \Yii::$app->request->url, [$model->formName().'[author]' => $model->author()->getId()]);
-			}
-		],
 
 		[
 			'class' => 'yii\grid\ActionColumn',
 			'buttons' => [
-				'form/update' => function ($url, $model) {
-					return \nitm\widgets\modal\Modal::widget([
-						'size' => 'large',
-						'toggleButton' => [
-							'tag' => 'a',
-							'class' => 'fa-2x',
-							'label' => Icon::forAction('update'), 
-							'href' => \Yii::$app->urlManager->createUrl([$url, '__format' => 'modal']),
-							'title' => Yii::t('yii', 'Edit '),
-							'role' => 'dynamicAction updateAction disabledOnClose',
-						],
-						'dialogOptions' => [
-							"class" => "modal-full"
-						]
-					]);
-				},
-				'view' => function ($url, $model) {
-					return \nitm\widgets\modal\Modal::widget([
-						'size' => 'normal',
-						'toggleButton' => [
-							'tag' => 'a',
-							'class' => 'fa-2x',
-							'label' => Icon::forAction('view'), 
-							'href' => \Yii::$app->urlManager->createUrl([$url, '__format' => 'modal']),
-							'title' => Yii::t('yii', 'View file'),
-							'role' => 'metaAction viewAction disabledOnClose',
-							'data-id' => 'view-template'.$model->getId()
-						],
-						'dialogOptions' => [
-							"class" => "modal-full"
-						]
-					]);
-				},
 				'delete' => function ($url, $model) {
-					return Html::a(Icon::forAction('delete'), \Yii::$app->urlManager->createUrl([$url, '__format' => 'json']), [
+					return Html::a(Icon::forAction('delete'), '#', [
 						'class' => 'fa-2x',
 						'title' => \Yii::t('yii', 'Delete File'),
 						'data-pjax' => '0',
-						'role' => "deleteFile disableParent dynamicValue",
-						'inline' => true,
-						'data-type' => 'json',
-						'data-parent' => 'file'.$model->getId(),
-						'data-depth' => 0,
-						'data-method' => 'post'
+						'role' => "deleteAction deleteFileAction metaAction",
+						'data-parent' => '#file'.$model->getId(),
+						'data-method' => 'post',
+						'data-url' => \Yii::$app->urlManager->createUrl([$url, '__format' => 'json'])
 					]);
 				},
-				'download' => function ($url, $model) {
+				'info' => function ($url, $model) {
+					return Html::a(Icon::forAction('info'), '#', [
+						'class' => 'fa-2x',
+						'title' => \Yii::t('yii', 'Show more Information'),
+						'data-pjax' => '0',
+						'role' => "visibility",
+						'data-id' => 'file-info'.$model->getId(),
+					]);
+				},
+				'get' => function ($url, $model) {
 					return Html::a(Icon::forAction('download'), \Yii::$app->urlManager->createUrl([$url, '__format' => 'json']), [
 						'class' => 'fa-2x',
 						'title' => \Yii::t('yii', 'Download File'),
 						'data-pjax' => '0',
 						'inline' => true,
 						'data-parent' => 'file'.$model->getId(),
-						'data-method' => 'post'
+						'data-method' => 'get',
+						'_target' => 'new'
 					]);
 				},
 			],
-			'template' => "{form/update} {view} {delete} {download}",
+			'template' => "{delete} {get} {info}",
 			'urlCreator' => function($action, $model, $key, $index) {
-				return '/'.$model->isWhat().'s/'.$action.'/'.$model->getId();
+				return '/'.$model->isWhat(true).'/'.$action.'/'.$model->getId();
 			},
 			'options' => [
-				'rowspan' => 2
+				'rowspan' => 2,
+				'class' => 'col-sm-3'
 			],
 			'headerOptions' => [
 				'class' => 'text-center col-md-1 col-lg-1 col-sm-2',
@@ -196,53 +141,72 @@ $dataProvider = isset($dataProvider) ? $dataProvider : new \yii\data\ArrayDataPr
 		{
 			case \Yii::$app->user->identity->lastActive() < strtotime($model->created_at):
 			case \Yii::$app->user->identity->lastActive() < strtotime($model->updated_at):
-			echo $this->context->activityWidget([
+			return \nitm\widgets\activityIndicator\ActivityIndicator::widget([
 					'type' => 'create',
 					'size' => 'large',
 			]);
 			break;
 		}
 	},
-	'afterRow' => function ($model, $key, $index, $grid){
-		/*$descriptionInfo = Html::tag('div', '', [
-			'style' => 'display:none',
-			'class' => 'well',
-			'id' => 'view-template'.$model->getId()
+	'afterRow' => function ($model, $key, $index, $grid) {
+		
+		$metaInfo = \nitm\widgets\metadata\StatusInfo::widget([
+			'items' => [
+				[
+					'blamable' => $model->author(),
+					'date' => $model->created_at,
+					'value' => $model->created_at,
+					'label' => [
+						'true' => "Created On ",
+					]
+				],
+				[
+					'value' => $model->type,
+					'label' => [
+						'true' => "File type ",
+					]
+				],
+				[
+					'value' => $model->getSize(),
+					'label' => [
+						'true' => "File size ",
+					]
+				],
+			]
 		]);
 		
-		$metaInfo = Html::tag('div',
-			Html::tag('div', $descriptionInfo, ['class' => 'col-md-12 col-lg-12']),
-			['class' => 'row']
-		);
-		$activityInfo = '';*/
-		
-		
-		if($model->getFileExists())
+		if($model->getFileExists()) {
 			$shortLink = \nitm\widgets\metadata\ShortLink::widget([
 				'label' => 'Url',
-				'url' => $model->getUrl(),
+				'url' => $model->url(),
 				'header' => $model->file_name,
 				'type' => (\Yii::$app->request->isAjax ? 'page' : 'modal'),
 				'size' => 'large'
 			]).
 			\nitm\widgets\metadata\ShortLink::widget([
-				'label' => 'File Location',
-				'url' => $model->getPath(),
+				'label' => 'Path',
+				'url' => $model->getRealPath(),
 				'header' => $model->file_name,
 				'type' => (\Yii::$app->request->isAjax ? 'page' : 'modal'),
 				'size' => 'large'
 			]);
-		else
+		} else
 			$shortLink = Html::tag('h4', "No file found");
 		return Html::tag('tr',
-			Html::tag(
-				'td', 
-				$shortLink, 
-				[
-					'colspan' => 10, 
-				]
-			)
-		);
-	}
+			Html::tag('td', $metaInfo.$shortLink, [
+				'colspan' => 10, 
+			]), [
+			'class' => 'hidden',
+			'id' => 'file-info'.$model->getId()
+		]);
+	},
+	'pager' => [
+		'class' => \nitm\widgets\ias\ScrollPager::className(),
+		'overflowContainer' => '#files-ias-container',
+		'container' => '#files',
+		'item' => ".item",
+		'negativeMargin' => 150,
+		'delay' => 500,
+	]
 ]); 
 ?>

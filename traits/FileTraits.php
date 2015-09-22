@@ -43,7 +43,35 @@ trait FileTraits
 	
 	public function getPath()
 	{
-		return $this->url;
+		return $this->url('file');
+	}
+	
+	/**
+	 * Get the main icon for this entity
+	 */
+	public function url($mode=null)
+	{
+		return \Yii::$app->urlManager->createAbsoluteUrl("/files/get/".$this->geturlKey($mode));
+	}
+	
+	protected function getUrlKey($mode)
+	{
+		$ret_val = '';
+		switch($mode)
+		{
+			case 'remote':
+			$ret_val = implode(':', [$this->remote_type, $this->remote_id]).'/'.$this->file_name;
+			break;
+			
+			case 'file':
+			$ret_val = $this->file_name;
+			break;
+			
+			default:
+			$ret_val = $this->getId().'/'.$this->file_name;
+			break;
+		}
+		return $ret_val;
 	}
 	
 	/**
@@ -90,7 +118,7 @@ trait FileTraits
 	 */
 	public function icon()
 	{
-		return \nitm\helpers\Relations::cachedRelation('id', false, Image::className(), 'icon', [], $this, 120);
+		return \nitm\helpers\Relations::getCachedRelation('id', false, Image::className(), 'icon', [], $this, 120);
 	}	
 		
 	/**

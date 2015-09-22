@@ -67,6 +67,7 @@ trait ImageTraits
 	public function getIcon($size='medium')
 	{
 		$ret_val = $this;
+		$size = is_null($size) ? 'large' : $size;
 		switch($size)
 		{
 			case 'medium':
@@ -156,18 +157,18 @@ trait ImageTraits
 	/**
 	 * Get the main icon for this entity
 	 */
-	public function getIconHtml($size='small', array $options=[])
+	public function getIconHtml($size='small', array $options=[], $mode=null)
 	{
-		return \yii\helpers\Html::img("/image/get/".$this->getId()."/".$size, $options);
+		$id = $useName ? $this->file_name : $this->getId();
+		return \yii\helpers\Html::img($this->url($size, $mode), $options);
 	}
 	
 	/**
-<<<<<<< HEAD
 	 * Get the main icon for this entity
 	 */
-	public function url($size='small')
+	public function url($size=null, $mode=null)
 	{
-		return \Yii::$app->urlManager->createAbsoluteUrl("/image/get/".$this->getId()."/".$size);
+		return \Yii::$app->urlManager->createAbsoluteUrl(["/image/get/".$this->geturlKey($mode), 'size' => $size]);
 	}
 	
 	public function isDefault()

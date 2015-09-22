@@ -4,6 +4,7 @@ namespace nitm\filemanager\helpers\storage;
 
 use yii\helpers\FileHelper;
 use yii\helpers\ArrayHelper;
+use nitm\filemanager\models\File;
 
 class Local extends \nitm\filemanager\helpers\Storage implements StorageInterface 
 {
@@ -19,9 +20,10 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	{
 		$ret_val = false;
 		$to = self::getUrl($to);
+		$data = $data instanceof File ? $data->url : $data;
 		if(!is_dir(dirname($to)))
-			static::createContainer($to, true);
-			
+			static::createContainer(dirname($to), true);
+		
 		switch(static::isWriteable($to))
 		{
 			case true:
@@ -56,16 +58,21 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	public static function move($from, $to, $isUploaded=false, $permissions=[])
 	{
 		$to = self::getUrl($to);
-		$from = self::getUrl($from);
+		$isFile = static::exists($from);
+		if($isFile)
+			$from = self::getUrl($from);
 		$ret_val = false;
 		
 		if(!is_dir(dirname($to)))
-			static::createContainer($to, true);
-			
+			static::createContainer(dirname($to), true);
+		
 		switch(static::isWriteable($to))
 		{
 			case true:
-			$ret_val =  ($isUploaded === true) ? move_uploaded_file($from, $to) : rename($from, $to);
+			if($isFile)
+				$ret_val =  ($isUploaded === true) ? move_uploaded_file($from, $to) : rename($from, $to);
+			else
+				$ret_val = file_put_contents($to, $from) === false ? false : true;
 			static::applyPermissions($to, $permissions);
 			break;
 			
@@ -91,7 +98,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 			return false;
 			break;
 		}
-		return static::exists($path) ? unlink(static::getUrl($path)) : false;
+		return static::exists($path) ? unlink($path) : false;
 	}
 	
 	/**
@@ -104,7 +111,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	public static function createContainer($container, $recursive=true, $permissions=[])
 	{
 		$ret_val = false;
-		if(FileHelper::createDirectory($container, (is_null($permissions['mode']) ? static::getPermission('directory', 'mode') : $permissions['mode']), $recursive)) {
+		if(FileHelper::createDirectory($container, ArrayHelper::getValue($permissions, 'mode', static::getPermission('directory', 'mode')), $recursive)) {
 			static::applyPermissions($container, $permissions, 'directory');
 			$ret_val = true;
 		}

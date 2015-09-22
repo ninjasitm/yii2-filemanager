@@ -141,17 +141,17 @@ trait Relations
 		$options = array_merge([
 			'orderBy' => ['id' => SORT_DESC],
 		], $options);
-        return $this->getFileRelationModelQuery(\nitm\filemanager\models\Files::className(), null, $options, true);
+        return $this->getFileRelationModelQuery(\nitm\filemanager\models\File::className(), null, $options, true);
     }
 	
 	public function files($useCache=false)
 	{
-		return $this->resolveRelation('id', \nitm\filemanager\models\Files::className(), $useCache, [], true, 'files');
+		return $this->resolveRelation('id', \nitm\filemanager\models\File::className(), $useCache, [], true, 'files');
 	}
 	
 	public function filesModel()
 	{
-		return $this->getFileRelationModel(\nitm\filemanager\models\Files::className(), 'filesModel');
+		return $this->getFileRelationModel(\nitm\filemanager\models\File::className(), 'filesModel');
 	}
 
     /**
@@ -159,7 +159,7 @@ trait Relations
      */
     public function getFilesModel()
     {
-        return $this->getFileRelationModelQuery(\nitm\filemanager\models\Files::className());
+        return $this->getFileRelationModelQuery(\nitm\filemanager\models\File::className());
     }
  }
 ?>

@@ -10,8 +10,10 @@ use yii\data\ActiveDataProvider;
  * BaseElasticSearch provides the basic search functionality based on the class it extends from.
  */
 class BaseSearch extends \nitm\search\BaseSearch
-{	
-	use \nitm\traits\Nitm, \nitm\traits\Relations,\nitm\traits\Cache;
+{
+	use \nitm\widgets\traits\BaseWidget, \nitm\filemanager\traits\FileTraits, \nitm\traits\Nitm {
+		\nitm\filemanager\traits\FileTraits::url insteadof \nitm\traits\Nitm;
+	}
 	
 	public $engine = 'elasticsearch';
 	public static $namespace = '\nitm\filemanager\models\\';

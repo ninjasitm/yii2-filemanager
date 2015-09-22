@@ -9,7 +9,7 @@ use yii\data\ActiveDataProvider;
 /**
  * FilesSearch represents the model behind the search form about `nitm\filemanager\models\Files`.
  */
-class File extends BaseSearch
+class Image extends BaseSearch
 {
-	use \nitm\filemanager\traits\FileTraits;
+	use \nitm\filemanager\traits\ImageTraits;
 }

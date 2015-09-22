@@ -23,8 +23,8 @@
 
 
 
-$(function() {
-    
+var initFileManager = function() {
+	
     context.init({
         fadespeed: 100,
         above: 'auto',
@@ -64,9 +64,9 @@ $(function() {
     ]);
     
     $('#fileUploadBtn').click(function(e){
-       
+		       
        e.preventDefault();
-       
+	   
        $(this).addClass('disabled');
        
        $('#fileGridBtn').removeClass('disabled');
@@ -110,7 +110,9 @@ $(function() {
         e.preventDefault();
     });
     
-});
+};
+
+initFileManager();
 
 
 ccm_editorSetupImagePicker = function() {

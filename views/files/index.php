@@ -16,7 +16,7 @@ use nitm\filemanager\widgets\Thumbnail;
 $this->title = 'File';
 $this->params['breadcrumbs'][] = $this->title;
 
-$awsConfig = $this->context->module->getEngine('aws');
+$awsConfig = \Yii::$app->getModule('nitm-files')->getEngine('aws');
 
 if(isset($awsConfig['enable']) && $awsConfig['enable']){
     $path = $awsConfig['url'];
@@ -61,29 +61,12 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
         <div class="panel-body">
             <div class="display-images" id="fileGridManager">
 				<?=
-					ListView::widget([
+					$this->render('view', [
 						'options' => [
 							'id' => 'files'
 						],
 						'dataProvider' => $dataProvider,
-						'itemOptions' => [
-							'class' => 'item'
-						],
-						'itemView' => function($model, $key, $index, $widget) {
-							return $this->render('view', [
-								'index' => $index,
-								'model' => $model,
-								'noBreadcrumbs' => true
-							]);
-						},
-						'pager' => [
-							'class' => \nitm\widgets\ias\ScrollPager::className(),
-							'overflowContainer' => '#files-ias-container',
-							'container' => '#files',
-							'item' => ".item",
-							'negativeMargin' => 150,
-							'delay' => 500,
-						]
+						'noBreadcrumbs' => isset($noBreadcrumbs) ? $noBreadcrumbs : false
 					]);
 				?>
             </div>
@@ -91,7 +74,7 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
                 <?= FileUploadUI::widget([
                     'model' => $model,
                     'attribute' => 'file_name',
-                    'url' => ['/files/upload'],
+                    'url' => '/files/save/'.$type.'/'.$id,
                     'options' => [
                         'done'   => 'filemanager',
 						//'enctype' => 'multipart/form-data'
@@ -103,26 +86,14 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
             </div>
         </div>
         <div class="panel-footer" id="fileGridFooter">
-            <?php
-                
-                echo linkPager::widget([
-                    'pagination'=>$dataProvider->pagination,
+            <?= linkPager::widget([
+                    'pagination' => $dataProvider->pagination,
                 ]);
-            
-            ?>
+			?>
         </div>
     </div>
     
 </div>
-
-
-<script>
-    
-    
-    
-</script>
-
-
 
 <div class="modal fade" id="editProperties" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">

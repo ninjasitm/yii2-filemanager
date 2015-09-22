@@ -27,13 +27,6 @@ class Module extends \yii\base\Module
 	 *	]
 	 */
 	public $permissions = [];
-    
-	/**
-	 * The custom path map for different file types
-	 */
-    	
-	public $namespaceMap = [
-	];
 	
 	public $engineMap = [
 	];
@@ -48,6 +41,12 @@ class Module extends \yii\base\Module
 	];
 	
 	protected $pathMap;
+    
+	/**
+	 * The custom path map for different file types
+	 */
+    	
+	protected $namespaceMap;
 	
 	public $allowedTypes = [
 	];
@@ -74,7 +73,7 @@ class Module extends \yii\base\Module
 	
 	public function getPath($for=null)
 	{
-		return ArrayHelper::getValue($this->pathMap, $for, $this->pathMap['unknown']);
+		return $this->getPathMap($for);
 	}
 	
 	public function getType($for=null) 
@@ -151,6 +150,8 @@ class Module extends \yii\base\Module
 			else
 				$ret_val[$t] = ArrayHelper::getValue($this->permissions, $t, []);
 		}
+		if(isset($ret_val['mode']))
+			$ret_val['mode'] = $ret_val['mode'][0] === 0 ? $ret_val['mode'] : octdec($ret_val['mode']);
 		return count($ret_val) == 1 ? array_pop($ret_val) : $ret_val;
 	}
 	
@@ -172,12 +173,17 @@ class Module extends \yii\base\Module
 	{
 		return [
 			'directory' => [
-				'mode' => '0770',
+				'mode' => 0770,
 				'owner' => 'nobody',
 				'group' => 'nogroup'
 			],
 			'file' => [
-				'mode' => '0770',
+				'mode' => 0770,
+				'owner' => 'nobody',
+				'group' => 'nogroup'
+			],
+			'image' => [
+				'mode' => 0770,
 				'owner' => 'nobody',
 				'group' => 'nogroup'
 			],
@@ -228,6 +234,26 @@ class Module extends \yii\base\Module
 			'text' => '@media/documents/',
 			'application' => '@media/applications/',
 			'unknown' => '@media/unknown/'
+		], (array) $paths);
+	}
+	
+	public function getNamespaceMap($index=null)
+	{
+		if(!isset($this->namespaceMap))
+			$this->setNamespaceMap([]);
+			
+		if(is_null($index))
+			return $this->namespaceMap;
+		else
+			return ArrayHelper::getValue($this->namespaceMap, $index, null);
+	}
+	
+	public function setNamespaceMap($paths)
+	{
+		$this->namespaceMap = array_merge([
+			'\\nitm\\models\\',
+			'\\nitm\\filemanager\\models\\',
+			'\\nitm\\widgets\\models\\',
 		], (array) $paths);
 	}
 

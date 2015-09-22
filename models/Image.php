@@ -42,7 +42,7 @@ class Image extends \nitm\filemanager\models\File
             [['url'], 'string'],
             [['created', 'updated'], 'safe'],
             [['slug', 'remote_type'], 'string', 'max' => 150],
-            [['remote_id', 'hash'], 'unique', 'targetAttribute' => ['remote_id', 'hash'], 'message' => 'This image already exists'],
+            [['remote_type', 'remote_id', 'hash'], 'unique', 'targetAttribute' => ['remote_id', 'hash'], 'message' => 'This image already exists', 'on' => ['create']],
         ];
     }
 
@@ -78,13 +78,14 @@ class Image extends \nitm\filemanager\models\File
 			$ret_val->andWhere(['is_default' => true]);
 			break;
 		}
-		switch($thumbnails)
-		{
-			case true:
-			array_push($with, 'icon');
-			break;
-		}
+		//switch($thumbnails)
+		//{
+		//	case true:
+		//	array_push($with, 'icon');
+		//	break;
+		//}
 		
+		array_push($with, 'metadata');
 		$queryOptions = array_merge([
 			'limit' => 10,
 			'orderBy' => ['is_default' => SORT_DESC],

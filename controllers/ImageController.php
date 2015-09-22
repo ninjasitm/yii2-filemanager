@@ -9,11 +9,10 @@ use nitm\filemanager\helpers\ImageHelper;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\ImageMetadata;
 use nitm\filemanager\helpers\Storage;
+use nitm\filemanager\models\search\Image as ImageSearch;
 
-class ImageController extends \nitm\controllers\DefaultController
-{
-	use \nitm\traits\Controller;
-	
+class ImageController extends DefaultController
+{	
 	public function init() 
 	{
 		parent::init();
@@ -26,14 +25,8 @@ class ImageController extends \nitm\controllers\DefaultController
 			'access' => [
 				'class' => \yii\filters\AccessControl::className(),
 				'only' => ['get'],
-				'rules' => [
 					[
-						'actions' => ['get'],
-						'allow' => true,
-						'roles' => ['?', '@'],
-					],
-					[
-						'actions' => ['delete', 'default', 'save'],
+						'actions' => ['default'],
 						'allow' => true,
 						'roles' => ['@'],
 					],
@@ -42,10 +35,7 @@ class ImageController extends \nitm\controllers\DefaultController
 			'verbs' => [
 				'class' => \yii\filters\VerbFilter::className(),
 				'actions' => [
-					'get' => ['get'],
-					'delete' => ['post'],
 					'default' => ['post'],
-					'save' => ['post', 'get'],
 				],
 			],
 		];
@@ -53,56 +43,49 @@ class ImageController extends \nitm\controllers\DefaultController
 		return array_replace_recursive(parent::behaviors(), $behaviors);
 	}
 	
-	
-    public function actionGet($id, $size=null)
-    {
-		$model = $this->findModel(Image::className(), $id, ['metadata']);
-		switch($model instanceof Image)
-		{
-			case true:
-			$image = $model->getIcon($size);
-			\Yii::$app->response->getHeaders()->set('Content-Type', $image->type);
-			switch(1)
-			{
-				case file_exists($image->getRealPath()):
-				return $this->getContents($image);
-				break;
-				
-				default:
-				return Image::getHtmlIcon($image->html_icon);
-				break;
-			}
-			break;
-		}
-    }
-	
-	protected function getContents($image)
+	public function actionIndex($type, $id)
 	{
-		$contents = file_get_contents($image->getRealPath());
-		switch(\Yii::$app->request->get('__format') == 'raw')
+		$images = parent::actionIndex(ImageSearch::className(), $type, $id, [
+			'construct' => [
+				'queryOptions' => [
+					'with' => [
+						'author'
+					],
+				],
+			]
+		]);
+		switch($this->getResponseFormat())
 		{
-			//We should display the image rather than the raw contents
-			case false:
-			return '<img url="'."data:".$image->type.";base64,".base64_encode($contents).'"/>';
-			break;
-			
-			default:
-			return $contents;
+			case 'json':
+			$images = array_map(function ($image) {
+				if($image) {
+					//if($image->metadata == []) {
+					//	\nitm\filemanager\helpers\ImageHelper::createThumbnails($image, $image->type);
+					//	print_r($image->metadata);
+					//}
+					return [
+						'thumb' => $image->url('small', 'remote'),
+						'image' => $image->url(null, 'remote'),
+						'title' => $image->file_name
+					];
+				}
+			}, $images);
 			break;
 		}
+		return $images;
 	}
 	
 	/**
 	 * Save images for a model
 	 * 
 	 */
-	public function actionSave($type, $id)
+	public function actionCreate($type, $id)
 	{
 		$ret_val = [
 			'remoteId' => $id
 		];
 		if(is_null($class = \Yii::$app->getModule('nitm-files')->getModelClass($type)))
-			return false;
+			return ['fileLink' => '#', 'filename' => 'Failed'];
 		$model = $class::findOne($id);
 		$imageModels = ImageHelper::saveImages($model, $type, $id);
 		switch(is_array($imageModels) && $imageModels != [])
@@ -116,8 +99,10 @@ class ImageController extends \nitm\controllers\DefaultController
 			{
 				$ret_val['files'][] = [
 					'name' => $image->file_name,
+					'filename' => $image->file_name,
 					'size' => $image->size,
 					'url' => $image->url,
+					'filelink' => $image->url,
 					'thumbnailUrl' => $image->getIcon('medium')->url,
 					'deleteUrl' => implode(DIRECTORY_SEPARATOR, [
 						$this->id,
@@ -139,6 +124,7 @@ class ImageController extends \nitm\controllers\DefaultController
 			default:
 			break;
 		}
+		
 		$this->setResponseFormat(\Yii::$app->request->isAjax ? 'json' : 'html');
 		return $this->renderResponse($ret_val, Response::viewOptions(), \Yii::$app->request->isAjax);
 	}

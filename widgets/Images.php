@@ -22,33 +22,8 @@ use nitm\helpers\Icon;
  * @author Malcolm Paul <lefteyecc@ninjasitm.com>
  * @since 1.0
  */
-class Images extends \yii\base\Widget
-{	
-	public $model;
-	public $withForm;
-	
-    /**
-     * @var string the title for the alert. If set to empty or null, will not be
-     * displayed.
-     */
-    public $title = '';
-
-    /**
-     * @var array the HTML attributes for the title. The following options are additionally recognized:
-     * - tag: the tag to display the title. Defaults to 'span'.
-     */
-    public $titleOptions = ['class' => 'kv-alert-title'];
-
-    /**
-     * @var array the HTML attributes for the defualt image wrapper.
-     */
-    public $defaultOptions = [
-		'class' => 'text-center col-md-3 col-lg-3 col-sm-6',
-		'role' => 'imageContainer'
-	];
-	
-	public $buttonOptions = [
-	];
+class Images extends BaseWidget
+{
 
     /**
      * @var array the HTML attributes for the extra image wrapper.
@@ -135,12 +110,6 @@ class Images extends \yii\base\Widget
 			]
 		],
 	];
-	
-	public function init()
-	{
-		$this->registerAssets();
-		$this->options['id'] .= $this->model->getId();
-	}
 
     /**
      * Runs the widget
@@ -152,6 +121,13 @@ class Images extends \yii\base\Widget
 		$info = $this->getInfoPane();
 		return $images.$initScript.$info;
     }
+	
+	protected function getAssets() 
+	{
+		return [
+			\nitm\filemanager\assets\ImagesAsset::className()
+		];
+	}
 	
 	protected function getInfoPane()
 	{
@@ -176,32 +152,6 @@ class Images extends \yii\base\Widget
 		return \nitm\widgets\modal\Modal::widget($options);
 	}
 	
-    /**
-     * Gets the title section
-     *
-     * @return string
-     */
-    protected function getTitle()
-    {
-        $icon = '';
-        $title = '';
-        $separator = '';
-        if (!empty($this->icon) && $this->iconType == 'image') {
-            $icon = Html::img($this->icon, $this->iconOptions);
-        } elseif (!empty($this->icon)) {
-            $this->iconOptions['class'] = $this->icon . ' ' . (empty($this->iconOptions['class']) ? 'kv-alert-title' : $this->iconOptions['class']);
-            $icon = Html::tag('span', '', $this->iconOptions) . ' ';
-        }
-        if (!empty($this->title)) {
-            $tag = ArrayHelper::remove($this->titleOptions, 'tag', 'span');
-            $title = Html::tag($tag, $this->title, $this->titleOptions);
-            if ($this->showSeparator) {
-                $separator = '<hr class="kv-alert-separator">' . "\n";
-            }
-        }
-        return $icon . $title . $separator;
-    }
-	
 	/**
 	 * Get the preview image
 	 * @param nitm\filemanager\models\Image $image
@@ -216,22 +166,8 @@ class Images extends \yii\base\Widget
 			'wrapperOptions' => $thumbnailOptions
 		]);
 	}
-
-    /**
-     * Register client assets
-     */
-    public function registerAssets()
-    {
-        $view = $this->getView();
-        \nitm\filemanager\assets\ImagesAsset::register($view);
-    }
 	
-	public function getActions()
-	{
-		return $this->_actions;
-	}
-	
-	public function getImages()
+	protected function getImages()
 	{
 		//Use smaller preview images for extra images
 		$pluginOptions = $this->pluginOptions;
@@ -251,7 +187,18 @@ class Images extends \yii\base\Widget
 		]);
 	}
 	
-	public function getImage($image)
+    /**
+     * @var array the HTML attributes for the defualt image wrapper.
+     */
+    protected function defaultOptions()
+	{
+		return [
+			'class' => 'text-center col-md-3 col-lg-3 col-sm-6',
+			'role' => 'imageContainer'
+		];
+	}
+	
+	protected function getImage($image)
 	{
 		$id = $this->getInputId($image);
 		$this->pluginExtraOptions['attribute'] = 'images['.$id.']';
@@ -283,10 +230,5 @@ class Images extends \yii\base\Widget
 				'style' => 'display:none'
 			]
 		);
-	}
-	
-	protected function getInputId($model)
-	{
-		return $this->model->isWhat()."-image-".(($model->getId() == 0) ? uniqid() : $model->getId());
 	}
 }

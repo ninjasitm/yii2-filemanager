@@ -58,7 +58,7 @@ class File extends BaseFile
             [['date', 'date_gmt', 'update', 'update_gmt'], 'safe'],
             [['url', 'thumbnail_url', 'file_name', 'title'], 'string', 'max' => 555],
             [['type'], 'string', 'max' => 45],
-            [['remote_id', 'hash'], 'unique', 'targetAttribute' => ['remote_id', 'hash'], 'message' => 'This image already exists'],
+            [['remote_type', 'remote_id', 'hash'], 'unique', 'targetAttribute' => ['remote_id', 'hash'], 'message' => 'This file already exists', 'on' => ['create']],
         ];
     }
 
