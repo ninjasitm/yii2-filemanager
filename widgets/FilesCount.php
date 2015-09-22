@@ -11,7 +11,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use nitm\models\User;
-use nitm\filemanager\models\Files as FilesModel;
+use nitm\filemanager\models\File as FilesModel;
 use kartik\icons\Icon;
 
 class FilesCount extends BaseWidget
