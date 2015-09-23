@@ -101,7 +101,6 @@ class ImageController extends DefaultController
 			case true:
 			$ret_val['success'] = true;
 			$ret_val['data'] = '';
-			$imageWidget = new \nitm\filemanager\widgets\Images(['model' => $model]);
 			$renderer = \Yii::$app->request->isAjax ? 'renderAjax' : 'render';
 			foreach($imageModels as $image)
 			{
@@ -119,7 +118,7 @@ class ImageController extends DefaultController
 					]),
 					'deleteType' => 'POST'
 				];
-				$ret_val['data'] .= $imageWidget->getThumbnail($image);
+				$ret_val['data'] .= $image->getIconHtml();
 			}
 			Response::viewOptions([
 				"view" => 'index', 
