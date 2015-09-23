@@ -74,43 +74,6 @@ class Images extends BaseWidget
 	
 	protected $imageModel;
 	
-	/**
-	 * The actions that are supported
-	 */
-	private $_actions = [
-		'delete' => [
-			'tag' => 'span',
-			'tagOptions' => [
-				'text' => 'Remove',
-				'class' => 'small glyphicon glyphicon-ban-circle',
-			],
-			'action' => '/image/delete',
-			'options' => [
-				'data-pjax' => 0,
-				'data-method' => 'post',
-				'class' => 'text-danger',
-				'role' => 'deleteImage',
-				'id' => 'delete',
-				'title' => 'Delete this Image'
-			]
-		],
-		'default' => [
-			'tag' => 'span',
-			'tagOptions' => [
-				'text' => 'Make Default',
-				'class' => 'small glyphicon glyphicon-thumbs-up',
-			],
-			'action' => '/image/default',
-			'options' => [
-				'data-pjax' => 0,
-				'class' => 'text-success',
-				'role' => 'toggleDefaultImage',
-				'id' => 'toggle-default',
-				'title' => 'Set this image as default'
-			]
-		],
-	];
-
     /**
      * Runs the widget
      */
@@ -125,7 +88,7 @@ class Images extends BaseWidget
 	protected function getAssets() 
 	{
 		return [
-			\nitm\filemanager\assets\ImagesAsset::className()
+			\nitm\filemanager\assets\ImageAsset::className()
 		];
 	}
 	
@@ -195,6 +158,46 @@ class Images extends BaseWidget
 		return [
 			'class' => 'text-center col-md-3 col-lg-3 col-sm-6',
 			'role' => 'imageContainer'
+		];
+	}
+	
+	/**
+	 * The default actions that are supported
+	 */
+	protected function defaultActions() 
+	{
+		return [
+			'delete' => [
+				'tag' => 'span',
+				'tagOptions' => [
+					'text' => 'Remove',
+					'class' => 'small glyphicon glyphicon-ban-circle',
+				],
+				'action' => '/image/delete',
+				'options' => [
+					'data-pjax' => 0,
+					'data-method' => 'post',
+					'class' => 'text-danger',
+					'role' => 'deleteImage',
+					'id' => 'delete',
+					'title' => 'Delete this Image'
+				]
+			],
+			'default' => [
+				'tag' => 'span',
+				'tagOptions' => [
+					'text' => 'Make Default',
+					'class' => 'small glyphicon glyphicon-thumbs-up',
+				],
+				'action' => '/image/default',
+				'options' => [
+					'data-pjax' => 0,
+					'class' => 'text-success',
+					'role' => 'toggleDefaultImage',
+					'id' => 'toggle-default',
+					'title' => 'Set this image as default'
+				]
+			],
 		];
 	}
 	

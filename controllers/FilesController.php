@@ -32,6 +32,13 @@ class FilesController extends DefaultController
 		$this->model = new File();
 	}
 	
+	public static function assets()
+	{
+		return [
+			\nitm\filemanager\assets\FilemanagerAssets::className()
+		];
+	}
+	
 	public function actionIndex($type, $id)
 	{
 		if(\Yii::$app->request->isAjax)

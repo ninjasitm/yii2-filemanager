@@ -25,8 +25,9 @@ class ImageController extends DefaultController
 			'access' => [
 				'class' => \yii\filters\AccessControl::className(),
 				'only' => ['get'],
+				'rules' => [
 					[
-						'actions' => ['default'],
+						'actions' => ['default', 'get'],
 						'allow' => true,
 						'roles' => ['@'],
 					],
@@ -41,6 +42,13 @@ class ImageController extends DefaultController
 		];
 		
 		return array_replace_recursive(parent::behaviors(), $behaviors);
+	}
+	
+	public static function assets()
+	{
+		return [
+			\nitm\filemanager\assets\ImageAsset::className()
+		];
 	}
 	
 	public function actionIndex($type, $id)
@@ -111,7 +119,7 @@ class ImageController extends DefaultController
 					]),
 					'deleteType' => 'POST'
 				];
-				$ret_val['data'] .= $imageWidget->getImage($image);
+				$ret_val['data'] .= $imageWidget->getThumbnail($image);
 			}
 			Response::viewOptions([
 				"view" => 'index', 
@@ -148,12 +156,16 @@ class ImageController extends DefaultController
 	
 	public function actionDelete($id)
 	{
+		$ret_val = [
+			'action' => 'delete',
+			'success' => 'false'
+		];
 		$this->setResponseFormat('json');
 		$model = $this->findModel(Image::className(), $id);
 		if($model instanceof Image) {
-			return ImageHelper::deleteImages($model);
+			$ret_val['success'] =  ImageHelper::deleteImages($model);
 		}
-		return false;
+		return $ret_val;
 	}
 	
 	/*

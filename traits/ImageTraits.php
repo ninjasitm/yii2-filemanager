@@ -159,7 +159,7 @@ trait ImageTraits
 	 */
 	public function getIconHtml($size='small', array $options=[], $mode=null)
 	{
-		$id = $useName ? $this->file_name : $this->getId();
+		$id = $mode=='name' ? $this->file_name : $this->getId();
 		return \yii\helpers\Html::img($this->url($size, $mode), $options);
 	}
 	

@@ -32,9 +32,9 @@ class BaseWidget extends Widget
      */
     public $titleOptions = ['class' => 'kv-alert-title'];
 	
-	protected $inputType = 'image';
+	public $actions  = [];
 	
-	protected $_actions  = [];
+	protected $inputType = 'image';
 	
 	public function init()
 	{
@@ -54,7 +54,12 @@ class BaseWidget extends Widget
 	
 	public function getActions()
 	{
-		return $this->_actions;
+		return array_merge($this->defaultActions(), $this->actions);
+	}
+	
+	protected function defaultActions() 
+	{
+		return [];
 	}
 	
     /**

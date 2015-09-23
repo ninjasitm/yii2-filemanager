@@ -71,9 +71,9 @@ trait Relations
 	 * @param boolean $thumbnails Get thumbnails as well?
 	 * @param boolean $default Get the default image as well?
 	 */
-	public function getImages($thumbnails=false, $default=false)
+	public function getImage($thumbnails=false, $default=false)
 	{
-        return Image::getImagesFor($this, $thumbnails, $default);
+        return Image::getImageFor($this, $thumbnails, $default);
 	}
 	
 	public function imageList()
@@ -97,12 +97,12 @@ trait Relations
 	
 	public function images($useCache=false)
 	{
-		return $this->resolveRelation('id', \nitm\filemanager\models\Images::className(), $useCache, [], true, 'images');
+		return $this->resolveRelation('id', \nitm\filemanager\models\Image::className(), $useCache, [], true, 'images');
 	}
 	
 	public function imagesModel()
 	{
-		return $this->getFileRelationModel(\nitm\filemanager\models\Images::className(), 'imagesModel');
+		return $this->getFileRelationModel(\nitm\filemanager\models\Image::className(), 'imagesModel');
 	}
 
     /**
@@ -110,7 +110,7 @@ trait Relations
      */
     public function getImagesModel()
     {
-        return $this->getFileRelationModelQuery(\nitm\filemanager\models\Images::className());
+        return $this->getFileRelationModelQuery(\nitm\filemanager\models\Image::className());
     }
 	
 	/**

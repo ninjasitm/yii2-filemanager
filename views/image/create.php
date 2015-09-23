@@ -4,17 +4,17 @@ use yii\helpers\Html;
 
 
 /* @var $this yii\web\View */
-/* @var $model linchpinstudios\filemanager\models\Files */
+/* @var $model linchpinstudios\filemanager\models\Images */
 
-$this->title = 'Add Images';
-$this->params['breadcrumbs'][] = ['label' => 'Files', 'url' => ['index']];
+$this->title = 'Create Images';
+$this->params['breadcrumbs'][] = ['label' => 'Images', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="files-create">
+<div class="images-create">
 
     <h1><?= Html::encode($this->title) ?></h1>
 
-    <?= $this->render('forms/_form', [
+    <?= $this->render('_form', [
         'model' => $model,
     ]) ?>
 

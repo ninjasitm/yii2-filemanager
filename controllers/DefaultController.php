@@ -75,10 +75,14 @@ class DefaultController extends \nitm\controllers\DefaultController
      */
     public function actionIndex($searchClass, $type, $id, $options=[])
     {
-        FilemanagerAssets::register($this->view);
 		$_GET['remote_type'] = $type;
 		$_GET['remote_id'] = $id;
 		unset($_GET['type'], $_GET['id']);
+		if(\Yii::$app->request->isAjax)
+		{
+			$asset = '\\nitm\\filemanager\\assets\\'.$this->model->properName().'Asset';
+			$asset::register($this->getView());
+		}
 		return parent::actionIndex($searchClass, array_merge_recursive([
 			'construct' => [
 				'inclusiveSearch' => true,

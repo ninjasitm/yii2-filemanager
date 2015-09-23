@@ -60,7 +60,7 @@ class Files extends BaseWidget
 	protected function getAssets() 
 	{
 		return [
-			\nitm\filemanager\assets\FilemanagerAssets::className()
+			\nitm\filemanager\assets\FileAsset::className()
 		];
 	}
 }

@@ -15,19 +15,16 @@ use yii\web\AssetBundle;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class FilemanagerAssets extends AssetBundle
+class FileTinyAsset extends AssetBundle
 {
-    public $sourcePath = '@vendor/mhdevnet/yii2-filemanager/assets';
+    public $sourcePath = '@vendor/nitm/yii2-filemanager/assets';
     public $css = [
-        'css/filemanager.css',
+        /*'css/filemanager.css',*/
     ];
     public $js = [
-        'js/context.js',
-        'js/filemanager.js',
-        'js/jquery.filemanager.js',
+        'js/filemanagertiny.js',
+        'js/filemanager_plugin.js',
     ];
     public $depends = [
-        'yii\web\JqueryAsset',
-        'yii\bootstrap\BootstrapAsset',
-    ];
+        'dosamigos\tinymce\TinyMceAsset',    ];
 }

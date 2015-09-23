@@ -140,7 +140,7 @@ trait FileTraits
 		switch(class_exists($metadataClass))
 		{
 			case false:
-			$metadataClass = EntityMetadata::className();
+			$metadataClass = \nitm\filemanager\models\FileMetadata::className();
 			break;
 		}
 		return $metadataClass;
