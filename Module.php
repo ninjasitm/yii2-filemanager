@@ -324,7 +324,7 @@ class Module extends \yii\base\Module
 	
 	public function getModelClass($modelName)
 	{
-		foreach($this->namespaceMap as $namespace)
+		foreach((array)$this->namespaceMap as $namespace)
 		{
 			$class = rtrim($namespace, '\\').'\\'.\nitm\helpers\ClassHelper::properClassName($modelName); 
 			if(class_exists($class))
