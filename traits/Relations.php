@@ -31,7 +31,7 @@ trait Relations
 		$options['andWhere'] = isset($options['andWhere']) ? $options['andWhere'] : ['remote_type' => $this->isWhat()];
 		return $this->getRelationQuery($className, $link, $options, $many);
 	}
-	
+
 	/**
 	 * File based relations
 	 */
@@ -43,39 +43,39 @@ trait Relations
 		$options['andWhere'] = isset($options['andWhere']) ? $options['andWhere'] : ['remote_type' => $this->isWhat()];
 		return $this->getRelationQuery($className, $link, $options);
 	}
-	
+
 	protected function getCachedFileRelationModel($className, $idKey=null, $many=false, $options=[])
 	{
 		$relation = \nitm\helpers\Helper::getCallerName();
 		$options['construct'] = isset($options['construct']) ? $options['construct'] : [
-			'remote_id' => $this->getId(), 
+			'remote_id' => $this->getId(),
 			'remote_type' => $this->isWhat()
 		];
 		$idKey = is_null($idKey) ? ['getId', 'isWhat'] : $idKey;
 		return $this->getCachedRelation($idKey, $className, $options, $many, $relation);
 	}
-	
+
 	protected function getFileRelationModel($className, $idKey=null, $many=false, $options=[])
 	{
 		$relation = \nitm\helpers\Helper::getCallerName();
 		$options['construct'] = isset($options['construct']) ? $options['construct'] : [
-			'remote_id' => $this->getId(), 
+			'remote_id' => $this->getId(),
 			'remote_type' => $this->isWhat()
 		];
 		$idKey = is_null($idKey) ? ['getId', 'isWhat'] : $idKey;
 		return RelationsHelper::getRelatedRecord($relation, $this, $className, $options, $many);
 	}
-	
+
 	/**
 	 * Get all the images for this entity
 	 * @param boolean $thumbnails Get thumbnails as well?
 	 * @param boolean $default Get the default image as well?
 	 */
-	public function getImage($thumbnails=false, $default=false)
+	public function getImages($thumbnails=false, $default=false)
 	{
-        return Image::getImageFor($this, $thumbnails, $default);
+        return Image::getImagesFor($this, $thumbnails, $default);
 	}
-	
+
 	public function imageList()
 	{
 		return array_map(function ($image) {
@@ -94,13 +94,13 @@ trait Relations
 			];
 		}, $this->images);
 	}
-	
+
 	public function images($useCache=false)
 	{
 		return $this->resolveRelation('id', \nitm\filemanager\models\Image::className(), $useCache, [], true, 'images');
 	}
-	
-	public function imagesModel()
+
+	public function image()
 	{
 		return $this->getFileRelationModel(\nitm\filemanager\models\Image::className(), 'imagesModel');
 	}
@@ -108,11 +108,11 @@ trait Relations
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getImagesModel()
+    public function getImage()
     {
         return $this->getFileRelationModelQuery(\nitm\filemanager\models\Image::className());
     }
-	
+
 	/**
 	 * Get the main icon for this entity
 	 */
@@ -120,7 +120,7 @@ trait Relations
 	{
         return Image::getIconFor($this);
 	}
-		
+
 	/**
 	 * Get metadata, either from key or all metadata
 	 * @param string $key
@@ -143,13 +143,13 @@ trait Relations
 		], $options);
         return $this->getFileRelationModelQuery(\nitm\filemanager\models\File::className(), null, $options, true);
     }
-	
+
 	public function files($useCache=false)
 	{
 		return $this->resolveRelation('id', \nitm\filemanager\models\File::className(), $useCache, [], true, 'files');
 	}
-	
-	public function filesModel()
+
+	public function file()
 	{
 		return $this->getFileRelationModel(\nitm\filemanager\models\File::className(), 'filesModel');
 	}
@@ -157,7 +157,7 @@ trait Relations
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getFilesModel()
+    public function getFile()
     {
         return $this->getFileRelationModelQuery(\nitm\filemanager\models\File::className());
     }
