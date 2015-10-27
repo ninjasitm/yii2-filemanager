@@ -6,101 +6,126 @@ use yii\helpers\ArrayHelper;
 /**
  * Module class.
  */
-class Module extends \yii\base\Module
+class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 {
-    
+	public $id = 'nitm-files';
     public $controllerNamespace = 'nitm\filemanager\controllers';
-    
+
     public $thumbnails = [[100,100]];
-	
+
 	public $directorySeparator = DIRECTORY_SEPARATOR;
-	
+
 	/**
 	 * This is used primarily for local permissions
 	 * Permissions in the format:
 	 *	[
 	 		'type' => [
-				'mode' => 
+				'mode' =>
 				'group' =>
 				'owner' =>
 			]
 	 *	]
 	 */
 	public $permissions = [];
-	
+
 	public $engineMap = [
 	];
-	
+
 	public $engine = 'local';
-    
+
     public $thumbPath = 'thumb/';
-    
+
     public $url = '/';
-	
+
 	protected $settings = [
 	];
-	
+
 	protected $pathMap;
-    
+
 	/**
 	 * The custom path map for different file types
 	 */
-    	
+
 	protected $namespaceMap;
-	
+
 	public $allowedTypes = [
 	];
-	
+
 	private $_storageEngines = [
 		'local' => 'Local',
 		'aws' => 'AmazonAWS',
 		'youtube' => 'YouTube',
 	];
-    
+
     public function init()
     {
         parent::init();
-		
+
 		$this->permissions = array_merge($this->defaultPermissions(), $this->permissions);
 
         // custom initialization code goes here
-		
+
 		/**
 		 * Aliases for nitm\widgets module
 		 */
 		\Yii::setAlias('nitm/filemanager', dirname(__DIR__)."/yii2-filemanager");
     }
-	
+
+	public static function getUrls($id='nitm-files')
+	{
+		return [
+            $id => $id,
+            $id . '/<controller:[\w\-]+>' => $id . '/<controller>/index',
+            $id . '/<controller:[\w\-]+>/<action:[\w\-]+>' => $id . '/<controller>/<action>',
+            $id . '/<controller:[\w\-]+>/<action:[\w\-]+>/<id>' => $id . '/<controller>/<action>',
+            $id . '/<controller:[\w\-]+>/<action:[\w\-]+>/<type>/<id>' => $id . '/<controller>/<action>',
+			'<controller:(filemanager|files|image)>' => $id . '/<controller>',
+			'<controller:(filemanager|files|image)>/<action>' => $id . '/<controller>/<action>',
+			'<controller:(filemanager|files|image)>/<action>/<id>' => $id . '/<controller>/<action>',
+			'<controller:(filemanager|files|image)>/<action:(get)>/<id>/<filename>' => $id . '/<controller>/<action>',
+			'<controller:(filemanager|files|image)>/<action:(index|save)>/<type>/<id:\d+>' => $id . '/<controller>/<action>',
+			'<controller:(image)>/<action>/<id:\d+>/<size:\w+>' => $id . '/<controller>/<action>',
+        ];
+	}
+
+	public function bootstrap($app)
+	{
+		/**
+		 * Setup urls
+		 */
+        $app->getUrlManager()->addRules($this->getUrls(), false);
+	}
+
 	public function getPath($for=null)
 	{
 		return $this->getPathMap($for);
 	}
-	
-	public function getType($for=null) 
+
+	public function getType($for=null)
 	{
 		return ArrayHelper::getValue($this->getTypeMap(), $for, $this->typeMap);
 	}
-	
-	public function getExtension($for=null) 
+
+	public function getExtension($for=null)
 	{
 		return ArrayHelper::getValue(array_flip($this->getExtensionMap()), $for, null);
 	}
-	
+
 	public function getBaseType($extension)
 	{
 		return ArrayHelper::getValue($this->getBaseTypeMap(), $extension, 'unknown');
 	}
-	
+
 	public function getIsAllowed($extension)
 	{
 		return in_array($extension, $this->getAllowedTypes());
 	}
-	
+
 	public function getAllowedTypes()
 	{
 		return (count($this->allowedTypes) == 0) ? array_keys($this->getBaseTypeMap()) : array_intersect(array_keys($this->getBaseTypeMap()), $this->allowedTypes);
 	}
-	
+
 	protected function resolveEngine($engine=null)
 	{
 		if(!is_null($engine) && isset($this->engineMap[$engine]))
@@ -108,19 +133,19 @@ class Module extends \yii\base\Module
 		else
 			return is_null($engine) ? $this->engine : $engine;
 	}
-	
+
 	/**
-	 * Select the engie to use. This can be either an index map for the engineMap, a tring specifying the engine or null, which will use the current engine 
+	 * Select the engie to use. This can be either an index map for the engineMap, a tring specifying the engine or null, which will use the current engine
 	 **/
 	public function getEngine($engine=null)
 	{
-		$engine = $this->resolveEngine($engine);		
+		$engine = $this->resolveEngine($engine);
 		if(isset($this->_storageEngines[$engine]))
-			return $this->_storageEngines[$engine];	
+			return $this->_storageEngines[$engine];
 		else
 			throw new \yii\base\Exception("Engine: $engine is not supported");
 	}
-	
+
 	public function getEngineClass($engine=null)
 	{
 		$engine = $this->resolveEngine($engine);
@@ -130,18 +155,18 @@ class Module extends \yii\base\Module
 			case true:
 			return $class;
 			break;
-		
+
 			default:
 			throw new \yii\base\Exception("There is no engine for [".$engine."] available");
 			break;
 		}
 	}
-	
+
 	public function getPermission($types=null, $for=null)
 	{
 		$types = count($_types = array_map('trim', explode('|', $types))) == 0 ? array_keys($this->permissions) : $_types;
 		$for = count($_for = array_map('trim', explode('|', $for))) == 0 ? null : $_for;
-		
+
 		$ret_val = [];
 		foreach((array)$types as $idx=>$t)
 		{
@@ -154,7 +179,7 @@ class Module extends \yii\base\Module
 			$ret_val['mode'] = $ret_val['mode'][0] === 0 ? $ret_val['mode'] : octdec($ret_val['mode']);
 		return count($ret_val) == 1 ? array_pop($ret_val) : $ret_val;
 	}
-	
+
 	public function getWidget($type, $options=[])
 	{
 		$widgetClass = __NAMESPACE__.'\widgets\\'.ucfirst(strtolower($type));
@@ -163,13 +188,13 @@ class Module extends \yii\base\Module
 		else
 			return ' => ';
 	}
-	
+
 	public function isSupportedProvider($for, $provider)
 	{
 		return isset($this->settings[$for]) && isset($this->settings[$for][$provider]);
 	}
-	
-	private function defaultPermissions() 
+
+	private function defaultPermissions()
 	{
 		return [
 			'directory' => [
@@ -189,11 +214,11 @@ class Module extends \yii\base\Module
 			],
 		];
 	}
-	
+
 	public function setSettings($settings) {
 		$this->settings = $settings;
 	}
-	
+
 	private function getExtensionMap()
 	{
 		return [
@@ -213,18 +238,18 @@ class Module extends \yii\base\Module
 			'xml' => 'text/xml',
 		];
 	}
-	
+
 	public function getPathMap($index=null)
 	{
 		if(!isset($this->pathMap))
 			$this->setPathMap([]);
-			
+
 		if(is_null($index))
 			return $this->pathMap;
 		else
 			return ArrayHelper::getValue($this->pathMap, $index, null);
 	}
-	
+
 	public function setPathMap($paths)
 	{
 		$this->pathMap = array_merge([
@@ -236,18 +261,18 @@ class Module extends \yii\base\Module
 			'unknown' => '@media/unknown/'
 		], (array) $paths);
 	}
-	
+
 	public function getNamespaceMap($index=null)
 	{
 		if(!isset($this->namespaceMap))
 			$this->setNamespaceMap([]);
-			
+
 		if(is_null($index))
 			return $this->namespaceMap;
 		else
 			return ArrayHelper::getValue($this->namespaceMap, $index, null);
 	}
-	
+
 	public function setNamespaceMap($paths)
 	{
 		$this->namespaceMap = array_merge([
@@ -261,7 +286,7 @@ class Module extends \yii\base\Module
 	{
 		return array_flip($this->getExtensionMap());
 	}
-	
+
 	private function getBaseTypeMap()
 	{
 		return [
@@ -276,17 +301,17 @@ class Module extends \yii\base\Module
 			'pdf' => 'text',
 			'pcap' => 'text',
 			'cap' => 'text',
-	
+
 			// ms office
 			'doc' => 'text',
 			'rtf' => 'text',
 			'xls' => 'text',
 			'ppt' => 'text',
-	
+
 			// open office
 			'odt' => 'text',
 			'ods' => 'text',
-	
+
 			// images
 			'png' => 'image',
 			'jpe' => 'image',
@@ -299,13 +324,13 @@ class Module extends \yii\base\Module
 			'tif' => 'image',
 			'svg' => 'image',
 			'svgz' => 'image',
-	
+
 			// adobe
 			'psd' => 'image',
 			'ai' => 'image',
 			'eps' => 'image',
 			'ps' => 'image',
-	
+
 			// archives
 			'swf' => 'application',
 			'zip' => 'application',
@@ -313,7 +338,7 @@ class Module extends \yii\base\Module
 			'exe' => 'application',
 			'msi' => 'application',
 			'cab' => 'application',
-	
+
 			// audio/video
 			'mp3' => 'audio',
 			'qt' => 'video',
@@ -321,21 +346,20 @@ class Module extends \yii\base\Module
 			'flv' => 'video',
 		];
 	}
-	
+
 	public function getModelClass($modelName)
 	{
 		foreach((array)$this->namespaceMap as $namespace)
 		{
-			$class = rtrim($namespace, '\\').'\\'.\nitm\helpers\ClassHelper::properClassName($modelName); 
+			$class = rtrim($namespace, '\\').'\\'.\nitm\helpers\ClassHelper::properClassName($modelName);
 			if(class_exists($class))
 				return $class;
 		}
 		return null;
 	}
-	
+
 	public function setting($setting=null)
 	{
 		return \yii\helpers\ArrayHelper::getValue($this->settings, $setting, null);
 	}
 }
-

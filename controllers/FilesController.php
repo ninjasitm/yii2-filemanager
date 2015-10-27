@@ -25,20 +25,20 @@ use nitm\helpers\Response;
  * FileController implements the CRUD actions for File model.
  */
 class FilesController extends DefaultController
-{	
-	public function init() 
+{
+	public function init()
 	{
 		parent::init();
 		$this->model = new File();
 	}
-	
+
 	public static function assets()
 	{
 		return [
-			\nitm\filemanager\assets\FilemanagerAssets::className()
+			\nitm\filemanager\assets\FileAsset::className()
 		];
 	}
-	
+
 	public function actionIndex($type, $id)
 	{
 		if(\Yii::$app->request->isAjax)
@@ -80,100 +80,100 @@ class FilesController extends DefaultController
      */
     public function actionTinymce()
     {
-    
+
         $this->layout = 'tinymce';
 
         FilemanagerAssets::register($this->view);
-        
+
         $searchModel = new FileSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         $model = new File();
-        
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'model' => $model,
         ]);
     }
-    
+
     /**
      * actionFilemodal function.
-     * 
+     *
      * @access public
      * @return void
      */
     public function actionFilemodal(){
-    
+
         $this->layout = 'tinymce';
 
         FilemanagerAssets::register($this->view);
-        
+
         $searchModel = new FileSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         $model = new File();
-        
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'model' => $model,
         ]);
     }
-    
+
     public function actionGetimage($id)
 	{
-        
+
         Yii::$app->response->getHeaders()->set('Vary', 'Accept');
         $this->setResponseFormat('json');
-        
+
         $model = $this->findModel($id);
-        
+
         $awsConfig = $module->aws;
-        
+
         if($awsConfig['enable']){
             $model->url = $awsConfig['url'].$model->url;
         }else{
             $model->url = '/'.$model->url;
         }
-        
+
         return $model;
     }
-    
+
     /**
      * actionUpload function.
-     * 
+     *
      * @access public
      * @return string JSON
      */
     public function actionCreate($type=null, $id=null)
     {
 		$ret_val = [];
-		
+
         Yii::$app->response->getHeaders()->set('Vary', 'Accept');
 		$this->setResponseFormat('json');
 		$module = \Yii::$app->getModule('nitm-files');
-		
+
         $model = new File(['scenario' => 'create']);
-        
+
 		$type = !$type ? $model->isWhat() : $type;
 		$id = !$id ? 0 : $id;
-		
+
         $files = UploadedFile::getInstance($model, ArrayHelper::getValue($_REQUEST, 'fileParam', 'file_name'));
 		if($files == [])
 			$files = UploadedFile::getInstancesByName(ArrayHelper::getValue($_REQUEST, 'fileParam', 'file_name'));
 		if($files == [])
 			$files = UploadedFile::getInstancesByName($model->formName());
-		
+
 		$files = is_array($files) ? $files : [$files];
-		
+
 		foreach($files as $file)
 		{
 			$baseType =	$module->getBaseType($module->getExtension($file->type));
 			$path       = $module->getPath($baseType).DIRECTORY_SEPARATOR.$type.DIRECTORY_SEPARATOR.$id;
 			$url        = $module->url;
 			$thumbnails = $module->thumbnails;
-			
+
 			$name = File::getSafeName($file->getBaseName()).'.'.$file->getExtension();
-	
+
 			$model->url             = FileHelper::normalizePath($path, $module->directorySeparator).$module->directorySeparator.$name;
 			$model->file_name       = $name;
 			$model->hash	= File::getHash($file->tempName);
@@ -185,7 +185,7 @@ class FilesController extends DefaultController
 			$model->remote_type = $type;
 			$model->remote_id = $id;
 			$model->base_type		= $baseType;
-			
+
 			if($model->validate() && \nitm\filemanager\helpers\Storage::move($file->tempName, $model->getRealPath(), true) && $model->save())
 			{
 				if($model->base_type == 'image') {
@@ -216,7 +216,7 @@ class FilesController extends DefaultController
 					'deleteUrl'     => \Yii::$app->urlManager->createUrl(['filemanager/files/delete']),
 					'deleteType'    => 'POST',
 				];
-				
+
 			} else {
 				error_log(print_r($model->getErrors(),true));
 				$result = [
@@ -230,7 +230,7 @@ class FilesController extends DefaultController
 			}
 			$ret_val['files'][] = $result;
 		}
-        
+
 		return $ret_val;
     }
 
@@ -241,7 +241,7 @@ class FilesController extends DefaultController
      */
     public function actionView($id)
     {
-        
+
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -257,18 +257,18 @@ class FilesController extends DefaultController
     {
         Yii::$app->response->getHeaders()->set('Vary', 'Accept');
         $this->setResponseFormat('json');
-        
+
 		$this->model = $this->findModel(File::className(), $id, ['metadata', 'icon']);
-        
+
 		ImageHelper::deleteImages($this->model->icon());
-		
+
         $result = [
             'success' => Storage::delete($this->model->getRealPath()),
 			'message' => 'Unable to delete '.$this->model->file_name,
 			'indicate' => 'warning',
 			'action' => 'delete'
         ];
-		
+
         if($result['success'] || !$this->model->getFileExists()) {
 			$result['message'] = 'Successfully deleted '.$this->model->file_name;
 			$result['indicate'] = 'success';
@@ -276,16 +276,16 @@ class FilesController extends DefaultController
 		}
         return $result;
     }
-    
+
     public function actionProperties()
     {
         return $this->renderPartial('_properties');
-    } 
+    }
 
-    protected function getMaximumFileUploadSize()  
-    {  
-        return min(convertPHPSizeToBytes(ini_get('post_max_size')), convertPHPSizeToBytes(ini_get('upload_max_filesize')));  
-    }  
-    
-    
+    protected function getMaximumFileUploadSize()
+    {
+        return min(convertPHPSizeToBytes(ini_get('post_max_size')), convertPHPSizeToBytes(ini_get('upload_max_filesize')));
+    }
+
+
 }

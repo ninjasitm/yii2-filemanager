@@ -9,7 +9,7 @@ use nitm\filemanager\models\search\File as FileSearch;
 class DefaultController extends \nitm\controllers\DefaultController
 {
     public $pageSize = 12;
-	
+
 	public function behaviors()
 	{
 		$behaviors = [
@@ -38,18 +38,18 @@ class DefaultController extends \nitm\controllers\DefaultController
 				],
 			],
 		];
-		
+
 		return array_replace_recursive(parent::behaviors(), $behaviors);
 	}
-    
+
     /**
      * beforeAction function.
-     * 
+     *
      * @access public
      * @param mixed $action
      * @return void
      */
-    public function beforeAction($action) 
+    public function beforeAction($action)
 	{
 		switch($action->id)
 		{
@@ -60,10 +60,10 @@ class DefaultController extends \nitm\controllers\DefaultController
 			break;
 		}
         $result = parent::beforeAction($action);
-		
+
         $options = [
-           'tinymce'             => \Yii::$app->urlManager->createUrl('/filemanager/files/tinymce'),
-           'properties'          => \Yii::$app->urlManager->createUrl('/filemanager/files/properties'),
+           'tinymce'             => \Yii::$app->urlManager->createUrl('files/tinymce'),
+           'properties'          => \Yii::$app->urlManager->createUrl('/files/properties'),
         ];
         $this->getView()->registerJs("filemanager.init(".json_encode($options).");", \yii\web\View::POS_END, 'my-options');
         return $result;
@@ -97,25 +97,25 @@ class DefaultController extends \nitm\controllers\DefaultController
 			]
 		], $options));
     }
-    
+
 	/**
 	 * Synonymous save function
-	 * 
+	 *
 	 */
 	public function actionSave($type, $id)
 	{
 		return $this->actionCreate($type, $id);
 	}
-    
+
 	/**
 	 * Synonymous save function
-	 * 
+	 *
 	 */
 	public function actionUpload($type, $id)
 	{
 		return $this->actionCreate($type, $id);
 	}
-	
+
 	/**
 	 * Download a file
 	 * @param string | int $id
@@ -129,7 +129,7 @@ class DefaultController extends \nitm\controllers\DefaultController
 			$id = (int) array_shift($parts);
 		else
 			$id = array_pop($parts);
-		
+
 		switch(sizeof($parts))
 		{
 			//Parts will be size 1 if there were two parts before
@@ -141,7 +141,7 @@ class DefaultController extends \nitm\controllers\DefaultController
 				]
 			];
 			break;
-			
+
 			default:
 			if(is_string($id) && !is_numeric($id))
 			$queryOptions = [
@@ -151,33 +151,33 @@ class DefaultController extends \nitm\controllers\DefaultController
 				$queryOptions = [];
 			break;
 		}
-		
+
 		if($filename && $queryOptions!=[])
 			$queryOptions['andWhere'] = ['file_name' => $filename];
-		
+
 		$model = $this->findModel($this->model->className(), $id, ['metadata'], $queryOptions);
 		$className = $this->model->className();
 		if($model)
 		{
 			$this->setContentType($model);
 			\Yii::$app->response->getHeaders()->set('Content-Disposition', 'attachment; filename="'.$model->file_name.'"');
-			
+
 			if($model instanceof Image)
 				$model = $model->getIcon($size);
-	
+
 			switch($this->getResponseFormat())
 			{
 				case 'icon':
 				return Image::getHtmlIcon($model->html_icon);
 				break;
-				
+
 				default:
 				return $this->getContents($model);
 				break;
 			}
 		}
     }
-	
+
 	/**
 	 * Set the content type of download
 	 * @param File|Image $model
@@ -192,7 +192,7 @@ class DefaultController extends \nitm\controllers\DefaultController
 			\Yii::$app->response->getHeaders()->set('Content-Type', $model->type);
 		}
 	}
-	
+
 	/**
 	 * Get the contents of a file
 	 * @param File|Image $model
