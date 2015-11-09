@@ -16,22 +16,22 @@ trait FileTraits
 		$class = $this->remote_class;
 		return class_exists($class) ? $class::className() : \nitm\models\Data::className();
 	}
-	
+
 	public function getSize()
 	{
 		return \Yii::$app->formatter->asShortSize($this->size);
 	}
-	
+
 	public function getUrl($action='view')
 	{
 		return \Yii::$app->urlManager->createAbsoluteUrl(['', 'id' => $this->getId(), 'type' => $action]);
 	}
-	
+
 	public function getFileExists()
 	{
 		return file_exists($this->getRealPath());
 	}
-	
+
 	public function getRealPath()
 	{
 		try {
@@ -40,12 +40,12 @@ trait FileTraits
 			return '';
 		}
 	}
-	
+
 	public function getPath()
 	{
 		return $this->url('file');
 	}
-	
+
 	/**
 	 * Get the main icon for this entity
 	 */
@@ -53,8 +53,8 @@ trait FileTraits
 	{
 		return \Yii::$app->urlManager->createAbsoluteUrl("/files/get/".$this->geturlKey($mode));
 	}
-	
-	protected function getUrlKey($mode)
+
+	protected function getUrlKey($mode=null)
 	{
 		$ret_val = '';
 		switch($mode)
@@ -62,18 +62,18 @@ trait FileTraits
 			case 'remote':
 			$ret_val = implode(':', [$this->remote_type, $this->remote_id]).'/'.$this->file_name;
 			break;
-			
+
 			case 'file':
 			$ret_val = $this->file_name;
 			break;
-			
+
 			default:
 			$ret_val = $this->getId().'/'.$this->file_name;
 			break;
 		}
 		return $ret_val;
 	}
-	
+
 	/**
 	 * @param string $subject
 	 */
@@ -82,7 +82,7 @@ trait FileTraits
 		$s = (!empty($s)) ? $s : array("/([^a-zA-Z0-9\\+])/", "/([^a-zA-Z0-9]){1,}$/", "/([\s]){1,}/");
 		$r = (!empty($r)) ? $r : array("-", "", "-");
 		return substr(strtolower(preg_replace($s, $r, $subject)), 0, 254);
-	}	
+	}
 
     /**
      * @return \yii\db\ActiveQuery
@@ -92,7 +92,7 @@ trait FileTraits
 		$metadataClass = $this->getMetadataClass();
         return $this->hasMany($metadataClass, $metadataClass::metadataLink())->indexBy('key');
     }
-	
+
 	/**
 	 * Get all the images for this entity
 	 * @param boolean $thumbnails Get thumbnails as well?
@@ -102,7 +102,7 @@ trait FileTraits
 	{
         return Image::getImagesFor($this, $thumbnails, $default);
 	}
-	
+
 	/**
 	 * Get the main icon for this entity
 	 */
@@ -110,7 +110,7 @@ trait FileTraits
 	{
         return Image::getIconFor($this);
 	}
-		
+
 	/**
 	 * Get metadata, either from key or all metadata
 	 * @param string $key
@@ -119,8 +119,8 @@ trait FileTraits
 	public function icon()
 	{
 		return \nitm\helpers\Relations::getCachedRelation('id', false, Image::className(), 'icon', [], $this, 120);
-	}	
-		
+	}
+
 	/**
 	 * Get metadata, either from key or all metadata
 	 * @param string $key
@@ -130,7 +130,7 @@ trait FileTraits
 	{
 		return !is_null($key) ? (isset($this->metadata[$key]) ? $this->metadata[$key] : '') : $this->metadata;
 	}
-	
+
     /**
      * @return string
      */

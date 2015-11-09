@@ -83,10 +83,9 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 			"<controller:$controllers>" => $id . "/<controller>",
 			"<controller:$controllers>/<action>" => $id . "/<controller>/<action>",
 			"<controller:$controllers>/<action>/<id>" => $id . "/<controller>/<action>",
-			"<controller:$controllers>/<action:(get)>/<id>/<filename>" => $id . "/<controller>/<action>",
-			"<controller:$controllers>/<action:(index|save)>/<type>/<id:>" => $id . "/<controller>/<action>",
-			"<controller:$controllers>/<action:\w+>/<type>/<remoteType>/<remoteId>" => $id . "/<controller>/<action>",
-			"<controller:(image)>/<action>/<id:\d+>/<size:\w+>" => $id . "/<controller>/<action>",
+			"<controller:$controllers>/<action:(get|download)>/<id:\d+>/<filename>" => $id . "/<controller>/<action>",
+			"<controller:$controllers>/<action>/<type>/<id>" => $id . "/<controller>/<action>",
+			"<controller:$controllers>/<action>/<type>/<remoteType>/<remoteId>" => $id . "/<controller>/<action>",
         ]);
 	}
 
@@ -144,8 +143,10 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 		$engine = $this->resolveEngine($engine);
 		if(isset($this->_storageEngines[$engine]))
 			return $this->_storageEngines[$engine];
-		else
-			throw new \yii\base\Exception("Engine: $engine is not supported");
+		else {
+			\Yii::warning("Engine: $engine is not supported");
+			return $this->_storageEngines['local'];
+		}
 	}
 
 	public function getEngineClass($engine=null)
@@ -159,7 +160,8 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 			break;
 
 			default:
-			throw new \yii\base\Exception("There is no engine for [".$engine."] available");
+			$class = "\\nitm\\filemanager\helpers\storage\\".$this->getEngine('local');
+			\yii::warning("There is no engine for [".$engine."] available. Using local storage engine instead");
 			break;
 		}
 	}

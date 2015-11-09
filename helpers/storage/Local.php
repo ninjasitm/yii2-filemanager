@@ -6,9 +6,9 @@ use yii\helpers\FileHelper;
 use yii\helpers\ArrayHelper;
 use nitm\filemanager\models\File;
 
-class Local extends \nitm\filemanager\helpers\Storage implements StorageInterface 
+class Local extends \nitm\filemanager\helpers\Storage implements StorageInterface
 {
-	
+
 	/**
 	 * Save a file or data to a file
 	 * @param string $data
@@ -23,7 +23,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 		$data = $data instanceof File ? $data->url : $data;
 		if(!is_dir(dirname($to)))
 			static::createContainer(dirname($to), true);
-		
+
 		switch(static::isWriteable($to))
 		{
 			case true:
@@ -32,21 +32,21 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 				case true:
 				$ret_val = copy($data, $to);
 				break;
-				
+
 				default:
 				$ret_val = file_put_contents($to, $data);
 				break;
 			}
 			static::applyPermissions($to, $permissions);
 			break;
-			
+
 			default:
 			throw new \yii\base\Exception("The directory: ".dirname($to)." is not writable");
 			break;
 		}
-		return $ret_val;
+		return $to;
 	}
-	
+
 	/**
 	 * Move a file or directory
 	 * @param string $from
@@ -62,10 +62,10 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 		if($isFile)
 			$from = self::getUrl($from);
 		$ret_val = false;
-		
+
 		if(!is_dir(dirname($to)))
 			static::createContainer(dirname($to), true);
-		
+
 		switch(static::isWriteable($to))
 		{
 			case true:
@@ -75,14 +75,14 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 				$ret_val = file_put_contents($to, $from) === false ? false : true;
 			static::applyPermissions($to, $permissions);
 			break;
-			
+
 			default:
 			throw new \yii\base\Exception("The directory: ".dirname($to)." is not writable");
 			break;
 		}
-		return $ret_val;
+		return $to;
 	}
-	
+
 	/**
 	 * Delete a file matched by path
 	 * @param string $container
@@ -100,7 +100,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 		}
 		return static::exists($path) ? unlink($path) : false;
 	}
-	
+
 	/**
 	 * Create a container most likely a directory
 	 * @param string $container
@@ -117,7 +117,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 		}
 		return $ret_val;
 	}
-	
+
 	/**
 	 * Delete a container most likely a directory
 	 * @param string $container
@@ -128,7 +128,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	{
 		return FileHelper::removeDirectory($container, $options);
 	}
-	
+
 	/**
 	 * Get the alias $of
 	 * @param string $of
@@ -138,7 +138,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	{
 		return \Yii::getAlias($of);
 	}
-	
+
 	/**
 	 * Does $path Exist?
 	 * @param string $path
@@ -152,7 +152,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Is $path writable?
 	 * @param string $path
@@ -162,7 +162,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	{
 		return is_writable(dirname(static::getUrl($path)));
 	}
-	
+
 	/**
 	 * Get the contents of a file
 	 * @param string $path
@@ -175,7 +175,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 			$ret_val = file_get_contents($path);
 		return $ret_val;
 	}
-	
+
 	/**
 	 * Apply the permissions
 	 * @param $to Apply the permissions to this path

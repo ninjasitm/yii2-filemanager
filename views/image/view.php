@@ -10,6 +10,11 @@ use nitm\helpers\Icon;
  * @var provisioning\models\ProvisioningImage $model
  */
 
+$options = isset($options) ? $options : [
+	'id' => 'images',
+	'role' => 'imagesContainer'
+];
+
 if(isset($model)) {
 	$this->title = $model->file_name;
 	$dataProvider = new \yii\data\ArrayDataProvider(['allModels' => [$model]]);
@@ -28,12 +33,13 @@ if(isset($model)) {
 	'export' => false,
 	'striped' => false,
 	'responsive' => true,
+	'options' => $options,
 	'rowOptions' => function ($model) {
 		return [
 			"style" => "border-top:solid medium #CCC",
 			"class" => \nitm\helpers\Statuses::getIndicator($model->getStatus()),
-			'id' => 'file'.$model->getId(),
-			'role' => 'statusIndicator'.$model->getId()
+			'role' => 'statusIndicator'.$model->getId().' imageContainer '.($model->isDefault() ? 'defaultImage' : 'extraImage'),
+			'id' => 'image'.$model->getId(),
 		];
 	},
 	'dataProvider' => $dataProvider,
@@ -67,7 +73,7 @@ if(isset($model)) {
 			'attribute' => 'icon',
 			'label' => '',
 			'value' => function ($model) {
-				return $model->getIcon()->getIconHtml('small', ['class' => 'thumbnail thumbnail-lg']);
+				return $model->getIcon()->getIconHtml('small', ['class' => 'thumbnail thumbnail-lg '.($model->isDefault() ? 'default' : '')]);
 			}
 		],
 		[
@@ -95,7 +101,7 @@ if(isset($model)) {
 						'title' => \Yii::t('yii', 'Delete Image'),
 						'data-pjax' => '0',
 						'role' => "deleteAction deleteImageAction metaAction",
-						'data-parent' => '#file'.$model->getId(),
+						'data-parent' => '#image'.$model->getId(),
 						'data-method' => 'post',
 						'data-url' => \Yii::$app->urlManager->createUrl([$url, '__format' => 'json'])
 					]);
@@ -106,7 +112,17 @@ if(isset($model)) {
 						'title' => \Yii::t('yii', 'Show more Information'),
 						'data-pjax' => '0',
 						'role' => "visibility",
-						'data-id' => 'file-info'.$model->getId(),
+						'data-id' => 'image-info'.$model->getId(),
+					]);
+				},
+				'default' => function ($url, $model) {
+					return Html::a(Icon::forAction('thumb-tack'), $url, [
+						'class' => 'fa-2x '.($model->isDefault() ? 'hidden' : ''),
+						'title' => \Yii::t('yii', 'Set this image as default'),
+						'data-pjax' => '0',
+						'role' => "toggleDefaultImage",
+						'data-id' => 'image-default'.$model->getId(),
+						'data-parent' => 'image'.$model->getId()
 					]);
 				},
 				'get' => function ($url, $model) {
@@ -115,13 +131,13 @@ if(isset($model)) {
 						'title' => \Yii::t('yii', 'Download Image'),
 						'data-pjax' => '0',
 						'inline' => true,
-						'data-parent' => 'file'.$model->getId(),
+						'data-parent' => 'image'.$model->getId(),
 						'data-method' => 'get',
 						'_target' => 'new'
 					]);
 				},
 			],
-			'template' => "{delete} {get} {info}",
+			'template' => "{delete} {get} {default} {info}",
 			'urlCreator' => function($action, $model, $key, $index) {
 				return '/'.$model->isWhat().'/'.$action.'/'.$model->getId();
 			},
@@ -189,13 +205,13 @@ if(isset($model)) {
 				'size' => 'large'
 			]);
 		} else
-			$shortLink = Html::tag('h4', "No file found");
+			$shortLink = Html::tag('h4', "No image found");
 		return Html::tag('tr',
 			Html::tag('td', $metaInfo.$shortLink, [
 				'colspan' => 10,
 			]), [
 			'class' => 'hidden',
-			'id' => 'file-info'.$model->getId()
+			'id' => 'image-info'.$model->getId()
 		]);
 	},
 	'pager' => [

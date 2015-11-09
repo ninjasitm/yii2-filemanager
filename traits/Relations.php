@@ -102,7 +102,7 @@ trait Relations
 
 	public function image()
 	{
-		return $this->getFileRelationModel(\nitm\filemanager\models\Image::className(), 'imagesModel');
+		return $this->getFileRelationModel(\nitm\filemanager\models\Image::className(), 'image');
 	}
 
     /**
@@ -151,7 +151,7 @@ trait Relations
 
 	public function file()
 	{
-		return $this->getFileRelationModel(\nitm\filemanager\models\File::className(), 'filesModel');
+		return $this->getFileRelationModel(\nitm\filemanager\models\File::className(), 'file');
 	}
 
     /**

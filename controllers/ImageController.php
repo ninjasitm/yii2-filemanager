@@ -8,9 +8,10 @@ use nitm\helpers\Response;
 use nitm\filemanager\helpers\ImageHelper;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\ImageMetadata;
+use nitm\filemanager\models\search\Image as ImageSearch;
 use nitm\filemanager\helpers\Storage;
 
-class ImageController extends \nitm\controllers\DefaultController
+class ImageController extends DefaultController
 {
 	use \nitm\traits\Controller;
 
@@ -53,18 +54,40 @@ class ImageController extends \nitm\controllers\DefaultController
 		return array_replace_recursive(parent::behaviors(), $behaviors);
 	}
 
+	public static function assets()
+	{
+		return array_merge(parent::assets(), [
+			\nitm\filemanager\assets\ImageAsset::className()
+		]);
+	}
 
-    public function actionGet($id, $size=null)
+	public function actionGallery($type, $id)
+	{
+		return \nitm\filemanager\widgets\Images::widget([
+			'model' => $this->findModel(\Yii::$app->getModule('nitm-files')->getModelClass($type), $id)
+		]);
+	}
+
+	public function actionIndex($type, $id)
+	{
+		return parent::actionIndex(ImageSearch::className(), $type, $id);
+	}
+
+
+    public function actionGet($id, $filename=null)
     {
+		$size = \Yii::$app->request->get('size');
 		$model = $this->findModel(Image::className(), $id, ['metadata']);
 		switch($model instanceof Image)
 		{
 			case true:
 			$image = $model->getIcon($size);
-			\Yii::$app->response->getHeaders()->set('Content-Type', $image->type);
+			\Yii::$app->response->getHeaders()->set('Content-Type', $model->type);
 			switch(1)
 			{
 				case file_exists($image->getRealPath()):
+				if(!\Yii::$app->request->get('__format'))
+					$_GET['__format'] = 'raw';
 				return $this->getContents($image);
 				break;
 
@@ -79,10 +102,10 @@ class ImageController extends \nitm\controllers\DefaultController
 	protected function getContents($image)
 	{
 		$contents = file_get_contents($image->getRealPath());
-		switch(\Yii::$app->request->get('__format') == 'raw')
+		switch(\Yii::$app->request->get('__format') == 'html')
 		{
 			//We should display the image rather than the raw contents
-			case false:
+			case true:
 			return '<img url="'."data:".$image->type.";base64,".base64_encode($contents).'"/>';
 			break;
 
@@ -99,15 +122,13 @@ class ImageController extends \nitm\controllers\DefaultController
 	public function actionSave($type, $id)
 	{
 		$ret_val = [
-			'files' => [$id => false]
+			'files' => []
 		];
 		if(is_null($class = \Yii::$app->getModule('nitm-files')->getModelClass($type)))
 			return false;
 		$model = $class::findOne($id);
 		$imageModels = ImageHelper::saveImages($model, $type, $id);
-		switch(is_array($imageModels) && $imageModels != [])
-		{
-			case true:
+		if(is_array($imageModels) && $imageModels != []) {
 			$ret_val['success'] = true;
 			$ret_val['data'] = '';
 			$imageWidget = new \nitm\filemanager\widgets\Images(['model' => $model]);
@@ -117,8 +138,8 @@ class ImageController extends \nitm\controllers\DefaultController
 				$ret_val['files'][] = [
 					'name' => $image->file_name,
 					'size' => $image->size,
-					'url' => $image->url,
-					'thumbnailUrl' => $image->getIcon('medium')->url,
+					'url' => $image->url(),
+					'thumbnailUrl' => $image->url('small'),
 					'deleteUrl' => implode(DIRECTORY_SEPARATOR, [
 						$this->id,
 						'delete',
@@ -134,10 +155,6 @@ class ImageController extends \nitm\controllers\DefaultController
 					"dataProvider" => new \yii\data\ArrayDataProvider(["allModels" => $imageModels]),
 				]
 			]);
-			break;
-
-			default:
-			break;
 		}
 		$this->setResponseFormat(\Yii::$app->request->isAjax ? 'json' : 'html');
 		return $this->renderResponse($ret_val, Response::viewOptions(), \Yii::$app->request->isAjax);

@@ -15,7 +15,7 @@
 
 .thumbnail {
 	padding: 0px;
-	heigth: auto;
+	height: auto;
 	vertical-align: middle;
 	margin: 0px;
 }
@@ -28,9 +28,9 @@
 }
 
 .icon-sm, .thumbnail-sm {
-	width: 56px;
+	width: 74px;
 }
 
 .icon-lg, .thumbnail-lg {
-	width: 72px;
+	width: 128px;
 }

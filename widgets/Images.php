@@ -15,6 +15,7 @@ use nitm\filemanager\models\Image;
 use nitm\filemanager\helpers\Storage;
 use nitm\helpers\Helper;
 use nitm\helpers\Icon;
+use dosamigos\fileupload\FileUploadUI;
 
 /**
  * Extends the kartik\widgets\FileInput widget.
@@ -29,12 +30,12 @@ class Images extends BaseWidget
      * @var array the HTML attributes for the extra image wrapper.
      */
 	public $infoOptions = [
-		'class' => 'col-md-4 col-lg-4',
+		'class' => 'col-md-12 col-lg-12',
 		'role' => 'infoContainer'
 	];
 
 	public $options = [
-		'class' => 'col-md-8 col-lg-8',
+		'class' => 'col-md-12 col-lg-12',
 		'role' => 'imagesContainer',
 		'id' => 'images'
 	];
@@ -79,10 +80,12 @@ class Images extends BaseWidget
      */
     public function run()
     {
+		if(!isset($this->imageModel))
+			$this->imageModel = $this->model->image();
 		$images = $this->getImages();
 		$initScript = \Yii::$app->request->isAjax ? Html::script("\$nitm.onModuleLoad('nitm-file-manager:images', function (module) {module.init();});", ['type' => 'text/javascript']) : '';
-		$info = $this->getInfoPane();
-		return $images.$initScript.$info;
+		$info = $this->getUploadUI();
+		return $info.$images.$initScript;
     }
 
 	protected function getAssets()
@@ -90,6 +93,29 @@ class Images extends BaseWidget
 		return [
 			\nitm\filemanager\assets\ImageAsset::className()
 		];
+	}
+
+	protected function getUploadUI()
+	{
+		return Html::tag('div',
+			Html::tag('div', '<br>'.FileUploadUI::widget([
+				'model' => $this->imageModel,
+				'attribute' => 'file_name',
+				'url' => '/image/save/'.$this->imageModel->remote_type.'/'.$this->imageModel->remote_id,
+				'options' => [
+					'done'   => 'filemanager',
+					//'enctype' => 'multipart/form-data'
+				],
+				'clientOptions' => [
+					'maxFileSize' => 2000000,
+				]
+			]), [
+				"class" => "upload-images",
+				"id" => "filemanagerUpload",
+				'style' => 'display:block'
+			]), [
+				'class' => 'col-sm-12'
+		]);
 	}
 
 	protected function getInfoPane()

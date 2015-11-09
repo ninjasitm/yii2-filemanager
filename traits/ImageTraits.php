@@ -157,7 +157,7 @@ trait ImageTraits
 	/**
 	 * Get the main icon for this entity
 	 */
-	public function getIconHtml($size='small', array $options=[], $mode=null)
+	public function getIconHtml($size='small', array $options=[], $mode='raw')
 	{
 		$id = $mode=='name' ? $this->file_name : $this->getId();
 		return \yii\helpers\Html::img($this->url($size, $mode), $options);
@@ -166,13 +166,47 @@ trait ImageTraits
 	/**
 	 * Get the main icon for this entity
 	 */
+	public function getIconRaw($size='small', $mode=null)
+	{
+		$id = $mode =='name' ? $this->file_name : $this->getId();
+		return $this->url($size, $mode);
+	}
+
+	/**
+	 * Get the main icon for this entity
+	 */
 	public function url($size='medium', $mode=null)
 	{
-		return ArrayHelper::getValue($this->metadata, $size.'.value', ArrayHelper::getValue($this->metadata, 'medium'));
+		//Compensate for finding metadata icon urls here
+		$url = ArrayHelper::getValue($this->metadata, $size.'.value', ArrayHelper::getValue($this, 'url', ArrayHelper::getValue($this->metadata, 'medium')));
+		if(file_exists(\Yii::getAlias($url)))
+			return \Yii::$app->urlManager->createAbsoluteUrl(["/image/get/".$this->geturlKey($size), 'size' => $size]);
+		else
+			return $url;
 	}
 
 	public function isDefault()
 	{
 		return ((bool)$this->is_default === true);
+	}
+
+	protected function getUrlKey($size='medium', $mode=null)
+	{
+		$ret_val = '';
+		switch($mode)
+		{
+			case 'remote':
+			$ret_val = implode(':', [$this->remote_type, $this->remote_id]).'/'.$this->file_name;
+			break;
+
+			case 'file':
+			$ret_val = $this->file_name;
+			break;
+
+			default:
+			$ret_val = $this->getId().'/'.$this->file_name;
+			break;
+		}
+		return $ret_val;
 	}
 }
