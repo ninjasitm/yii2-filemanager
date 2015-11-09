@@ -9,16 +9,17 @@ use nitm\filemanager\helpers\ImageHelper;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\ImageMetadata;
 use nitm\filemanager\helpers\Storage;
-use nitm\filemanager\models\search\Image as ImageSearch;
 
-class ImageController extends DefaultController
-{	
-	public function init() 
+class ImageController extends \nitm\controllers\DefaultController
+{
+	use \nitm\traits\Controller;
+
+	public function init()
 	{
 		parent::init();
 		$this->model = new Image(['scenario' => 'default']);
 	}
-	
+
 	public function behaviors()
 	{
 		$behaviors = [
@@ -27,7 +28,12 @@ class ImageController extends DefaultController
 				'only' => ['get'],
 				'rules' => [
 					[
-						'actions' => ['default', 'get'],
+						'actions' => ['get'],
+						'allow' => true,
+						'roles' => ['?', '@'],
+					],
+					[
+						'actions' => ['delete', 'default', 'save'],
 						'allow' => true,
 						'roles' => ['@'],
 					],
@@ -36,64 +42,67 @@ class ImageController extends DefaultController
 			'verbs' => [
 				'class' => \yii\filters\VerbFilter::className(),
 				'actions' => [
+					'get' => ['get'],
+					'delete' => ['post'],
 					'default' => ['post'],
+					'save' => ['post', 'get'],
 				],
 			],
 		];
-		
+
 		return array_replace_recursive(parent::behaviors(), $behaviors);
 	}
-	
-	public static function assets()
-	{
-		return [
-			\nitm\filemanager\assets\ImageAsset::className()
-		];
-	}
-	
-	public function actionIndex($type, $id)
-	{
-		$images = parent::actionIndex(ImageSearch::className(), $type, $id, [
-			'construct' => [
-				'queryOptions' => [
-					'with' => [
-						'author'
-					],
-				],
-			]
-		]);
-		switch($this->getResponseFormat())
+
+
+    public function actionGet($id, $size=null)
+    {
+		$model = $this->findModel(Image::className(), $id, ['metadata']);
+		switch($model instanceof Image)
 		{
-			case 'json':
-			$images = array_map(function ($image) {
-				if($image) {
-					//if($image->metadata == []) {
-					//	\nitm\filemanager\helpers\ImageHelper::createThumbnails($image, $image->type);
-					//	print_r($image->metadata);
-					//}
-					return [
-						'thumb' => $image->url('small', 'remote'),
-						'image' => $image->url(null, 'remote'),
-						'title' => $image->file_name
-					];
-				}
-			}, $images);
+			case true:
+			$image = $model->getIcon($size);
+			\Yii::$app->response->getHeaders()->set('Content-Type', $image->type);
+			switch(1)
+			{
+				case file_exists($image->getRealPath()):
+				return $this->getContents($image);
+				break;
+
+				default:
+				return Image::getHtmlIcon($image->html_icon);
+				break;
+			}
 			break;
 		}
-		return $images;
+    }
+
+	protected function getContents($image)
+	{
+		$contents = file_get_contents($image->getRealPath());
+		switch(\Yii::$app->request->get('__format') == 'raw')
+		{
+			//We should display the image rather than the raw contents
+			case false:
+			return '<img url="'."data:".$image->type.";base64,".base64_encode($contents).'"/>';
+			break;
+
+			default:
+			return $contents;
+			break;
+		}
 	}
-	
+
 	/**
 	 * Save images for a model
-	 * 
+	 *
 	 */
-	public function actionCreate($type, $id)
+	public function actionSave($type, $id)
 	{
 		$ret_val = [
-			'remoteId' => $id
+			'files' => [$id => false]
 		];
 		if(is_null($class = \Yii::$app->getModule('nitm-files')->getModelClass($type)))
-			return ['fileLink' => '#', 'filename' => 'Failed'];
+			return false;
 		$model = $class::findOne($id);
 		$imageModels = ImageHelper::saveImages($model, $type, $id);
 		switch(is_array($imageModels) && $imageModels != [])
@@ -101,15 +110,14 @@ class ImageController extends DefaultController
 			case true:
 			$ret_val['success'] = true;
 			$ret_val['data'] = '';
+			$imageWidget = new \nitm\filemanager\widgets\Images(['model' => $model]);
 			$renderer = \Yii::$app->request->isAjax ? 'renderAjax' : 'render';
 			foreach($imageModels as $image)
 			{
 				$ret_val['files'][] = [
 					'name' => $image->file_name,
-					'filename' => $image->file_name,
 					'size' => $image->size,
 					'url' => $image->url,
-					'filelink' => $image->url,
 					'thumbnailUrl' => $image->getIcon('medium')->url,
 					'deleteUrl' => implode(DIRECTORY_SEPARATOR, [
 						$this->id,
@@ -118,24 +126,23 @@ class ImageController extends DefaultController
 					]),
 					'deleteType' => 'POST'
 				];
-				$ret_val['data'] .= $image->getIconHtml();
+				$ret_val['data'] .= $imageWidget->getImage($image);
 			}
 			Response::viewOptions([
-				"view" => 'index', 
+				"view" => 'index',
 				"args" => [
 					"dataProvider" => new \yii\data\ArrayDataProvider(["allModels" => $imageModels]),
 				]
 			]);
 			break;
-			
+
 			default:
 			break;
 		}
-		
 		$this->setResponseFormat(\Yii::$app->request->isAjax ? 'json' : 'html');
 		return $this->renderResponse($ret_val, Response::viewOptions(), \Yii::$app->request->isAjax);
 	}
-	
+
 	public function actionDefault($id)
 	{
 		$this->setResponseFormat('json');
@@ -152,21 +159,17 @@ class ImageController extends DefaultController
 			return $model->save();
 		}
 	}
-	
+
 	public function actionDelete($id)
 	{
-		$ret_val = [
-			'action' => 'delete',
-			'success' => 'false'
-		];
 		$this->setResponseFormat('json');
 		$model = $this->findModel(Image::className(), $id);
 		if($model instanceof Image) {
-			$ret_val['success'] =  ImageHelper::deleteImages($model);
+			return ImageHelper::deleteImages($model);
 		}
-		return $ret_val;
+		return false;
 	}
-	
+
 	/*
 	 * Get the forms associated with this controller
 	 * @param string $param What are we getting this form for?

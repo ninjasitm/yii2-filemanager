@@ -19,14 +19,15 @@ if(isset($model)) {
 }
 
 ?>
-<?php 
+<?php
 	if(!isset($noBreadcrumbs) ||
 		(isset($noBreadcrumbs) && !$noBreadcrumbs))
 		echo \yii\widgets\Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]);
 ?>
 <?= GridView::widget([
+	'export' => false,
 	'striped' => false,
-	'responsive' => true, 
+	'responsive' => true,
 	'rowOptions' => function ($model) {
 		return [
 			"style" => "border-top:solid medium #CCC",
@@ -146,7 +147,7 @@ if(isset($model)) {
 		}
 	},
 	'afterRow' => function ($model, $key, $index, $grid) {
-		
+
 		$metaInfo = \nitm\widgets\metadata\StatusInfo::widget([
 			'items' => [
 				[
@@ -171,7 +172,7 @@ if(isset($model)) {
 				],
 			]
 		]);
-		
+
 		if($model->getFileExists()) {
 			$shortLink = \nitm\widgets\metadata\ShortLink::widget([
 				'label' => 'Url',
@@ -191,7 +192,7 @@ if(isset($model)) {
 			$shortLink = Html::tag('h4', "No file found");
 		return Html::tag('tr',
 			Html::tag('td', $metaInfo.$shortLink, [
-				'colspan' => 10, 
+				'colspan' => 10,
 			]), [
 			'class' => 'hidden',
 			'id' => 'file-info'.$model->getId()
@@ -205,5 +206,5 @@ if(isset($model)) {
 		'negativeMargin' => 150,
 		'delay' => 500,
 	]
-]); 
+]);
 ?>

@@ -32,13 +32,13 @@ class Images extends BaseWidget
 		'class' => 'col-md-4 col-lg-4',
 		'role' => 'infoContainer'
 	];
-	
+
 	public $options = [
 		'class' => 'col-md-8 col-lg-8',
 		'role' => 'imagesContainer',
 		'id' => 'images'
 	];
-	
+
 	public $pluginOptions = [
 		"pluginOptions" => [
 			'previewFileType' => 'image',
@@ -54,7 +54,7 @@ class Images extends BaseWidget
 			'type' => 'file'
 		]
 	];
-	
+
 	public $pluginExtraOptions = [
 		"pluginOptions" => [
 			'previewFileType' => 'image',
@@ -71,9 +71,9 @@ class Images extends BaseWidget
 			'type' => 'file'
 		]
 	];
-	
+
 	protected $imageModel;
-	
+
     /**
      * Runs the widget
      */
@@ -84,19 +84,19 @@ class Images extends BaseWidget
 		$info = $this->getInfoPane();
 		return $images.$initScript.$info;
     }
-	
-	protected function getAssets() 
+
+	protected function getAssets()
 	{
 		return [
 			\nitm\filemanager\assets\ImageAsset::className()
 		];
 	}
-	
+
 	protected function getInfoPane()
 	{
 		return Html::tag('div', Html::tag('div', $this->getUploadButton()), $this->infoOptions);
 	}
-	
+
 	protected function getUploadButton()
 	{
 		$text = \yii\helpers\ArrayHelper::remove($this->buttonOptions, 'text', 'Add Images');
@@ -104,17 +104,17 @@ class Images extends BaseWidget
 			'size' => 'large',
 			'toggleButton' => [
 				'tag' => 'a',
-				'label' => Icon::forAction('plus')." ".$text, 
+				'label' => Icon::forAction('plus')." ".$text,
 				'href' => \Yii::$app->urlManager->createUrl(['/image/form/create/'.$this->model->isWhat().'/'.$this->model->getId(), '__format' => 'modal']),
 				'title' => \Yii::t('yii', $text),
 				'role' => 'dynamicAction createAction disabledOnClose',
 				'class' => 'btn btn-primary'
 			],
 		], (array)$this->buttonOptions);
-		
+
 		return \nitm\widgets\modal\Modal::widget($options);
 	}
-	
+
 	/**
 	 * Get the preview image
 	 * @param nitm\filemanager\models\Image $image
@@ -123,13 +123,13 @@ class Images extends BaseWidget
 	 * @return html string
 	 */
 	protected function getThumbnail($model=null, $default=false, $placeholder=false)
-	{		
+	{
 		return \Yii::$app->getView()->render("/image/thumbnail", [
 			'model' => $model,
 			'wrapperOptions' => $thumbnailOptions
 		]);
 	}
-	
+
 	protected function getImages()
 	{
 		//Use smaller preview images for extra images
@@ -149,7 +149,7 @@ class Images extends BaseWidget
 			}
 		]);
 	}
-	
+
     /**
      * @var array the HTML attributes for the defualt image wrapper.
      */
@@ -160,11 +160,11 @@ class Images extends BaseWidget
 			'role' => 'imageContainer'
 		];
 	}
-	
+
 	/**
 	 * The default actions that are supported
 	 */
-	protected function defaultActions() 
+	protected function defaultActions()
 	{
 		return [
 			'delete' => [
@@ -200,30 +200,33 @@ class Images extends BaseWidget
 			],
 		];
 	}
-	
-	protected function getImage($image)
+
+	public function getImage($image)
 	{
 		$id = $this->getInputId($image);
 		$this->pluginExtraOptions['attribute'] = 'images['.$id.']';
 		$this->pluginExtraOptions['pluginOptions']['uploadUrl'] = '/image/save/'.$this->model->isWhat().'/'.$this->model->getId();
 		$this->pluginExtraOptions['model'] = $this->model;
 		$this->pluginExtraOptions['options']['id'] = $id;
-        $this->defaultOptions['class'] .= ' image';
-		$this->defaultOptions['id'] = $id;
-		$this->defaultOptions['role'] .= ' '.($image->isDefault() ? 'defaultImage' : 'extraImage');
+
+		$defaultOptions = $this->defaultOptions();
+        $defaultOptions['class'] .= ' image';
+		$defaultOptions['id'] = $id;
+		$defaultOptions['role'] .= ' '.($image->isDefault() ? 'defaultImage' : 'extraImage');
 		return \Yii::$app->getView()->render("@nitm/filemanager/views/image/view", [
 			'model' => $image,
 			"actions" => $this->getActions(),
-			'wrapperOptions' => $this->defaultOptions,
-			'pluginOptions' => $this->pluginExtraOptions
+			'wrapperOptions' => $defaultOptions,
+			'pluginOptions' => $this->pluginExtraOptions,
+			'noBreadcrumbs' => true
 		]);
 	}
-	
+
 	protected function getProgressHtml()
 	{
 		return Html::tag('div',
-			Html::tag('div', 
-				Html::tag('div', '', ['id' => 'percentage']), 
+			Html::tag('div',
+				Html::tag('div', '', ['id' => 'percentage']),
 				['id' => 'bar', 'class' => 'clear']
 			).
 			Html::tag('div', '', ['id' => 'message', 'class' => 'clear']),

@@ -8,7 +8,7 @@ use yii\helpers\ArrayHelper;
  */
 class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 {
-	public $id = 'nitm-files';
+	public $id = "nitm-files";
     public $controllerNamespace = 'nitm\filemanager\controllers';
 
     public $thumbnails = [[100,100]];
@@ -19,10 +19,10 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	 * This is used primarily for local permissions
 	 * Permissions in the format:
 	 *	[
-	 		'type' => [
-				'mode' =>
-				'group' =>
-				'owner' =>
+	 		"type" => [
+				"mode" =>
+				"group" =>
+				"owner" =>
 			]
 	 *	]
 	 */
@@ -31,11 +31,11 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	public $engineMap = [
 	];
 
-	public $engine = 'local';
+	public $engine = "local";
 
-    public $thumbPath = 'thumb/';
+    public $thumbPath = "thumb/";
 
-    public $url = '/';
+    public $url = "/";
 
 	protected $settings = [
 	];
@@ -52,9 +52,9 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	];
 
 	private $_storageEngines = [
-		'local' => 'Local',
-		'aws' => 'AmazonAWS',
-		'youtube' => 'YouTube',
+		"local" => "Local",
+		"aws" => "AmazonAWS",
+		"youtube" => "YouTube",
 	];
 
     public function init()
@@ -68,24 +68,26 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 		/**
 		 * Aliases for nitm\widgets module
 		 */
-		\Yii::setAlias('nitm/filemanager', dirname(__DIR__)."/yii2-filemanager");
+		\Yii::setAlias("nitm/filemanager", dirname(__DIR__)."/yii2-filemanager");
     }
 
-	public static function getUrls($id='nitm-files')
+	public static function getUrls($id="nitm-files")
 	{
-		return [
-            $id => $id,
-            $id . '/<controller:[\w\-]+>' => $id . '/<controller>/index',
-            $id . '/<controller:[\w\-]+>/<action:[\w\-]+>' => $id . '/<controller>/<action>',
-            $id . '/<controller:[\w\-]+>/<action:[\w\-]+>/<id>' => $id . '/<controller>/<action>',
-            $id . '/<controller:[\w\-]+>/<action:[\w\-]+>/<type>/<id>' => $id . '/<controller>/<action>',
-			'<controller:(filemanager|files|image)>' => $id . '/<controller>',
-			'<controller:(filemanager|files|image)>/<action>' => $id . '/<controller>/<action>',
-			'<controller:(filemanager|files|image)>/<action>/<id>' => $id . '/<controller>/<action>',
-			'<controller:(filemanager|files|image)>/<action:(get)>/<id>/<filename>' => $id . '/<controller>/<action>',
-			'<controller:(filemanager|files|image)>/<action:(index|save)>/<type>/<id:\d+>' => $id . '/<controller>/<action>',
-			'<controller:(image)>/<action>/<id:\d+>/<size:\w+>' => $id . '/<controller>/<action>',
-        ];
+		$controllers = '('.implode('|', [
+			'file', 'image', 'files', 'images'
+		]).')';
+		$synonyms = [
+			$id => $id,
+		];
+		return array_merge($synonyms, [
+			"<controller:$controllers>" => $id . "/<controller>",
+			"<controller:$controllers>/<action>" => $id . "/<controller>/<action>",
+			"<controller:$controllers>/<action>/<id>" => $id . "/<controller>/<action>",
+			"<controller:$controllers>/<action:(get)>/<id>/<filename>" => $id . "/<controller>/<action>",
+			"<controller:$controllers>/<action:(index|save)>/<type>/<id:>" => $id . "/<controller>/<action>",
+			"<controller:$controllers>/<action:\w+>/<type>/<remoteType>/<remoteId>" => $id . "/<controller>/<action>",
+			"<controller:(image)>/<action>/<id:\d+>/<size:\w+>" => $id . "/<controller>/<action>",
+        ]);
 	}
 
 	public function bootstrap($app)
@@ -113,7 +115,7 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 
 	public function getBaseType($extension)
 	{
-		return ArrayHelper::getValue($this->getBaseTypeMap(), $extension, 'unknown');
+		return ArrayHelper::getValue($this->getBaseTypeMap(), $extension, "unknown");
 	}
 
 	public function getIsAllowed($extension)
@@ -164,8 +166,8 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 
 	public function getPermission($types=null, $for=null)
 	{
-		$types = count($_types = array_map('trim', explode('|', $types))) == 0 ? array_keys($this->permissions) : $_types;
-		$for = count($_for = array_map('trim', explode('|', $for))) == 0 ? null : $_for;
+		$types = count($_types = array_map("trim", explode("|", $types))) == 0 ? array_keys($this->permissions) : $_types;
+		$for = count($_for = array_map("trim", explode("|", $for))) == 0 ? null : $_for;
 
 		$ret_val = [];
 		foreach((array)$types as $idx=>$t)
@@ -175,18 +177,18 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 			else
 				$ret_val[$t] = ArrayHelper::getValue($this->permissions, $t, []);
 		}
-		if(isset($ret_val['mode']))
-			$ret_val['mode'] = $ret_val['mode'][0] === 0 ? $ret_val['mode'] : octdec($ret_val['mode']);
+		if(isset($ret_val["mode"]))
+			$ret_val["mode"] = $ret_val["mode"][0] === 0 ? $ret_val["mode"] : octdec($ret_val["mode"]);
 		return count($ret_val) == 1 ? array_pop($ret_val) : $ret_val;
 	}
 
 	public function getWidget($type, $options=[])
 	{
-		$widgetClass = __NAMESPACE__.'\widgets\\'.ucfirst(strtolower($type));
+		$widgetClass = __NAMESPACE__."\widgets\\".ucfirst(strtolower($type));
 		if(class_exists($widgetClass))
 			return new $widgetClass($options);
 		else
-			return ' => ';
+			return " => ";
 	}
 
 	public function isSupportedProvider($for, $provider)
@@ -197,20 +199,20 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	private function defaultPermissions()
 	{
 		return [
-			'directory' => [
-				'mode' => 0770,
-				'owner' => 'nobody',
-				'group' => 'nogroup'
+			"directory" => [
+				"mode" => 0770,
+				"owner" => "nobody",
+				"group" => "nogroup"
 			],
-			'file' => [
-				'mode' => 0770,
-				'owner' => 'nobody',
-				'group' => 'nogroup'
+			"file" => [
+				"mode" => 0770,
+				"owner" => "nobody",
+				"group" => "nogroup"
 			],
-			'image' => [
-				'mode' => 0770,
-				'owner' => 'nobody',
-				'group' => 'nogroup'
+			"image" => [
+				"mode" => 0770,
+				"owner" => "nobody",
+				"group" => "nogroup"
 			],
 		];
 	}
@@ -222,20 +224,20 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	private function getExtensionMap()
 	{
 		return [
-			'pdf' => 'application/pdf',
-			'zip' => 'application/zip',
-			'pcap' => 'application/vnd.tcpdump.pcap',
-			'cap' => 'application/vnd.tcpdump.pcap',
-			'gif' => 'image/gif',
-			'jpg' => 'image/jpeg',
-			'png' => 'image/png',
-			'tiff' => 'image/tiff',
-			'tif' => 'image/tiff',
-			'css' => 'text/css',
-			'html' => 'text/html',
-			'js' => 'text/javascript',
-			'txt' => 'text/plain',
-			'xml' => 'text/xml',
+			"pdf" => "application/pdf",
+			"zip" => "application/zip",
+			"pcap" => "application/vnd.tcpdump.pcap",
+			"cap" => "application/vnd.tcpdump.pcap",
+			"gif" => "image/gif",
+			"jpg" => "image/jpeg",
+			"png" => "image/png",
+			"tiff" => "image/tiff",
+			"tif" => "image/tiff",
+			"css" => "text/css",
+			"html" => "text/html",
+			"js" => "text/javascript",
+			"txt" => "text/plain",
+			"xml" => "text/xml",
 		];
 	}
 
@@ -253,12 +255,12 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	public function setPathMap($paths)
 	{
 		$this->pathMap = array_merge([
-			'image' => '@media/images/',
-			'audio' => '@media/audio/',
-			'video' => '@media/videos/',
-			'text' => '@media/documents/',
-			'application' => '@media/applications/',
-			'unknown' => '@media/unknown/'
+			"image" => "@media/images/",
+			"audio" => "@media/audio/",
+			"video" => "@media/videos/",
+			"text" => "@media/documents/",
+			"application" => "@media/applications/",
+			"unknown" => "@media/unknown/"
 		], (array) $paths);
 	}
 
@@ -276,9 +278,9 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	public function setNamespaceMap($paths)
 	{
 		$this->namespaceMap = array_merge([
-			'\\nitm\\models\\',
-			'\\nitm\\filemanager\\models\\',
-			'\\nitm\\widgets\\models\\',
+			"\\nitm\\models\\",
+			"\\nitm\\filemanager\\models\\",
+			"\\nitm\\widgets\\models\\",
 		], (array) $paths);
 	}
 
@@ -290,60 +292,60 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	private function getBaseTypeMap()
 	{
 		return [
-			'txt' => 'text',
-			'htm' => 'text',
-			'html' => 'text',
-			'php' => 'text',
-			'css' => 'text',
-			'js' => 'text',
-			'json' => 'text',
-			'xml' => 'text',
-			'pdf' => 'text',
-			'pcap' => 'text',
-			'cap' => 'text',
+			"txt" => "text",
+			"htm" => "text",
+			"html" => "text",
+			"php" => "text",
+			"css" => "text",
+			"js" => "text",
+			"json" => "text",
+			"xml" => "text",
+			"pdf" => "text",
+			"pcap" => "text",
+			"cap" => "text",
 
 			// ms office
-			'doc' => 'text',
-			'rtf' => 'text',
-			'xls' => 'text',
-			'ppt' => 'text',
+			"doc" => "text",
+			"rtf" => "text",
+			"xls" => "text",
+			"ppt" => "text",
 
 			// open office
-			'odt' => 'text',
-			'ods' => 'text',
+			"odt" => "text",
+			"ods" => "text",
 
 			// images
-			'png' => 'image',
-			'jpe' => 'image',
-			'jpeg' => 'image',
-			'jpg' => 'image',
-			'gif' => 'image',
-			'bmp' => 'image',
-			'ico' => 'image',
-			'tiff' => 'image',
-			'tif' => 'image',
-			'svg' => 'image',
-			'svgz' => 'image',
+			"png" => "image",
+			"jpe" => "image",
+			"jpeg" => "image",
+			"jpg" => "image",
+			"gif" => "image",
+			"bmp" => "image",
+			"ico" => "image",
+			"tiff" => "image",
+			"tif" => "image",
+			"svg" => "image",
+			"svgz" => "image",
 
 			// adobe
-			'psd' => 'image',
-			'ai' => 'image',
-			'eps' => 'image',
-			'ps' => 'image',
+			"psd" => "image",
+			"ai" => "image",
+			"eps" => "image",
+			"ps" => "image",
 
 			// archives
-			'swf' => 'application',
-			'zip' => 'application',
-			'rar' => 'application',
-			'exe' => 'application',
-			'msi' => 'application',
-			'cab' => 'application',
+			"swf" => "application",
+			"zip" => "application",
+			"rar" => "application",
+			"exe" => "application",
+			"msi" => "application",
+			"cab" => "application",
 
 			// audio/video
-			'mp3' => 'audio',
-			'qt' => 'video',
-			'mov' => 'video',
-			'flv' => 'video',
+			"mp3" => "audio",
+			"qt" => "video",
+			"mov" => "video",
+			"flv" => "video",
 		];
 	}
 
@@ -351,7 +353,7 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	{
 		foreach((array)$this->namespaceMap as $namespace)
 		{
-			$class = rtrim($namespace, '\\').'\\'.\nitm\helpers\ClassHelper::properClassName($modelName);
+			$class = rtrim($namespace, "\\")."\\".\nitm\helpers\ClassHelper::properClassName($modelName);
 			if(class_exists($class))
 				return $class;
 		}

@@ -13,12 +13,12 @@ use yii\helpers\ArrayHelper;
  *	Amazon S3
  */
 class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
-{	
+{
 	public static function containers($specifically=null)
 	{
 		return \Yii::$app->get('nitm-files')->getPath($specifically);
 	}
-	
+
 	/**
 	 * Save a file or data to a file
 	 * @param string $data
@@ -31,7 +31,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::save($data, $to, static::parsePermissions($permissions), $thumb, $path, $type);
 	}
-	
+
 	/**
 	 * Move a file or directory
 	 * @param string $from
@@ -45,7 +45,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::move($from, $to, $isUploaded, $thumb, $fileType);
 	}
-	
+
 	/**
 	 * Get the alias $of
 	 * @param string $of
@@ -56,7 +56,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::getUrl($of);
 	}
-	
+
 	/**
 	 * Does $path Exist?
 	 * @param string $path
@@ -65,9 +65,9 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	public static function exists($path, $type=null)
 	{
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::exists($path); 
+		return $module::exists($path);
 	}
-	
+
 	/**
 	 * Delete files
 	 * @param mixed $of
@@ -78,7 +78,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::delete($path);
 	}
-	
+
 	/**
 	 * Is $path writable?
 	 * @param string $path
@@ -89,7 +89,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::isWritable($path);
 	}
-	
+
 	/**
 	 * Get the contents of a file
 	 * @param string $path
@@ -100,7 +100,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::getContents($path);
 	}
-	
+
 	/**
 	 * Create a container/directory
 	 * @param string $container
@@ -111,7 +111,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::createContainer($container, $recursive, static::parsePermissions($permissions));
 	}
-	
+
 	/**
 	 * Delete a container/directory
 	 * @param string $container
@@ -122,10 +122,10 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
 		return $module::removeContainer($container, $options, $type);
 	}
-	
+
 	/**
 	 * Convert the permissions
-	 * @param array $permissions Permissions ['mode':mode, 'group':group, 'owner': owner] 
+	 * @param array $permissions Permissions ['mode':mode, 'group':group, 'owner': owner]
 	 * @return octal permissions
 	 */
 	protected static function parsePermissions($permissions=[])
@@ -134,7 +134,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 			$permissions['mode'] = is_null($permissions['mode']) ? null : octdec((string)$permissions['mode']);
 		return $permissions;
 	}
-	
+
 	/**
 	 * Apply the permissions
 	 * @param $to Apply the permissions to this path
@@ -146,7 +146,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($fileType);
 		return $module::applyPermissions($to, $permissions, $type);
 	}
-	
+
 	/**
 	 * Get the permissions
 	 * @parm string $type 'directory'|'file'

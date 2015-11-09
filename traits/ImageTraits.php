@@ -24,7 +24,7 @@ use nitm\filemanager\models\Image;
  * @property ImagesMetadata $metadata
  */
 trait ImageTraits
-{	
+{
 	/**
 	 * Returns the placeholder image
 	 */
@@ -32,7 +32,7 @@ trait ImageTraits
 	{
 		return Icon::show("camera");
 	}
-	
+
 	public static function getHtmlIcon($name)
 	{
 		switch($name)
@@ -40,14 +40,14 @@ trait ImageTraits
 			case null:
 			$name = 'camera';
 			break;
-			
+
 			case 'text':
 			$name = 'file-text';
 			break;
 		}
 		return Icon::show($name, ['class' => 'fa fa-2x']);
 	}
-	
+
 	/**
 	 * Get the main icon for this entity
 	 * @param strin $size
@@ -59,7 +59,7 @@ trait ImageTraits
 				'key' => $size
 			]);
 	}
-	
+
 	/**
 	 * Get the main icon for this entity
 	 * @param strin $size
@@ -89,14 +89,14 @@ trait ImageTraits
 				break;
 			}
 			break;
-			
+
 			default:
 			$ret_val = new Image();
 			break;
 		}
 		return $ret_val;
 	}
-	
+
 	/**
 	 * Dynamically update a thumb for an image
 	 */
@@ -110,7 +110,7 @@ trait ImageTraits
 			$this->save();
 		}
 	}
-	
+
 	public function updateMetadataSizes($size='medium')
 	{
 		$metadata = ArrayHelper::getValue($this->metadata, $size, null);
@@ -125,17 +125,17 @@ trait ImageTraits
 			$metadata->save();
 		}
 	}
-	
+
 	/**
 	 * Utry two methods of getting the height information for this image
 	 */
 	public function getImageSize($metadataSize=null)
 	{
 		$path = is_null($metadataSize) ? $this->getRealPath() : ArrayHelper::getValue($this->metadata, $metadataSize.'.value', $this->getRealPath());
-		
+
 		if(!file_exists($path))
 			return [0, 0, 0];
-		
+
 		try {
 			list($x, $y, $size) = getimagesize($path);
 		} catch (\Exception $e) {
@@ -153,7 +153,7 @@ trait ImageTraits
 		}
 		return [$x, $y, $size];
 	}
-	
+
 	/**
 	 * Get the main icon for this entity
 	 */
@@ -162,15 +162,15 @@ trait ImageTraits
 		$id = $mode=='name' ? $this->file_name : $this->getId();
 		return \yii\helpers\Html::img($this->url($size, $mode), $options);
 	}
-	
+
 	/**
 	 * Get the main icon for this entity
 	 */
-	public function url($size=null, $mode=null)
+	public function url($size='medium', $mode=null)
 	{
-		return \Yii::$app->urlManager->createAbsoluteUrl(["/image/get/".$this->geturlKey($mode), 'size' => $size]);
+		return ArrayHelper::getValue($this->metadata, $size.'.value', ArrayHelper::getValue($this->metadata, 'medium'));
 	}
-	
+
 	public function isDefault()
 	{
 		return ((bool)$this->is_default === true);

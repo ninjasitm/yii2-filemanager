@@ -17,13 +17,13 @@ class BaseWidget extends Widget
 {
 	public $model;
 	public $withForm;
-	
+
     /**
      * @var string the title for the alert. If set to empty or null, will not be
      * displayed.
      */
     public $title = '';
-	
+
 	public $buttonOptions = [];
 
     /**
@@ -31,11 +31,11 @@ class BaseWidget extends Widget
      * - tag: the tag to display the title. Defaults to 'span'.
      */
     public $titleOptions = ['class' => 'kv-alert-title'];
-	
+
 	public $actions  = [];
-	
+
 	protected $inputType = 'image';
-	
+
 	public function init()
 	{
 		$this->registerAssets();
@@ -51,17 +51,17 @@ class BaseWidget extends Widget
 		foreach($this->getAssets() as $asset)
         	$asset::register($view);
     }
-	
+
 	public function getActions()
 	{
 		return array_merge($this->defaultActions(), $this->actions);
 	}
-	
-	protected function defaultActions() 
+
+	protected function defaultActions()
 	{
 		return [];
 	}
-	
+
     /**
      * Gets the title section
      *
@@ -87,18 +87,18 @@ class BaseWidget extends Widget
         }
         return $icon . $title . $separator;
     }
-	
+
 	protected function getInputId($model)
 	{
 		return $this->model->isWhat()."-".$this->inputType."-".(($model->getId() == 0) ? uniqid() : $model->getId());
 	}
-	
+
 	protected function getAssets()
 	{
 		return [];
 	}
-	
-	protected function defaultOptions() 
+
+	protected function defaultOptions()
 	{
 		return [];
 	}
