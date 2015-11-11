@@ -235,7 +235,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 					'value' => $url,
 					'width' => @$imageSize[0],
 					'height' => @$imageSize[1],
-					'size' => filesize(\Yii::getAlias($thumbStoredPath))
+					'size' => static::getImageBlobFileSize($thumb)
 				]);
 				$metadata->save();
 			}
@@ -266,5 +266,15 @@ class ImageHelper extends \yii\helpers\FileHelper
 				return Storage::delete($image->getPath());
 		}
 		return false;
+	}
+
+	public static function getImageBlobFileSize($blob)
+	{
+		if (function_exists('mb_strlen')) {
+		    $size = mb_strlen($blob, '8bit');
+		} else {
+		    $size = strlen($blob);
+		}
+		return $size;
 	}
 }

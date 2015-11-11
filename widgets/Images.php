@@ -112,9 +112,10 @@ class Images extends BaseWidget
 			]), [
 				"class" => "upload-images",
 				"id" => "filemanagerUpload",
-				'style' => 'display:block'
+				'style' => 'display:block; z-index: 10000'
 			]), [
-				'class' => 'col-sm-12'
+				'class' => 'col-sm-12',
+				'style' => 'z-index: 10000'
 		]);
 	}
 
