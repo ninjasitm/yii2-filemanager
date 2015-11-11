@@ -10,20 +10,20 @@ use Yii;
 use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use yii\widgets\ListView;
-use nitm\filemanager\models\File;
-use nitm\filemanager\models\search\File as FileSearch;
+use nitm\filemanager\models\Image;
+use nitm\filemanager\models\search\Image as ImageSearch;
 use nitm\helpers\Icon;
 
 /**
- * Extends the kartik\widgets\FileInput widget.
+ * Extends the kartik\widgets\ImageInput widget.
  *
  * @author Malcolm Paul <lefteyecc@ninjasitm.com>
  * @since 1.0
  */
-class Files extends BaseWidget
+class ImagesList extends BaseWidget
 {
 	public $options = [
-		'id' => 'files'
+		'id' => 'image'
 	];
 
 	/**
@@ -43,30 +43,24 @@ class Files extends BaseWidget
      */
     public function run()
     {
-		$searchModel = new FileSearch([
-			'queryOptions' => [
-				'where' => [
-					'remote_type' => $this->model->remote_type,
-					'remote_id' => $this->model->remote_id
-				]
-			]
-		]);
-		if(isset($this->model) && $this->model instanceof File)
+		$searchModel = new ImageSearch();
+		if(isset($this->items))
+			$dataProvider = new \yii\data\ArrayDataProvider([
+				'allModels' => $this->items
+			]);
+		else if(isset($this->model) && $this->model instanceof Image)
 			$dataProvider = $searchModel->search([
 				'remote_type' => $this->model->remote_type,
 				'remote_id' => $this->model->remote_id
 			]);
 		else
 			$datProvider = new \yii\data\ArrayDataProvider([
-				'allModels' => $this->model->files()
+				'allModels' => $this->model->images()
 			]);
-		return $this->render('@nitm/filemanager/views/files/index', [
+		return $this->render('@nitm/filemanager/views/image/index', [
 			'type' => $this->model->remote_type,
 			'id' => $this->model->remote_id,
-			'dataProvider' => $searchModel->search([
-				'remote_type' => $this->model->remote_type,
-				'remote_id' => $this->model->remote_id
-			]),
+			'dataProvider' => $dataProvider,
 			'searchModel' => $searchModel,
 			'model' => $this->model,
 			'noBreadcrumbs' => true
@@ -76,7 +70,7 @@ class Files extends BaseWidget
 	protected function getAssets()
 	{
 		return [
-			\nitm\filemanager\assets\FileAsset::className()
+			\nitm\filemanager\assets\ImageAsset::className()
 		];
 	}
 }

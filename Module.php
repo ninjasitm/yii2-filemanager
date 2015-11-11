@@ -73,20 +73,24 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 
 	public static function getUrls($id="nitm-files")
 	{
-		$controllers = '('.implode('|', [
-			'file', 'image', 'files', 'images'
-		]).')';
 		$synonyms = [
-			$id => $id,
+			'files' => ['file', 'files'],
+			'image' => ['images', 'image']
 		];
-		return array_merge($synonyms, [
-			"<controller:$controllers>" => $id . "/<controller>",
-			"<controller:$controllers>/<action>" => $id . "/<controller>/<action>",
-			"<controller:$controllers>/<action>/<id>" => $id . "/<controller>/<action>",
-			"<controller:$controllers>/<action:(get|download)>/<id:\d+>/<filename>" => $id . "/<controller>/<action>",
-			"<controller:$controllers>/<action>/<type>/<id>" => $id . "/<controller>/<action>",
-			"<controller:$controllers>/<action>/<type>/<remoteType>/<remoteId>" => $id . "/<controller>/<action>",
-        ]);
+		$ret_val = [];
+		foreach($synonyms as $controller=>$alias)
+		{
+			$controllers = '('.implode('|', $alias).')';
+			$ret_val += [
+				"<controller:$controllers>" => $id . "/$controller",
+				"<controller:$controllers>/<action>" => $id . "/$controller/<action>",
+				"<controller:$controllers>/<action>/<id>" => $id . "/$controller/<action>",
+				"<controller:$controllers>/<action:(get|download)>/<id:\d+>/<filename>" => $id . "/$controller/<action>",
+				"<controller:$controllers>/<action>/<type>/<id>" => $id . "/$controller/<action>",
+				"<controller:$controllers>/<action>/<type>/<remoteType>/<remoteId>" => $id . "/$controller/<action>",
+			];
+		}
+		return $ret_val;
 	}
 
 	public function bootstrap($app)

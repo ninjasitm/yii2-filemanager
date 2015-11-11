@@ -20,7 +20,7 @@ use nitm\helpers\Icon;
  * @author Malcolm Paul <lefteyecc@ninjasitm.com>
  * @since 1.0
  */
-class Files extends BaseWidget
+class FilesList extends BaseWidget
 {
 	public $options = [
 		'id' => 'files'
@@ -43,15 +43,12 @@ class Files extends BaseWidget
      */
     public function run()
     {
-		$searchModel = new FileSearch([
-			'queryOptions' => [
-				'where' => [
-					'remote_type' => $this->model->remote_type,
-					'remote_id' => $this->model->remote_id
-				]
-			]
-		]);
-		if(isset($this->model) && $this->model instanceof File)
+		$searchModel = new FileSearch();
+		if(isset($this->items))
+			$dataProvider = new \yii\data\ArrayDataProvider([
+				'allModels' => $this->items
+			]);
+		else if(isset($this->model) && $this->model instanceof File)
 			$dataProvider = $searchModel->search([
 				'remote_type' => $this->model->remote_type,
 				'remote_id' => $this->model->remote_id
@@ -60,16 +57,23 @@ class Files extends BaseWidget
 			$datProvider = new \yii\data\ArrayDataProvider([
 				'allModels' => $this->model->files()
 			]);
-		return $this->render('@nitm/filemanager/views/files/index', [
-			'type' => $this->model->remote_type,
-			'id' => $this->model->remote_id,
-			'dataProvider' => $searchModel->search([
-				'remote_type' => $this->model->remote_type,
-				'remote_id' => $this->model->remote_id
-			]),
-			'searchModel' => $searchModel,
-			'model' => $this->model,
-			'noBreadcrumbs' => true
+		return \yii\widgets\ListView::widget([
+			'dataProvider' => $dataProvider,
+			'options' => [
+				'tag' => 'div',
+				'class' => 'list-group'
+			],
+			'itemOptions' => [
+				'tag' => false,
+			],
+			'layout' => "{items}\n{pager}",
+			'itemView' => function ($model) {
+				return Html::tag('a', $model->file_name, [
+					'class' => 'list-group-item',
+					'target' => '_new',
+					'href' => $model->url()
+				]);
+			}
 		]);
     }
 

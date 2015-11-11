@@ -29,6 +29,10 @@ trait Relations
 		$options['select'] = isset($options['select']) ? $options['select'] : ['id', 'remote_id', 'remote_type'];
 		$options['with'] = array_merge(ArrayHelper::getValue($options, 'with', []), ['author', 'last', 'count', 'newCount']);
 		$options['andWhere'] = isset($options['andWhere']) ? $options['andWhere'] : ['remote_type' => $this->isWhat()];
+		$options['groupBy'] = isset($options['groupBy']) ? $options['groupBy'] : array_merge($link, [
+			'remote_type' => $this->isWhat(),
+			'hash' => null
+		]);
 		return $this->getRelationQuery($className, $link, $options, $many);
 	}
 
@@ -41,6 +45,9 @@ trait Relations
 		$options['select'] = isset($options['select']) ? $options['select'] : ['remote_id', 'remote_type'];
 		$options['with'] = array_merge(ArrayHelper::getValue($options, 'with', []), ['count', 'newCount']);
 		$options['andWhere'] = isset($options['andWhere']) ? $options['andWhere'] : ['remote_type' => $this->isWhat()];
+		$options['groupBy'] = isset($options['groupBy']) ? $options['groupBy'] : array_merge($link, [
+			'remote_type' => $this->isWhat()
+		]);
 		return $this->getRelationQuery($className, $link, $options);
 	}
 
@@ -79,20 +86,20 @@ trait Relations
 	public function imageList()
 	{
 		return array_map(function ($image) {
-			$thumb = $image->getIcon('medium');
+			$thumb = $image->getIcon('small');
 			if(!$thumb->height || !$thumb->width)
-				$image->updateMetadataSizes('medium');
+				$image->updateMetadataSizes('small');
 			if(!$image->height || !$image->width)
 				$image->updateSizes();
 			return [
 				'title' => ucfirst($image->remote_type).' Image',
-				'thumb' => $thumb->url,
-				'url' => $image->url,
+				'thumb' => $thumb->url('small'),
+				'src' => $thumb->url('small'),
+				'url' => $image->url('large'),
 				'height' => $thumb->height,
-				'width' => $thumb->width
-				//s'description' => $image->metadata->description
+				'width' => $thumb->width,
 			];
-		}, $this->images);
+		}, $this->images());
 	}
 
 	public function images($useCache=false)
@@ -140,13 +147,25 @@ trait Relations
     {
 		$options = array_merge([
 			'orderBy' => ['id' => SORT_DESC],
+			'select' => '*'
 		], $options);
-        return $this->getFileRelationModelQuery(\nitm\filemanager\models\File::className(), null, $options, true);
+        return $this->getFileRelationQuery(\nitm\filemanager\models\File::className(), null, $options, true);
     }
 
 	public function files($useCache=false)
 	{
 		return $this->resolveRelation('id', \nitm\filemanager\models\File::className(), $useCache, [], true, 'files');
+	}
+
+	public function fileList()
+	{
+		return array_map(function ($file) {
+			return [
+				'title' => ucfirst($file->remote_type).' Image',
+				'src' => $file->url(),
+				'url' => $file->url(),
+			];
+		}, $this->files());
 	}
 
 	public function file()

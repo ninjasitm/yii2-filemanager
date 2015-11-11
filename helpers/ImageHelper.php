@@ -157,21 +157,16 @@ class ImageHelper extends \yii\helpers\FileHelper
 
 					if($proceed)
 					{
-						switch($image->save())
-						{
-							case true:
+						if($image->save()) {
 							\Yii::trace("Saved image ".$image->slug);
 							/**
 							 * Need top fix creating thumbnail sbefore uploading to AWS
 							 */
 							$tempImage->id = $id;
-							self::createThumbnails($tempImage, $image->type, $originalPath);
+							self::createThumbnails($image, $image->type, $originalPath);
 							$ret_val[] = $image;
-							break;
-
-							default:
+						} else {
 							\Yii::trace("Unable to save file informaiton to database for ".$image->slug);
-							break;
 						}
 					} else {
 						\Yii::trace("Unable to save physical file: ".$image->slug);

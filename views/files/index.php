@@ -27,20 +27,21 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
 ?>
 <br>
 <div class="filemanager-default-index <?= \Yii::$app->request->isAjax ? '' : 'col-sm-12'; ?>">
+	<?php
+		if(!isset($noBreadcrumbs) ||
+			(isset($noBreadcrumbs) && !$noBreadcrumbs))
+			echo \yii\widgets\Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]);
+	?>
     <div class="panel panel-default">
         <div class="panel-heading">
 			<div class="row">
-				<div class="col-md-6 col-lg-6">
-					<?= Html::a(Html::tag('i','',['class' => 'glyphicon glyphicon-th-large']), '', ['data-toggle' => 'modal', 'class' => 'btn btn-primary navbar-btn disabled', 'id' => 'fileGridBtn']); ?>
-					<?= Html::a(Html::tag('i','',['class' => 'glyphicon glyphicon-cloud-upload']), '', ['class' => 'btn btn-success navbar-btn', 'data-toggle' => 'modal', 'id' => 'fileUploadBtn']); ?>
-				</div>
-				<div class="col-md-6 col-lg-6">
+				<div class="col-sm-12">
 					<?php
 						$form = ActiveForm::begin([
 							'id' => 'file-search-form',
 							'method' => 'get',
 							'options' => [
-								'class' => 'navbar-form navbar-right'
+								'class' => 'navbar-form'
 							],
 						]);
 					?>
@@ -59,30 +60,21 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
 			</div>
         </div>
         <div class="panel-body">
-            <div class="display-images" id="fileGridManager">
+			<div class="upload-files" id="filemanagerUpload" style='display:block'>
+				<?= \nitm\filemanager\widgets\FileUpload::widget([
+						'model' => $model instanceof \nitm\filemanager\models\File ? $model : $model->file(),
+					]); ?>
+			</div>
+            <div class="display-files" id="fileGridManager">
 				<?=
 					$this->render('view', [
 						'options' => [
 							'id' => 'files'
 						],
 						'dataProvider' => $dataProvider,
-						'noBreadcrumbs' => isset($noBreadcrumbs) ? $noBreadcrumbs : false
+						'noBreadcrumbs' => true
 					]);
 				?>
-            </div>
-            <div class="upload-images" id="filemanagerUpload">
-                <?= FileUploadUI::widget([
-                    'model' => $model,
-                    'attribute' => 'file_name',
-                    'url' => '/files/save/'.$type.'/'.$id,
-                    'options' => [
-                        'done'   => 'filemanager',
-						//'enctype' => 'multipart/form-data'
-                    ],
-                    'clientOptions' => [
-                        'maxFileSize' => 2000000,
-                    ]
-                ]);?>
             </div>
         </div>
         <div class="panel-footer" id="fileGridFooter">
@@ -92,17 +84,5 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
 			?>
         </div>
     </div>
-    
+
 </div>
-
-<div class="modal fade" id="editProperties" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-            <div class="modal-body"></div>
-            
-        </div>
-    </div>
-</div>
-
-

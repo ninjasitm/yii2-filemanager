@@ -17,6 +17,7 @@ class BaseWidget extends Widget
 {
 	public $model;
 	public $withForm;
+	public $items;
 
     /**
      * @var string the title for the alert. If set to empty or null, will not be
@@ -39,7 +40,7 @@ class BaseWidget extends Widget
 	public function init()
 	{
 		$this->registerAssets();
-		$this->options['id'] .= $this->model->getId();
+		$this->options['id'] .= isset($this->model) ? $this->model->getId() : uniqid();
 	}
 
     /**
