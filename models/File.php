@@ -31,15 +31,9 @@ use yii\helpers\ArrayHelper;
  * @property FileTerms[] $fileTerms
  * @property User $user
  */
- 
+
 class File extends BaseFile
-{	
-    public function behaviors()
-    {
-		$behaviors = [
-		];
-        return array_merge(parent::behaviors(), $behaviors);
-    }
+{
     /**
      * @inheritdoc
      */

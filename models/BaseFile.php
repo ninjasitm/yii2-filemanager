@@ -22,23 +22,23 @@ use nitm\helpers\Cache;
 class BaseFile extends \nitm\models\Entity
 {
 	use \nitm\widgets\traits\BaseWidget, \nitm\filemanager\traits\FileTraits;
-	
+
 	protected $link = [
 		'remote_type' => 'remote_type',
 		'remote_id' => 'remote_id'
 	];
-	
+
 	public function init()
 	{
 		$this->setConstraints($this->constrain);
 		$this->addWith(['author']);
 		if($this->initSearchClass)
 			//static::initCache($this->constrain, self::cacheKey($this->getId()));
-		
+
 		if(is_object(static::currentUser()))
 			static::$userLastActive = date('Y-m-d G:i:s', strtotime(is_null(static::$userLastActive) ? static::currentUser()->lastActive() : static::$userLastActive));
 	}
-	
+
 	public function scenarios() {
 		return array_merge(parent::scenarios(), [
 			'create' => ['remote_id', 'remote_type', 'size', 'hash', 'url', 'file_name', 'title'],
@@ -46,11 +46,11 @@ class BaseFile extends \nitm\models\Entity
 			'delete' => ['remote_id', 'remote_type']
 		]);
 	}
-	
+
 	public static function has()
 	{
 		$has = [
-			'author' => null, 
+			'author' => null,
 			'editor' => null,
 			'hidden' => null,
 			'deleted' => null,
@@ -65,7 +65,7 @@ class BaseFile extends \nitm\models\Entity
     {
         return $this->hasMany(FileTerms::className(), ['file_id' => 'id']);
     }
-	
+
 	/**
 	 * @param string file
 	 */
@@ -75,13 +75,13 @@ class BaseFile extends \nitm\models\Entity
 			$file = $this->url;
 		return array_shift(explode(' ', exec("md5sum '".\Yii::getAlias($file)."'")));
 	}
-	
+
 	public function setHash($hash=null)
 	{
 		$this->hash = !$hash ? $this->getHash() : $hash;
 		return !empty($this->hash);
 	}
-	
+
 	/**
 	 * Add metadata for an image item
 	 * @param mixed $array
@@ -104,7 +104,7 @@ class BaseFile extends \nitm\models\Entity
 					case true:
 					$metadata = $currentMetadata[$id];
 					break;
-					
+
 					default:
 					$metadata = new $metadataClass;
 					break;
@@ -118,7 +118,7 @@ class BaseFile extends \nitm\models\Entity
 		}
 		return $ret_val;
 	}
-	
+
 	/**
 	 * Get all the files for this entity
 	 * @param boolean $metadata Get metadata as well?

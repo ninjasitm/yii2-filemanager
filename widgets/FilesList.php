@@ -70,7 +70,6 @@ class FilesList extends BaseWidget
 			'itemView' => function ($model) {
 				return Html::tag('a', $model->file_name, [
 					'class' => 'list-group-item',
-					'target' => '_new',
 					'href' => $model->url()
 				]);
 			}
