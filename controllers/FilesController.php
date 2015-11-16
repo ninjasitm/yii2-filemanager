@@ -39,19 +39,16 @@ class FilesController extends DefaultController
 		];
 	}
 
+	public function getWith()
+	{
+		return array_merge(parent::getWith(), []);
+	}
+
 	public function actionIndex($type, $id)
 	{
 		if(\Yii::$app->request->isAjax)
 			Response::viewOptions('js', 'initFileManager();');
-		$files = parent::actionIndex(FileSearch::className(), $type, $id, [
-			'construct' => [
-				'queryOptions' => [
-					'with' => [
-						'author'
-					],
-				],
-			],
-		]);
+		$files = parent::actionIndex(FileSearch::className(), $type, $id);
 		switch($this->getResponseFormat())
 		{
 			case 'json':

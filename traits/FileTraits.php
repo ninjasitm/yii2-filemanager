@@ -46,6 +46,21 @@ trait FileTraits
 		return $this->url('file');
 	}
 
+	public function indexUrl($as='html', $options=[])
+	{
+		switch($as)
+		{
+			case 'modal':
+			$options += ['__format' => 'modal'];
+			break;
+
+			default:
+			$options += ['__format' => 'html'];
+			break;
+		}
+		return \Yii::$app->urlManager->createAbsoluteUrl(array_merge([implode('/', [$this->isWhat(), 'index', $this->remote_type, $this->remote_id])], $options));
+	}
+
 	/**
 	 * Get the main icon for this entity
 	 */

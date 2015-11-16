@@ -34,7 +34,7 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
 			echo \yii\widgets\Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]);
 	?>
     <div class="panel panel-default">
-        <div class="panel-heading">
+        <!-- <div class="panel-heading">
 			<div class="row">
 				<div class="col-sm-12">
 					<?php
@@ -59,7 +59,7 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
 					<?php ActiveForm::end(); ?>
 				</div>
 			</div>
-        </div>
+        </div> -->
         <div class="panel-body">
 			<div class="upload-images" id="filemanagerUpload" style="display:block">
 				<?= \nitm\filemanager\widgets\ImageUpload::widget([

@@ -11,7 +11,7 @@ use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use nitm\models\User;
-use nitm\filemanager\models\Images as ImagesModel;
+use nitm\filemanager\models\Image as ImageModel;
 use kartik\icons\Icon;
 
 class ImagesCount extends BaseWidget
@@ -25,26 +25,26 @@ class ImagesCount extends BaseWidget
 		'id' => 'images-count',
 		'tag' => 'a'
 	];
-	
+
 	public $widgetOptions = [
 		'class' => 'btn-group text-center'
 	];
-	
+
 	public function init()
 	{
 		switch(1)
 		{
-			case !($this->model instanceof ImagesModel) && (($this->parentType == null) || ($this->parentId == null)):
+			case !($this->model instanceof ImageModel) && (($this->parentType == null) || ($this->parentId == null)):
 			$this->model = null;
 			break;
-			
+
 			default:
-			$this->model = ($this->model instanceof ImagesModel) ? $this->model : ImagesModel::findModel([$this->parentId, $this->parentType]);
+			$this->model = ($this->model instanceof ImageModel) ? $this->model : ImageModel::findModel([$this->parentId, $this->parentType]);
 			break;
-		}	
+		}
 		parent::init();
 	}
-	
+
 	public function run()
 	{
 		$this->options['id'] .= $this->parentId;

@@ -92,6 +92,7 @@ class DefaultController extends \nitm\controllers\DefaultController
 				'params' => [$this->model->formName() => ['deleted' => 0]]
 			],
 			'viewOptions' => [
+				'noBreadcrumbs' => \Yii::$app->request->isAjax,
 				'type' => $type,
 				'id' => $id
 			]
