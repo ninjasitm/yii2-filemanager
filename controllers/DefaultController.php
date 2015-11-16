@@ -75,8 +75,6 @@ class DefaultController extends \nitm\controllers\DefaultController
      */
     public function actionIndex($searchClass, $type, $id, $options=[])
     {
-		$_GET['remote_type'] = $type;
-		$_GET['remote_id'] = $id;
 		unset($_GET['type'], $_GET['id']);
 		if(\Yii::$app->request->isAjax)
 		{
@@ -85,8 +83,14 @@ class DefaultController extends \nitm\controllers\DefaultController
 		}
 		return parent::actionIndex($searchClass, array_merge_recursive([
 			'construct' => [
-				'inclusiveSearch' => true,
-				'booleanSearch' => true,
+				'inclusiveSearch' => false,
+				'booleanSearch' => false,
+			],
+			'params' => [
+				$this->model->formName() => [
+					'remote_type' => $type,
+					'remote_id' => $id
+				]
 			],
 			'defaults' => [
 				'params' => [$this->model->formName() => ['deleted' => 0]]
