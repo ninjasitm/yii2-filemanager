@@ -111,6 +111,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	public static function createContainer($container, $recursive=true, $permissions=[])
 	{
 		$ret_val = false;
+		$container = static::getUrl($container);
 		if(FileHelper::createDirectory($container, ArrayHelper::getValue($permissions, 'mode', static::getPermission('directory', 'mode')), $recursive)) {
 			static::applyPermissions($container, $permissions, 'directory');
 			$ret_val = true;
@@ -126,6 +127,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 */
 	public static function removeContainer($container, $options=[])
 	{
+		$container = static::getUrl($container);
 		return FileHelper::removeDirectory($container, $options);
 	}
 
