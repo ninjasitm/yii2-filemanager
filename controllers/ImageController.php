@@ -70,6 +70,8 @@ class ImageController extends DefaultController
 
 	public function actionIndex($type, $id)
 	{
+		$asset = '\\nitm\\filemanager\\assets\\ImageAsset';
+		$asset::register($this->getView());
 		return parent::actionIndex(ImageSearch::className(), $type, $id);
 	}
 

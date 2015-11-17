@@ -76,9 +76,8 @@ class DefaultController extends \nitm\controllers\DefaultController
     public function actionIndex($searchClass, $type, $id, $options=[])
     {
 		unset($_GET['type'], $_GET['id']);
-		if(\Yii::$app->request->isAjax)
-		{
-			$asset = '\\nitm\\filemanager\\assets\\'.$this->model->properName().'Asset';
+		if(\Yii::$app->request->isAjax) {
+			$asset = '\\nitm\\filemanager\\assets\\FileAsset';
 			$asset::register($this->getView());
 		}
 		return parent::actionIndex($searchClass, array_merge_recursive([
