@@ -21,7 +21,10 @@ use nitm\helpers\Cache;
 
 class BaseFile extends \nitm\models\Entity
 {
-	use \nitm\widgets\traits\BaseWidget, \nitm\filemanager\traits\FileTraits;
+	use \nitm\widgets\traits\BaseWidgetModel, \nitm\filemanager\traits\FileTraits {
+		\nitm\filemanager\traits\FileTraits::fields insteadof \nitm\widgets\traits\BaseWidgetModel;
+		\nitm\filemanager\traits\FileTraits::extraFields insteadof \nitm\widgets\traits\BaseWidgetModel;
+	}
 
 	protected $link = [
 		'remote_type' => 'remote_type',

@@ -9,7 +9,7 @@ namespace nitm\filemanager\widgets;
 
 use Yii;
 use yii\base\InvalidConfigException;
-use nitm\widgets\helpers\BaseWidget as Widget;
+use nitm\widgets\BaseWidget as Widget;
 use yii\helpers\Html;
 use kartik\icons\Icon;
 

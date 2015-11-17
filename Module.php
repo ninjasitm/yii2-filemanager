@@ -71,26 +71,28 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 		\Yii::setAlias("nitm/filemanager", dirname(__DIR__)."/yii2-filemanager");
     }
 
-	public static function getUrls($id="nitm-files")
+	public function getUrls($id = 'nitm-files')
 	{
-		$synonyms = [
-			'files' => ['file', 'files'],
-			'image' => ['images', 'image']
-		];
-		$ret_val = [];
-		foreach($synonyms as $controller=>$alias)
-		{
-			$controllers = '('.implode('|', $alias).')';
-			$ret_val += [
-				"<controller:$controllers>" => $id . "/$controller",
-				"<controller:$controllers>/<action>" => $id . "/$controller/<action>",
-				"<controller:$controllers>/<action>/<id>" => $id . "/$controller/<action>",
-				"<controller:$controllers>/<action:(get|download)>/<id:\d+>/<filename>" => $id . "/$controller/<action>",
-				"<controller:$controllers>/<action>/<type>/<id>" => $id . "/$controller/<action>",
-				"<controller:$controllers>/<action>/<type>/<remoteType>/<remoteId>" => $id . "/$controller/<action>",
-			];
-		}
-		return $ret_val;
+		$parameters = [];
+		$routeHelper = new \nitm\helpers\Routes([
+			'moduleId' => $id,
+			'map' => [
+				'type-remoteType-remoteId' => '<controller:%controllers%>/<action>/<type>/<remoteType>/<remoteId>',
+				'type-id' => '<controller:%controllers%>/<action>/<type>/<id:\d+>',
+				'get' => '<controller:%controllers%>/<action:(get|download)>/<id:\d+>/<filename>',
+				'id' => '<controller:%controllers%>/<action>/<id:\d+>',
+				'action-only' => '<controller:%controllers%>/<action>',
+				'none' => '<controller:%controllers%>'
+			],
+			'controllers' => [
+				'file' => ['alias' => true],
+				'image' => ['alias' => true]
+			]
+		]);
+		$routeHelper->pluralize();
+		$parameters = array_keys($routeHelper->map);
+		$routes = $routeHelper->create($parameters);
+		return $routes;
 	}
 
 	public function bootstrap($app)

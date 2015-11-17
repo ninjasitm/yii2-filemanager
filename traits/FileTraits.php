@@ -11,6 +11,30 @@ use nitm\filemanager\models\Image;
  */
 trait FileTraits
 {
+	public function fields()
+	{
+		$src = function ($model) {
+			return $model->url('large');
+		};
+		return [
+			'id',
+			'name' => 'file_name',
+			'icon' => function ($model) {
+				return $model->icon()->url('small');
+			},
+			'link' => $src,
+			'url' => $src,
+			'title' => 'file_name',
+			'size' => function ($model) {
+				return $model->getSize();
+			}
+		];
+	}
+
+	public function extraFields()
+	{
+		return [];
+	}
 	public function getRemoteClass()
 	{
 		$class = $this->remote_class;

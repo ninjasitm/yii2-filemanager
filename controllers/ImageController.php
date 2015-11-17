@@ -89,11 +89,13 @@ class ImageController extends DefaultController
 			{
 				case file_exists($image->getRealPath()):
 				if(!\Yii::$app->request->get('__format'))
-					$_GET['__format'] = 'raw';
+					$this->setResponseFormat('raw');
 				return $this->getContents($image);
 				break;
 
 				default:
+				if(!\Yii::$app->request->get('__format'))
+					$this->setResponseFormat('html');
 				return Image::getHtmlIcon($image->html_icon);
 				break;
 			}
@@ -104,11 +106,15 @@ class ImageController extends DefaultController
 	protected function getContents($image)
 	{
 		$contents = file_get_contents($image->getRealPath());
-		switch(\Yii::$app->request->get('__format') == 'html')
+		switch($this->getResponseFormat())
 		{
 			//We should display the image rather than the raw contents
-			case true:
+			case 'html':
 			return '<img url="'."data:".$image->type.";base64,".base64_encode($contents).'"/>';
+			break;
+
+			case 'json':
+			return $image;
 			break;
 
 			default:

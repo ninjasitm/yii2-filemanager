@@ -24,7 +24,7 @@ use nitm\helpers\Response;
 /**
  * FileController implements the CRUD actions for File model.
  */
-class FilesController extends DefaultController
+class FileController extends DefaultController
 {
 	public function init()
 	{
@@ -39,36 +39,11 @@ class FilesController extends DefaultController
 		];
 	}
 
-	public function getWith()
-	{
-		return array_merge(parent::getWith(), []);
-	}
-
 	public function actionIndex($type, $id)
 	{
 		if(\Yii::$app->request->isAjax)
 			Response::viewOptions('js', 'initFileManager();');
-		$files = parent::actionIndex(FileSearch::className(), $type, $id);
-		switch($this->getResponseFormat())
-		{
-			case 'json':
-			$files = array_map(function ($file) {
-				if($file) {
-					//if($image->metadata == []) {
-					//	\nitm\filemanager\helpers\ImageHelper::createThumbnails($image, $image->type);
-					//	print_r($image->metadata);
-					//}
-					return [
-						'link' => $file->url(),
-						'name' => $file['file_name'],
-						'title' => $file['file_name'],
-						'size' => $file->getSize()
-					];
-				}
-			}, $files);
-			break;
-		}
-		return $files;
+		return parent::actionIndex(FileSearch::className(), $type, $id);
 	}
 
     /**

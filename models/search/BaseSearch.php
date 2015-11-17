@@ -11,13 +11,15 @@ use yii\data\ActiveDataProvider;
  */
 class BaseSearch extends \nitm\search\BaseSearch
 {
-	use \nitm\widgets\traits\BaseWidget, \nitm\filemanager\traits\FileTraits, \nitm\traits\Nitm {
+	use \nitm\widgets\traits\BaseWidgetModel, \nitm\filemanager\traits\FileTraits, \nitm\traits\Nitm {
 		\nitm\filemanager\traits\FileTraits::url insteadof \nitm\traits\Nitm;
+		\nitm\filemanager\traits\FileTraits::fields insteadof \nitm\widgets\traits\BaseWidgetModel;
+		\nitm\filemanager\traits\FileTraits::extraFields insteadof \nitm\widgets\traits\BaseWidgetModel;
 	}
-	
+
 	public $engine = 'elasticsearch';
 	public static $namespace = '\nitm\filemanager\models\\';
-	
+
 	/*public function init()
 	{
 		$this->namespace = "\\lab1\models\\";
@@ -26,7 +28,7 @@ class BaseSearch extends \nitm\search\BaseSearch
 		$this->primaryModel = new $class;
 		parent::init();
 	}
-	
+
 	public function behaviors()
 	{
 		$behaviors = [];
@@ -38,7 +40,7 @@ class BaseSearch extends \nitm\search\BaseSearch
 				'primaryModelClass' => $this->namespace.$this->formName()
 			];
 			break;
-			
+
 			default:
 			$behaviors['search'] = [
 				'class' => \nitm\search\BaseSearch::className(),

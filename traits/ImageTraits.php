@@ -25,6 +25,34 @@ use nitm\filemanager\models\Image;
  */
 trait ImageTraits
 {
+	public function fields()
+	{
+		$src = function ($model) {
+			return $model->url('large');
+		};
+		$icon = function ($model) {
+			return $model->getIcon()->url('medium');
+		};
+		return [
+			'id',
+			'name' => 'file_name',
+			'icon' => $icon,
+			'thumb' => $icon,
+			'image' => $src,
+			'url' => $src,
+			'src' => $src,
+			'title' => 'file_name',
+			'size' => function ($model) {
+				return $model->getSize();
+			}
+		];
+	}
+
+	public function extraFields()
+	{
+		return [];
+	}
+
 	/**
 	 * Returns the placeholder image
 	 */
