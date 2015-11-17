@@ -80,6 +80,10 @@ class DefaultController extends \nitm\controllers\DefaultController
 			$asset = '\\nitm\\filemanager\\assets\\FileAsset';
 			$asset::register($this->getView());
 		}
+		$this->model->setAttributes([
+			'remote_type' => $type,
+			'remote_id' => $id
+		], false);
 		return parent::actionIndex($searchClass, array_merge_recursive([
 			'construct' => [
 				'inclusiveSearch' => false,
