@@ -83,15 +83,16 @@ trait Relations
         return Image::getImagesFor($this, $thumbnails, $default);
 	}
 
-	public function imageList()
+	public function imageList($idsOnly=false)
 	{
-		return array_map(function ($image) {
+		return ArrayHelper::filter($this->images(), $idsOnly, function ($image) {
 			$thumb = $image->getIcon('small');
 			if(!$thumb->height || !$thumb->width)
 				$image->updateMetadataSizes('small');
 			if(!$image->height || !$image->width)
 				$image->updateSizes();
 			return [
+				'id' => $image->getId(),
 				'title' => ucfirst($image->remote_type).' Image',
 				'thumb' => $thumb->url('small'),
 				'src' => $thumb->url('small'),
@@ -99,7 +100,7 @@ trait Relations
 				'height' => $thumb->height,
 				'width' => $thumb->width,
 			];
-		}, $this->images());
+		});
 	}
 
 	public function images($useCache=false)
@@ -157,15 +158,15 @@ trait Relations
 		return $this->resolveRelation('id', \nitm\filemanager\models\File::className(), $useCache, [], true, 'files');
 	}
 
-	public function fileList()
+	public function fileList($idsOnly=false)
 	{
-		return array_map(function ($file) {
+		return ArrayHelper::filter($this->files(), $idsOnly, function ($file) {
 			return [
 				'title' => ucfirst($file->remote_type).' Image',
 				'src' => $file->url(),
 				'url' => $file->url(),
 			];
-		}, $this->files());
+		});
 	}
 
 	public function file()
