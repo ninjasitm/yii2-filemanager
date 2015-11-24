@@ -60,7 +60,7 @@ class Files extends BaseWidget
 			$datProvider = new \yii\data\ArrayDataProvider([
 				'allModels' => $this->model->files()
 			]);
-		return $this->render('@nitm/filemanager/views/files/index', [
+		return $this->render('@nitm/filemanager/views/file/index', [
 			'type' => $this->model->remote_type,
 			'id' => $this->model->remote_id,
 			'dataProvider' => $searchModel->search([
