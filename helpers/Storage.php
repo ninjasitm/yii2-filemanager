@@ -93,11 +93,12 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	/**
 	 * Get the contents of a file
 	 * @param string $path
+	 * @param string $engine The stroage engine to use
 	 * @return string Contents of the file
 	 */
-	public static function getContents($path, $type=null)
+	public static function getContents($path, $engine=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
+		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($engine);
 		return $module::getContents($path);
 	}
 

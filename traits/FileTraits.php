@@ -5,6 +5,7 @@ namespace nitm\filemanager\traits;
 use Yii;
 use nitm\models\User as Users;
 use nitm\filemanager\models\Image;
+use nitm\filemanager\helpers\Storage;
 
 /**
  * This is the traits class for files.
@@ -53,6 +54,11 @@ trait FileTraits
 
 	public function getFileExists()
 	{
+		return $this->exists();
+	}
+
+	public function exists()
+	{
 		return file_exists($this->getRealPath());
 	}
 
@@ -68,6 +74,12 @@ trait FileTraits
 	public function getPath()
 	{
 		return $this->url('file');
+	}
+
+	public function getContents()
+	{
+		if(Storage::exists($this->getRealPath()))
+			return Storage::getContents($this->getRealPath());
 	}
 
 	public function indexUrl($as='html', $options=[])

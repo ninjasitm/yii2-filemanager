@@ -44,8 +44,8 @@ class BaseFile extends \nitm\models\Entity
 
 	public function scenarios() {
 		return array_merge(parent::scenarios(), [
-			'create' => ['remote_id', 'remote_type', 'size', 'hash', 'url', 'file_name', 'title'],
-			'update' => ['remote_id', 'remote_type', 'size', 'hash', 'url', 'file_name', 'title'],
+			'create' => ['remote_id', 'remote_type', 'size', 'hash', 'url', 'file_name', 'title', 'slug', 'html_icon', 'base_type', 'type'],
+			'update' => ['remote_id', 'remote_type', 'size', 'hash', 'url', 'file_name', 'title', 'slug', 'html_icon', 'base_type', 'type'],
 			'delete' => ['remote_id', 'remote_type']
 		]);
 	}
