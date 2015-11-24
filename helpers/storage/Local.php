@@ -98,7 +98,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 			return false;
 			break;
 		}
-		return static::exists($path) ? unlink($path) : false;
+		return static::exists($path) ? unlink(\Yii::getAlias($path)) : false;
 	}
 
 	/**
