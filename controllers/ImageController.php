@@ -79,27 +79,22 @@ class ImageController extends DefaultController
     public function actionGet($id, $filename=null)
     {
 		$size = \Yii::$app->request->get('size');
-		$model = $this->findModel(Image::className(), $id, ['metadata']);
-		switch($model instanceof Image)
-		{
-			case true:
-			$image = $model->getIcon($size);
-			\Yii::$app->response->getHeaders()->set('Content-Type', $model->type);
-			switch(1)
-			{
-				case file_exists($image->getRealPath()):
+		$image = $this->findModel(Image::className(), $id, ['metadata']);
+		if($image instanceof Image) {
+			\Yii::$app->response->getHeaders()->set('Content-Type', $image->type);
+			if(!empty($size) && ($thumb = $image->getIcon($size)) != null)
+				if(!$thumb->isNewRecord)
+					$image = $thumb;
+			if(file_exists($image->getRealPath())) {
 				if(!\Yii::$app->request->get('__format'))
 					$this->setResponseFormat('raw');
 				return $this->getContents($image);
-				break;
-
-				default:
-				if(!\Yii::$app->request->get('__format'))
-					$this->setResponseFormat('html');
-				return Image::getHtmlIcon($image->html_icon);
-				break;
 			}
-			break;
+		} else {
+			\Yii::$app->response->getHeaders()->set('Content-Type', 'html');
+			if(!\Yii::$app->request->get('__format'))
+				$this->setResponseFormat('html');
+			return Image::getHtmlIcon($image->html_icon);
 		}
     }
 

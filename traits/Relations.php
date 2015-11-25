@@ -86,17 +86,17 @@ trait Relations
 	public function imageList($idsOnly=false)
 	{
 		return ArrayHelper::filter($this->images(), $idsOnly, function ($image) {
-			$thumb = $image->getIcon('small');
+			$thumb = $image->getIcon('medium');
 			if(!$thumb->height || !$thumb->width)
-				$image->updateMetadataSizes('small');
+				$image->updateMetadataSizes('medium');
 			if(!$image->height || !$image->width)
 				$image->updateSizes();
 			return [
 				'id' => $image->getId(),
 				'title' => ucfirst($image->remote_type).' Image',
-				'thumb' => $thumb->url('small'),
-				'src' => $thumb->url('small'),
-				'url' => $image->url('large'),
+				'thumb' => $thumb->url('medium'),
+				'src' => $thumb->url('medium'),
+				'url' => $image->url(),
 				'height' => $thumb->height,
 				'width' => $thumb->width,
 			];

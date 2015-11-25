@@ -24,6 +24,7 @@ class FileAsset extends AssetBundle
     public $js = [
         'js/context.js',
         'js/filemanager.js',
+        'js/nitm.filemanager.js',
         'js/jquery.filemanager.js',
     ];
     public $depends = [

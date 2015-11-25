@@ -4,6 +4,7 @@ namespace nitm\filemanager\helpers;
 
 use Yii;
 use yii\helpers\Html;
+use yii\helpers\Inflector;
 use yii\web\UploadedFile;
 use kartik\icons\Icon;
 use yii\imagine\Image as BaseImage;
@@ -39,18 +40,18 @@ class ImageHelper extends \yii\helpers\FileHelper
 	 */
 	private static $_sizes = [
 		'small' => [
-			'sizeX' => 128,
-			'sizeY' => 128,
+			'size-x' => 128,
+			'size-y' => 128,
 			'quality' => 90
 		],
 		'medium' => [
-			'sizeX' => 256,
-			'sizeY' => 256,
+			'size-x' => 256,
+			'size-y' => 256,
 			'quality' => 90
 		],
 		'large' => [
-			'sizeX' => 512,
-			'sizeY' => 512,
+			'size-x' => 800,
+			'size-y' => 800,
 			'quality' => 90
 		]
 	];
@@ -95,7 +96,7 @@ class ImageHelper extends \yii\helpers\FileHelper
 				'remote_id' => $id,
 				'slug' => Image::getSafeName($name)."-$id-image-$idx",
 				'hash' => Image::getHash($uploadedFile->tempName),
-				'url' => $directory.implode('-', array_filter([($image->is_default ?  'default' : 'extra'), "image", md5($uploadedFile->name)])).".".$uploadedFile->getExtension(),
+				'url' => $directory.implode('-', array_filter([Inflector::slug($uploadedFile->baseName), md5($uploadedFile->name)])).".".$uploadedFile->extension,
 				'is_default' => @($_FILES[$model->formName()]['tmp_name']['images']['default'] == $uploadedFile->tempName) ? true : false,
 				'size' => $uploadedFile->size
 			], false);
@@ -173,9 +174,9 @@ class ImageHelper extends \yii\helpers\FileHelper
 					}
 					break;
 
-					//This image exists already lets attach it.
+					//This image exists already lets attach it and update the thumbnails if necessary.
 					default:
-					if($image->save()) {
+					if($image->save()){
 						$ret_val[] = $image;
 						self::createThumbnails($image, $image->type, $image->url);
 					}
@@ -212,8 +213,20 @@ class ImageHelper extends \yii\helpers\FileHelper
 				/**
 				 * To save we're using ob contents to get the outputed image from memory
 				 */
-				$thumb = BaseImage::thumbnail($image->getRealPath(), $options['sizeX'], $options['sizeY'])
-					->get(array_pop(explode('/', $image->type)), [
+				if($size == 'small' || $size == 'medium') {
+					//In these cases we create cropped thumbnails
+					$thumb = BaseImage::thumbnail($image->getRealPath(), $options['size-x'], $options['size-y']);
+				} else {
+					//Here we create proportional images
+				    $imagine = BaseImage::getImagine()->open($image->getRealPath());
+				    $box = $imagine->getSize();
+					if($options['size-x'] < $box->getWidth())
+						$box = $box->widen($options['size-x']);
+					else
+						$box =$box->heighten($options['size-y']);
+					$thumb = $imagine->resize($box);
+				}
+				$thumbnail = $thumb->get(array_pop(explode('/', $image->type)), [
 						'quality' => $options['quality'],
 						'format' => pathinfo($thumbStoredPath, \PATHINFO_EXTENSION)
 					]);
@@ -221,22 +234,35 @@ class ImageHelper extends \yii\helpers\FileHelper
 				/**
 				 * The Storage engine should understand how to save a stream to a file;
 				 */
-				$url = Storage::move($thumb, $thumbStoredPath, false, true, $type, 'image');
-
-				$imageSize = @getimagesize(Yii::getAlias($thumbStoredPath));
+				$url = Storage::move($thumbnail, $thumbStoredPath, false, true, $type, 'image');
 
 				if(file_exists(\Yii::getAlias($thumbStoredPath)))
 					$url = $thumbStoredPath;
 
-				$metadata = new ImageMetadata([
-					'scenario' => 'create',
+				$metadata = ImageMetadata::find()->where([
 					'image_id' => $image->getId(),
-					'key' => $size,
-					'value' => $url,
-					'width' => @$imageSize[0],
-					'height' => @$imageSize[1],
+					'key' => $size
+				])->one();
+
+				$metadataAttrs = [
+					'width' => $thumb->getSize()->getWidth(),
+					'height' => $thumb->getSize()->getHeight(),
 					'size' => static::getImageBlobFileSize($thumb)
-				]);
+				];
+
+				if(!$metadata)
+					$metadata = new ImageMetadata([
+						'scenario' => 'create',
+						'image_id' => $image->getId(),
+						'key' => $size,
+						'value' => $url,
+					]);
+				else {
+					$metadata->setScenario('update');
+				}
+
+				$metadata->setAttributes($metadataAttrs);
+
 				$metadata->save();
 			}
 			break;

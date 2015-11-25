@@ -100,9 +100,10 @@ if(isset($model)) {
 						'class' => 'fa-2x',
 						'title' => \Yii::t('yii', 'Delete Image'),
 						'data-pjax' => '0',
-						'role' => "deleteAction deleteImageAction metaAction",
+						'role' => "deleteAction deleteImage metaAction",
 						'data-parent' => '#image'.$model->getId(),
 						'data-method' => 'post',
+						'data-action' => 'delete',
 						'data-url' => \Yii::$app->urlManager->createUrl([$url, '__format' => 'json'])
 					]);
 				},

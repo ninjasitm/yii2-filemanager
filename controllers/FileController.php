@@ -157,7 +157,7 @@ class FileController extends DefaultController
 			$model->remote_type = $type;
 			$model->remote_id = $id;
 			$model->base_type		= $baseType;
-
+			
 			if($model->validate() && \nitm\filemanager\helpers\Storage::move($file->tempName, $model->getRealPath(), true) && $model->save())
 			{
 				if($model->base_type == 'image') {

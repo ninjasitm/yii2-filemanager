@@ -17,7 +17,7 @@ use Yii;
  */
 class ImageMetadata extends FileMetadata
 {
-	
+
     /**
      * @inheritdoc
      */
@@ -38,16 +38,16 @@ class ImageMetadata extends FileMetadata
             [['image_id', 'key'], 'unique', 'targetAttribute' => ['image_id', 'key'], 'message' => 'The combination of Image ID and Key has already been taken.']
         ];
     }
-	
+
 	public function behaviors()
 	{
 		return parent::behaviors();
 	}
-	
+
 	public function scenarios()
 	{
 		return [
-			'create' => ['key', 'value', 'image_id'],
+			'create' => ['key', 'value', 'image_id', 'width', 'height', 'size'],
 			'update' => ['key', 'value', 'width', 'height', 'size'],
 		];
 	}
