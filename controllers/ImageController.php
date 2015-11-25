@@ -83,7 +83,7 @@ class ImageController extends DefaultController
 		if($image instanceof Image) {
 			\Yii::$app->response->getHeaders()->set('Content-Type', $image->type);
 			if(!empty($size) && ($thumb = $image->getIcon($size)) != null)
-				if(!$thumb->isNewRecord)
+				if($thumb->exists())
 					$image = $thumb;
 			if(file_exists($image->getRealPath())) {
 				if(!\Yii::$app->request->get('__format'))
