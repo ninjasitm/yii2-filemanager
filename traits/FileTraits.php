@@ -6,6 +6,7 @@ use Yii;
 use nitm\models\User as Users;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\helpers\Storage;
+use nitm\helpers\ArrayHelper;
 
 /**
  * This is the traits class for files.
@@ -179,7 +180,13 @@ trait FileTraits
 	 */
 	public function metadata($key=null)
 	{
-		return !is_null($key) ? (isset($this->metadata[$key]) ? $this->metadata[$key] : '') : $this->metadata;
+		$metadata = \nitm\helpers\Relations::getRelatedRecord('metadata', $this, null, [], true);
+		if($key == null)
+			return $metadata;
+		else {
+			$metadataClass = $this->getMetadataClass();
+			return ArrayHelper::getValue($metadata, $key, (strpos($key, '.') === false ? new $metadataClass : null));
+		}
 	}
 
     /**

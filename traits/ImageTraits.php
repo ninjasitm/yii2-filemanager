@@ -103,16 +103,17 @@ trait ImageTraits
 			case 'large':
 			case 'default':
 			$size = ($size == 'default') ? 'medium' : $size;
-			switch(isset($this->metadata[$size]))
+			$metadata = $this->metadata($size);
+			switch($metadata->isNewRecord)
 			{
-				case true:
+				case false:
 				$ret_val = new Image([
-					'url' => $this->metadata[$size]->value,
-					'slug' => $this->metadata[$size]->key,
-					'id' => $this->metadata[$size]->image_id,
-					'width' => $this->metadata[$size]->width,
-					'height' => $this->metadata[$size]->height,
-					'size' => $this->metadata[$size]->size,
+					'url' => $metadata->value,
+					'slug' => $metadata->key,
+					'id' => $metadata->image_id,
+					'width' => $metadata->width,
+					'height' => $metadata->height,
+					'size' => $metadata->size,
 				]);
 				break;
 			}
@@ -141,8 +142,8 @@ trait ImageTraits
 
 	public function updateMetadataSizes($size='medium')
 	{
-		$metadata = ArrayHelper::getValue($this->metadata, $size, null);
-		if($metadata == null)
+		$metadata = $this->metadata($size);
+		if($metadata->isNewRecord)
 			return;
 		if(!$metadata->height || !$metadata->width && (strlen(\Yi::getAlias($metadata->value))>0)) {
 			list($x, $y, $size) = $this->getImageSize($size);
@@ -206,8 +207,13 @@ trait ImageTraits
 	public function url($size='medium', $mode=null)
 	{
 		//Compensate for finding metadata icon urls here
-		$url = ArrayHelper::getValue($this->metadata, $size.'.value', ArrayHelper::getValue($this, 'url', ArrayHelper::getValue($this->metadata, 'medium')));
-		if(file_exists(\Yii::getAlias($url)))
+		$url = ArrayHelper::getValue($this->metadata(), $size.'.value', ArrayHelper::getValue($this, 'url', ArrayHelper::getValue($this->metadata(), 'medium')));
+		try {
+			$path = \Yii::getAlias($url);
+		} catch (\Exception $e) {
+			$path = '';
+		}
+		if(file_exists($path))
 			return \Yii::$app->urlManager->createAbsoluteUrl(["/image/get/".$this->geturlKey($size), 'size' => $size]);
 		else
 			return $url;

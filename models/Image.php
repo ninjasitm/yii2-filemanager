@@ -22,7 +22,7 @@ use Yii;
 class Image extends \nitm\filemanager\models\File
 {
 	use \nitm\filemanager\traits\ImageTraits;
-		
+
     /**
      * @inheritdoc
      */
@@ -60,7 +60,7 @@ class Image extends \nitm\filemanager\models\File
             'updated' => Yii::t('app', 'Updated'),
         ];
 	}
-	
+
 	/**
 	 * Get all the images for this entity
 	 * @param boolean $thumbnails Get thumbnails as well?
@@ -71,7 +71,7 @@ class Image extends \nitm\filemanager\models\File
 		$queryOptions = is_null($queryOptions) ? ['where' => ['remote_type' => $model->isWhat()]] : $queryOptions;
         $ret_val = $model->hasMany(Image::className(), ['remote_id' => 'id']);
 		$with = [];
-		
+
 		switch($default === true)
 		{
 			case true:
@@ -84,21 +84,21 @@ class Image extends \nitm\filemanager\models\File
 		//	array_push($with, 'icon');
 		//	break;
 		//}
-		
+
 		array_push($with, 'metadata');
 		$queryOptions = array_merge([
 			'limit' => 10,
 			'orderBy' => ['is_default' => SORT_DESC],
 			'with' => $with
 		], (array)$queryOptions);
-			
+
 		foreach($queryOptions as $option=>$params)
 			if($ret_val->hasMethod($option))
 				$ret_val->$option($params);
-			
+
 		return $ret_val;
 	}
-	
+
 	/**
 	 * Get the main icon for this entity
 	 */
@@ -106,7 +106,8 @@ class Image extends \nitm\filemanager\models\File
 	{
 		$queryOptions = is_null($queryOptions) ? ['where' => ['remote_type' => $model->isWhat()]] : $queryOptions;
         $query = $model->hasOne(Image::className(), ['remote_id' => 'id'])
-			->andWhere('is_default=true')->with('metadata');
+			->andWhere('is_default=true')
+			->with('metadata');
 		foreach($queryOptions as $option=>$params)
 			$query->$option($params);
 		return $query;

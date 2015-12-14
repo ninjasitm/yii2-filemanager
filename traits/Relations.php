@@ -136,7 +136,7 @@ trait Relations
 	 */
 	public function icon()
 	{
-		return $this->icon instanceof Image ? $this->icon : new Image();
+		return $this->getCachedRelation('id', Image::className(), [], false, 'icon');
 	}
 
     /**
