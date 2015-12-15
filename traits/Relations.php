@@ -136,7 +136,7 @@ trait Relations
 	 */
 	public function icon()
 	{
-		return $this->getCachedRelation('id', Image::className(), [], false, 'icon');
+		return $this->getFileRelationModel(\nitm\filemanager\models\Image::className(), 'icon');
 	}
 
     /**

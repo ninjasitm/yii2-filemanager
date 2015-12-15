@@ -27,7 +27,7 @@ class Thumbnail extends \yii\base\Widget
 	public $size = 'default';
 	public $model;
 	public $url;
-	
+
     /**
      * @var string the title for the thumbnail. If set to empty or null, will not be
      * displayed.
@@ -39,11 +39,11 @@ class Thumbnail extends \yii\base\Widget
      * - tag: the tag to display the title. Defaults to 'span'.
      */
     public $imageOptions = [];
-	
+
 	public $options = [
 		'class' => 'thumbnail',
 	];
-	
+
 	public function init()
 	{
 		parent::init();
@@ -58,31 +58,31 @@ class Thumbnail extends \yii\base\Widget
 	{
 		$this->model = $this->model instanceof Image ? $this->model : new Image();
 		$this->options['class'] .= ' '.$this->getSize($this->size);
-		$url = ArrayHelper::getValue($this->model->metadata, $this->getSize().'.value', false);
+		$url = ArrayHelper::getValue($this->model->metadata(), $this->getSize().'.value', false);
 		switch(true)
 		{
 			case $url && $this->model->getIsNewRecord() && !isset($this->htmlIcon):
-			$thumbnail = Html::tag('div', 
-				Html::img($url, $this->imageOptions), 
+			$thumbnail = Html::tag('div',
+				Html::img($url, $this->imageOptions),
 				$this->options);
 			break;
-			
+
 			case !$url:
 			case $this->model->getIsNewRecord() && isset($this->htmlIcon):
 			$thumbnail = Html::tag('div', Image::getHtmlIcon($this->htmlIcon), $this->options);
 			break;
-			
+
 			default:
-			$thumbnail = Html::tag('div', 
-				Html::img($url, $this->imageOptions), 
+			$thumbnail = Html::tag('div',
+				Html::img($url, $this->imageOptions),
 				$this->options);
 			break;
 		}
 		if(isset($this->title))
-			$thumbnail .= $this->title; 
+			$thumbnail .= $this->title;
 		return $thumbnail;
 	}
-	
+
 	protected function getSize()
 	{
 		switch($this->size)
@@ -91,16 +91,16 @@ class Thumbnail extends \yii\base\Widget
 			case 'tiny':
 			$this->size = 'small';
 			break;
-			
+
 			case 'medium':
 			case 'normal':
 			$this->size = 'medium';
 			break;
-			
+
 			case 'large':
 			$this->size = 'large';
 			break;
-			
+
 			default:
 			$this->size = 'default';
 			break;
@@ -121,11 +121,11 @@ class Thumbnail extends \yii\base\Widget
 		];
 		return \nitm\helpers\ArrayHelper::getValue($sizes, $size, $sizes['default']);
 	}
-	
+
 	/**
 	 * The actions that are supported
 	 */
-	protected function defaultActions() 
+	protected function defaultActions()
 	{
 		return [
 			'delete' => [
