@@ -162,9 +162,6 @@ trait ImageTraits
 	{
 		$path = is_null($metadataSize) ? $this->getRealPath() : ArrayHelper::getValue($this->metadata, $metadataSize.'.value', $this->getRealPath());
 
-		if(!file_exists($path))
-			return [0, 0, 0];
-
 		try {
 			list($x, $y, $size) = getimagesize($path);
 		} catch (\Exception $e) {
@@ -177,7 +174,8 @@ trait ImageTraits
 				];
 				list($x, $y, $size) = getimagesizefromstring(file_get_contents($path, false, stream_context_create($arrContextOptions)));
 			} else {
-				$x = $y = $size = 0;
+				//We use a value of 1 to prevent rechecking of metadata for this image
+				$x = $y = $size = 1;
 			}
 		}
 		return [$x, $y, $size];

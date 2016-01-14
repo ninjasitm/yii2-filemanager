@@ -5,30 +5,20 @@ namespace nitm\filemanager\helpers;
 use Yii;
 use yii\helpers\Html;
 use yii\helpers\Inflector;
+use yii\helpers\FileHelper;
 use yii\web\UploadedFile;
-use kartik\icons\Icon;
 use yii\imagine\Image as BaseImage;
+use kartik\icons\Icon;
 use nitm\filemanager\helpers\Storage;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\ImageMetadata;
+use nitm\helpers\ArrayHelper;
 use Imagick;
 
 /**
- * This is the model class for table "images".
- *
- * @property integer $id
- * @property integer $category_id
- * @property integer $content_id
- * @property string $url
- * @property string $slug
- * @property string $created
- * @property string $updated
- *
- * @property Content $content
- * @property Categories $category
- * @property ImagesMetadata $metadata
+ * Image class helper provides some useful functionality for handling and saving images.
  */
-class ImageHelper extends \yii\helpers\FileHelper
+class ImageHelper
 {
 	/**
 	 * @mixed thumbnail sizes to create
@@ -69,124 +59,34 @@ class ImageHelper extends \yii\helpers\FileHelper
 	 * @param Entity $model The model images are being saved for
 	 * @param string $name
 	 */
-	public static function saveImages($model, $name, $id=null)
+	public static function saveImages($model, $name, $id=null, $instanceName=null, $uploads=null)
 	{
-		// retrieve all uploaded files for name images
-		$ret_val = [];
-		$pathId = md5(is_null($id) ? uniqid() : $id);
-		$name = Image::getSafeName($name);
 		$imageModel = $model instanceof Image ? $model : $model->image();
-		$uploads = UploadedFile::getInstances($imageModel, 'file_name');
-		//Increase the count for the images for this model $model
-		$idx = ($count = $imageModel->getCount()->one()) != null ? $count->count() : 0;
-		foreach($uploads as $uploadedFile)
-		{
-			$idx++;
-			$image = new Image(['scenario' => 'create']);
-			$directory = rtrim(implode(DIRECTORY_SEPARATOR, array_filter([rtrim(static::getDirectory(), DIRECTORY_SEPARATOR), $name, $id])), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
-			$size = getimagesize($uploadedFile->tempName);
+		$instanceName = $instanceName ?: 'file_name';
+		$uploads = $uploads ?: UploadedFile::getInstances($imageModel, $instanceName);
+		if($uploads == [])
+			$uploads = UploadedFile::getInstancesByName($instanceName);
+		return self::saveInternally($imageModel, $uploads, [
+			'name' => $name,
+			'id' => $id
+		]);
+	}
 
-			$image->setAttributes([
-				'width' => $size[0] || 0,
-				'height' => $size[1] || 0,
-				'type' => $uploadedFile->type,
-				'author_id' => \Yii::$app->user->getIdentity()->getId(),
-				'file_name' => $uploadedFile->name,
-				'remote_type' => $name,
-				'remote_id' => $id,
-				'slug' => Image::getSafeName($name)."-$id-image-$idx",
-				'hash' => Image::getHash($uploadedFile->tempName),
-				'url' => $directory.implode('-', array_filter([Inflector::slug($uploadedFile->baseName), md5($uploadedFile->name)])).".".$uploadedFile->extension,
-				'is_default' => @($_FILES[$model->formName()]['tmp_name']['images']['default'] == $uploadedFile->tempName) ? true : false,
-				'size' => $uploadedFile->size
-			], false);
-
-			$originalPath = $image->url;
-			$tempImage = new Image([
-				'url' => $uploadedFile->tempName,
-				'type' => $uploadedFile->type
-			]);
-
-			$existing = Image::find()->where([
-				"hash" => $image->hash,
-				'remote_type' => $name
-			])->one();
-
-			switch($existing instanceof Image)
-			{
-				//If an image already exists for this file then swap images
-				case true:
-				$image = $existing;
-				\Yii::trace("Found dangling $name image ".$image->slug);
-				$tempImage->id = $image->getId();
-				self::createThumbnails($image, $image->type, $image->getRealPath());
-				$existing->remote_id = $id;
-				$existing->save();
-				$ret_val[] = $image;
-				break;
-
-				default:
-				switch(file_exists($image->getRealPath()) && ($image->setHash()))
-				{
-					//This image doesn't exist yet
-					case false:
-					$image->remote_id = $id;
-					switch($image->is_default)
-					{
-						//If we're replacing the default image then unset all the otehr default images
-						case true:
-						Image::updateAll(['is_default' => false], [
-							'remote_id' => $id,
-							'remote_type' => $name
-						]);
-						break;
-					}
-					$imageDir = dirname($image->getRealPath());
-
-					if(!is_dir($imageDir))
-						Storage::createContainer($imageDir, true, [], 'image');
-
-					$url = Storage::save($tempImage, $image->getRealPath(), [], false, $image->getRealPath(), 'image');
-
-					if(filter_var($url, FILTER_VALIDATE_URL)) {
-						$proceed = true;
-						$image->url = $url;
-					} else if(file_exists($image->getRealPath()))
-						$proceed = true;
-					else
-						$proceed = false;
-
-					if($proceed)
-					{
-						if($image->save()) {
-							\Yii::trace("Saved image ".$image->slug);
-							/**
-							 * Need top fix creating thumbnail sbefore uploading to AWS
-							 */
-							$tempImage->id = $id;
-							self::createThumbnails($image, $image->type, $originalPath);
-							$ret_val[] = $image;
-						} else {
-							\Yii::trace("Unable to save file informaiton to database for ".$image->slug);
-						}
-					} else {
-						\Yii::trace("Unable to save physical file: ".$image->slug);
-					}
-					break;
-
-					//This image exists already lets attach it and update the thumbnails if necessary.
-					default:
-					if($image->save()){
-						$ret_val[] = $image;
-						self::createThumbnails($image, $image->type, $image->url);
-					}
-					break;
-				}
-				break;
-			}
-			unlink($uploadedFile->tempName);
+	public static function saveFromStdIn($model, $name, $id, $uploads=null)
+	{
+		if(!is_array($uploads)) {
+			$file = UploadHelper::getDataFromStdIn();
+			if(is_null($file))
+				return false;
+			$uploads = [$file];
 		}
-		return $ret_val;
+		print_r($uploads);
+		return;
+		$imageModel = $model instanceof Image ? $model : $model->image();
+		return self::saveInternally($imageModel, $uploads, [
+			'name' => $name,
+			'id' => $id
+		]);
 	}
 
 	/**
@@ -302,5 +202,132 @@ class ImageHelper extends \yii\helpers\FileHelper
 		    $size = strlen($blob);
 		}
 		return $size;
+	}
+
+	protected static function saveInternally($imageModel, $uploads, $options=[])
+	{
+		$ret_val = [];
+		extract($options);
+		$pathId = md5(is_null($id) ? uniqid() : $id);
+		$name = Image::getSafeName($name);
+		//Increase the count for the images for this model $model
+		$idx = ($count = $imageModel->getCount()->one()) != null ? $count->count() : 0;
+		foreach($uploads as $uploadedFile)
+		{
+			//We're counting starting from 1
+			$idx++;
+			$image = new Image(['scenario' => 'create']);
+			$directory = rtrim(implode(DIRECTORY_SEPARATOR, array_filter([rtrim(static::getDirectory(), DIRECTORY_SEPARATOR), $name, $id])), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+			$size = getimagesize($uploadedFile->tempName);
+			$image->setAttributes([
+				'width' => $size[0] || 0,
+				'height' => $size[1] || 0,
+				'type' => $uploadedFile->type,
+				'author_id' => \Yii::$app->user->getIdentity()->getId(),
+				'file_name' => $uploadedFile->name,
+				'remote_type' => $name,
+				'remote_id' => $id,
+				'slug' => Image::getSafeName($name)."-$id-image-$idx",
+				'hash' => Image::getHash($uploadedFile->tempName),
+				'url' => $directory.implode('-', array_filter([Inflector::slug($uploadedFile->baseName), md5($uploadedFile->name)])).".".$uploadedFile->extension,
+				'is_default' => self::getIsDefault($imageModel, $uploadedFile, $idx),
+				'size' => $uploadedFile->size
+			], false);
+
+			$originalPath = $image->url;
+			$tempImage = new Image([
+				'url' => $uploadedFile->tempName,
+				'type' => $uploadedFile->type
+			]);
+
+			$existing = Image::find()->where([
+				"hash" => $image->hash,
+				'remote_type' => $name
+			])->one();
+
+			switch($existing instanceof Image)
+			{
+				//If an image already exists for this file then swap images
+				case true:
+				$image = $existing;
+				\Yii::trace("Found dangling $name image ".$image->slug);
+				$tempImage->id = $image->getId();
+				self::createThumbnails($image, $image->type, $image->getRealPath());
+				$existing->remote_id = $id;
+				$existing->save();
+				$ret_val[] = $image;
+				break;
+
+				default:
+				switch(file_exists($image->getRealPath()) && ($image->setHash()))
+				{
+					//This image doesn't exist yet
+					case false:
+					$image->remote_id = $id;
+					switch($image->is_default)
+					{
+						//If we're replacing the default image then unset all the otehr default images
+						case true:
+						Image::updateAll(['is_default' => false], [
+							'remote_id' => $id,
+							'remote_type' => $name
+						]);
+						break;
+					}
+					$imageDir = dirname($image->getRealPath());
+
+					if(!is_dir($imageDir))
+						Storage::createContainer($imageDir, true, [], 'image');
+
+					$url = Storage::save($tempImage, $image->getRealPath(), [], false, $image->getRealPath(), 'image');
+
+					if(filter_var($url, FILTER_VALIDATE_URL)) {
+						$proceed = true;
+						$image->url = $url;
+					} else if(file_exists($image->getRealPath()))
+						$proceed = true;
+					else
+						$proceed = false;
+
+					if($proceed)
+					{
+						if($image->save()) {
+							\Yii::trace("Saved image ".$image->slug);
+							/**
+							 * Need top fix creating thumbnail sbefore uploading to AWS
+							 */
+							$tempImage->id = $id;
+							self::createThumbnails($image, $image->type, $originalPath);
+							$ret_val[] = $image;
+						} else {
+							\Yii::trace("Unable to save file informaiton to database for ".$image->slug);
+						}
+					} else {
+						\Yii::trace("Unable to save physical file: ".$image->slug);
+					}
+					break;
+
+					//This image exists already lets attach it and update the thumbnails if necessary.
+					default:
+					if($image->save()){
+						$ret_val[] = $image;
+						self::createThumbnails($image, $image->type, $image->url);
+					}
+					break;
+				}
+				break;
+			}
+			unlink($uploadedFile->tempName);
+		}
+		return $ret_val;
+	}
+
+	protected static function getIsDefault($model, $file, $idx)
+	{
+		$uploadedName = ArrayHelper::getValue($_FILES, $model->formName().'.tmp_name.images.default', ($idx === 0));
+		if($uploadedName && ($uploadedName === $file->tempName))
+			return true;
+		else
+			return $idx === 1;
 	}
 }
