@@ -69,7 +69,7 @@ class DefaultController extends \nitm\controllers\DefaultController
         return $result;
     }
 
-	public function getWith()
+	protected function getWith()
 	{
 		return array_merge(parent::getWith(), []);
 	}

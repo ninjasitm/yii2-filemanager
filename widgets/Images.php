@@ -83,9 +83,8 @@ class Images extends BaseWidget
 		if(!isset($this->imageModel))
 			$this->imageModel = $this->model instanceof Image ? $this->model : $this->model->image();
 		$images = $this->getImages();
-		$initScript = \Yii::$app->request->isAjax ? Html::script("\$nitm.onModuleLoad('nitm-file-manager:images', function (module) {module.init();});", ['type' => 'text/javascript']) : '';
 		$info = $this->getUploadUI();
-		return $info.$images.$initScript;
+		return $info.$images;
     }
 
 	protected function getAssets()

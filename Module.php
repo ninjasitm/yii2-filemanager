@@ -28,8 +28,9 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	 */
 	public $permissions = [];
 
-	public $engineMap = [
-	];
+	public $engineMap = [];
+
+	public $namespaces;
 
 	public $engine = "local";
 
@@ -37,24 +38,30 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 
     public $url = "/";
 
-	protected $settings = [
-	];
+	protected $settings = [];
 
 	protected $pathMap;
 
 	/**
 	 * The custom path map for different file types
 	 */
+	protected $modelMap;
 
-	protected $namespaceMap;
-
-	public $allowedTypes = [
-	];
+	public $allowedTypes = [];
 
 	private $_storageEngines = [
-		"local" => "Local",
-		"aws" => "AmazonAWS",
-		"youtube" => "YouTube",
+		"local" => [
+			'class' => "\\nitm\\filemanager\\helpers\\storage\\Local"
+		],
+		"aws" => [
+			"class" => "\\nitm\\filemanager\\helpers\\storage\\AmazonAWS"
+		],
+		"azure" => [
+			"class" => "\\nitm\\filemanager\\helpers\\storage\\MicrosoftAzure"
+		],
+		"youtube" => [
+			"class" => "\\nitm\\filemanager\\helpers\\storage\\YouTube"
+		],
 	];
 
     public function init()
@@ -85,8 +92,8 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 				'none' => '<controller:%controllers%>'
 			],
 			'controllers' => [
-				'file' => ['alias' => true],
-				'image' => ['alias' => true]
+				'file' => ['pluralize' => true],
+				'image' => ['pluralize' => true]
 			]
 		]);
 		$routeHelper->pluralize();
@@ -144,31 +151,41 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 	/**
 	 * Select the engie to use. This can be either an index map for the engineMap, a tring specifying the engine or null, which will use the current engine
 	 **/
-	public function getEngine($engine=null)
+	public function getEngine($type=null)
 	{
-		$engine = $this->resolveEngine($engine);
-		if(isset($this->_storageEngines[$engine]))
+		$engine = $this->resolveEngine($type);
+		if(isset($this->_storageEngines[$engine])) {
+			if(!is_object($this->_storageEngines[$engine]))
+				$this->_storageEngines[$engine] = \Yii::createObject([
+					'class' => $this->getEngineClass($engine),
+					'dataType' => $type
+				]);
 			return $this->_storageEngines[$engine];
-		else {
+		} else {
 			\Yii::warning("Engine: $engine is not supported");
-			return $this->_storageEngines['local'];
+			$engine = 'local';
+			if(!is_object($this->_storageEngines[$engine]))
+				$this->_storageEngines[$engine] = \Yii::createObject([
+					'class' => $this->getEngineClass($engine),
+					'dataType' => $type
+				]);
+			return $this->_storageEngines[$engine];
 		}
 	}
 
-	public function getEngineClass($engine=null)
+	protected function getEngineClass($engine=null)
 	{
 		$engine = $this->resolveEngine($engine);
-		$class = "\\nitm\\filemanager\helpers\storage\\".$this->getEngine($engine);
-		switch(class_exists($class))
-		{
-			case true:
-			return $class;
-			break;
-
-			default:
-			$class = "\\nitm\\filemanager\helpers\storage\\".$this->getEngine('local');
-			\yii::warning("There is no engine for [".$engine."] available. Using local storage engine instead");
-			break;
+		if(is_object($this->_storageEngines[$engine]))
+			return $this->_storageEngines[$engine]->className();
+		else {
+			$class = ArrayHelper::getValue($this->_storageEngines, $engine.'.class', null);
+			if(class_exists($class))
+				return $class;
+			else {
+				\yii::warning("There is no engine for [".$engine."] available. Using local storage engine instead");
+				return "\\nitm\\filemanager\\helpers\\storage\\Local";
+			}
 		}
 	}
 
@@ -272,20 +289,20 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 		], (array) $paths);
 	}
 
-	public function getNamespaceMap($index=null)
+	public function getModelMap($index=null)
 	{
-		if(!isset($this->namespaceMap))
+		if(!isset($this->modelMap))
 			$this->setNamespaceMap([]);
 
 		if(is_null($index))
-			return $this->namespaceMap;
+			return $this->modelMap;
 		else
-			return ArrayHelper::getValue($this->namespaceMap, $index, null);
+			return ArrayHelper::getValue($this->modelMap, $index, null);
 	}
 
-	public function setNamespaceMap($paths)
+	public function setModelMap($paths)
 	{
-		$this->namespaceMap = array_merge([
+		$this->modelMap = array_merge([
 			"\\nitm\\models\\",
 			"\\nitm\\filemanager\\models\\",
 			"\\nitm\\widgets\\models\\",
@@ -359,10 +376,14 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 
 	public function getModelClass($modelName)
 	{
-		foreach((array)$this->namespaceMap as $namespace)
+		foreach((array)$this->namespaces as $namespace)
 		{
 			$class = rtrim($namespace, "\\")."\\".\nitm\helpers\ClassHelper::properClassName($modelName);
-			if(class_exists($class))
+			if(isset($this->modelMap[$class]))
+				return $this->modelMap[$class];
+			else if(isset($this->modelMap[array_pop(explode('\\', $class))]))
+				return $this->modelMap[array_pop(explode('\\', $class))];
+			else if(class_exists($class))
 				return $class;
 		}
 		return null;

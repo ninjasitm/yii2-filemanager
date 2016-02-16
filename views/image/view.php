@@ -73,7 +73,9 @@ if(isset($model)) {
 			'attribute' => 'icon',
 			'label' => '',
 			'value' => function ($model) {
-				return $model->getIcon()->getIconHtml('small', ['class' => 'thumbnail thumbnail-lg '.($model->isDefault() ? 'default' : '')]);
+				return Html::a($model->icon->getIconHtml('small', [
+					'class' => 'thumbnail thumbnail-lg '.($model->isDefault() ? 'default' : '')
+				]), $model->url());
 			}
 		],
 		[

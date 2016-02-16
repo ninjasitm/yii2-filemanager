@@ -12,11 +12,12 @@ use yii\helpers\ArrayHelper;
  *	local
  *	Amazon S3
  */
-class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
+class Storage extends \yii\base\Component
 {
-	public static function containers($specifically=null)
+	public static function getContainers($specifically=null)
 	{
-		return \Yii::$app->get('nitm-files')->getPath($specifically);
+		$module = static::getEngine($type);
+		return $module->getContainers($specifically);
 	}
 
 	/**
@@ -28,8 +29,8 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	public static function save($data, $to, $permissions=[], $thumb=false, $path=null, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::save($data, $to, static::parsePermissions($permissions), $thumb, $path, $type);
+		$module = static::getEngine($type);
+		return $module->save($data, $to, static::parsePermissions($permissions), $thumb, $path, $type);
 	}
 
 	/**
@@ -42,8 +43,8 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	public static function move($from, $to, $isUploaded=false, $thumb=false, $fileType=null, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::move($from, $to, $isUploaded, $thumb, $fileType);
+		$module = static::getEngine($type);
+		return $module->move($from, $to, $isUploaded, $thumb, $fileType);
 	}
 
 	/**
@@ -53,8 +54,8 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	public static function getUrl($of, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::getUrl($of);
+		$module = static::getEngine($type);
+		return $module->getUrl($of);
 	}
 
 	/**
@@ -64,8 +65,8 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	public static function exists($path, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::exists($path);
+		$module = static::getEngine($type);
+		return $module->exists($path);
 	}
 
 	/**
@@ -75,8 +76,8 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	public static function delete($path, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::delete($path);
+		$module = static::getEngine($type);
+		return $module->delete($path);
 	}
 
 	/**
@@ -86,8 +87,8 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	public static function isWriteable($path, $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::isWritable($path);
+		$module = static::getEngine($type);
+		return $module->isWritable($path);
 	}
 
 	/**
@@ -99,7 +100,7 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	public static function getContents($path, $engine=null)
 	{
 		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($engine);
-		return $module::getContents($path);
+		return $module->getContents($path);
 	}
 
 	/**
@@ -109,8 +110,19 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	public static function createContainer($container, $recursive=true, $permissions=[], $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::createContainer($container, $recursive, static::parsePermissions($permissions));
+		$module = static::getEngine($type);
+		return $module->createContainer($container, $recursive, static::parsePermissions($permissions));
+	}
+
+	/**
+	 * Create a container/directory
+	 * @param string $container
+	 * @param boolean $resursive
+	 */
+	public static function containerExists($container, $type=null)
+	{
+		$module = static::getEngine($type);
+		return $module->containerExists($container);
 	}
 
 	/**
@@ -120,8 +132,8 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	public static function removeContainer($container, $options=[], $type=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($type);
-		return $module::removeContainer($container, $options, $type);
+		$module = static::getEngine($type);
+		return $module->removeContainer($container, $options, $type);
 	}
 
 	/**
@@ -144,8 +156,8 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	 */
 	protected static function applyPermissions($to, $permissions=[], $type='file', $fileType=null)
 	{
-		$module = \Yii::$app->getModule('nitm-files')->getEngineClass($fileType);
-		return $module::applyPermissions($to, $permissions, $type);
+		$module = static::getEngine($type);
+		return $module->applyPermissions($to, $permissions, $type);
 	}
 
 	/**
@@ -157,5 +169,10 @@ class Storage implements \nitm\filemanager\helpers\storage\StorageInterface
 	protected static function getPermission($type=null, $for=null)
 	{
 		return \Yii::$app->getModule('nitm-files')->getPermission($type, $for);
+	}
+
+	private function getEngine($type)
+	{
+		return \Yii::$app->getModule('nitm-files')->getEngine($type);
 	}
 }

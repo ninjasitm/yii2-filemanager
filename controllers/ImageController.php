@@ -141,7 +141,7 @@ class ImageController extends DefaultController
 				$ret_val['files'][] = [
 					'name' => $image->file_name,
 					'size' => $image->size,
-					'url' => $image->url(),
+					'url' => $image->url('small'),
 					'thumbnailUrl' => $image->url('small'),
 					'deleteUrl' => implode(DIRECTORY_SEPARATOR, [
 						$this->id,

@@ -97,6 +97,7 @@ class ImageHelper
 		switch(file_exists($image->getRealPath()) || filter_var($image->url, FILTER_VALIDATE_URL))
 		{
 			case true:
+			$metadatas = [];
 			$sizes = empty(static::$sizes) ? self::$_sizes : array_intersect_key(self::$_sizes, self::$sizes);
 			//BaseImage::$cachePath = \Yii::getAlias('@media/cache/images');
 			foreach($sizes as $size=>$options)
@@ -108,7 +109,7 @@ class ImageHelper
 				$thumbRealPath = dirname($file).$basePath;
 				$thumbStoredPath = dirname($file).$basePath;
 
-				if(!filter_var($image->url, FILTER_VALIDATE_URL) && !is_dir(dirname($thumbRealPath)))
+				if(!filter_var($image->url, FILTER_VALIDATE_URL) && !Storage::containerExists(dirname($thumbRealPath), 'image'))
 					Storage::createContainer(dirname($thumbRealPath), true, [], 'image');
 				/**
 				 * To save we're using ob contents to get the outputed image from memory
@@ -164,7 +165,9 @@ class ImageHelper
 				$metadata->setAttributes($metadataAttrs);
 
 				$metadata->save();
+				$metadatas[] = $metadata;
 			}
+			$image->populateRelation('metadata', $metadatas);
 			break;
 		}
 	}
@@ -245,10 +248,8 @@ class ImageHelper
 				'remote_type' => $name
 			])->one();
 
-			switch($existing instanceof Image)
-			{
+			if($existing instanceof Image) {
 				//If an image already exists for this file then swap images
-				case true:
 				$image = $existing;
 				\Yii::trace("Found dangling $name image ".$image->slug);
 				$tempImage->id = $image->getId();
@@ -256,27 +257,20 @@ class ImageHelper
 				$existing->remote_id = $id;
 				$existing->save();
 				$ret_val[] = $image;
-				break;
-
-				default:
-				switch(file_exists($image->getRealPath()) && ($image->setHash()))
-				{
+			} else {
+				if(!Storage::exists($image->url, 'image') && $image->hash) {
 					//This image doesn't exist yet
-					case false:
 					$image->remote_id = $id;
-					switch($image->is_default)
-					{
+					if($image->is_default) {
 						//If we're replacing the default image then unset all the otehr default images
-						case true:
 						Image::updateAll(['is_default' => false], [
 							'remote_id' => $id,
 							'remote_type' => $name
 						]);
-						break;
 					}
 					$imageDir = dirname($image->getRealPath());
 
-					if(!is_dir($imageDir))
+					if(!Storage::containerExists($imageDir, 'image'))
 						Storage::createContainer($imageDir, true, [], 'image');
 
 					$url = Storage::save($tempImage, $image->getRealPath(), [], false, $image->getRealPath(), 'image');
@@ -284,7 +278,7 @@ class ImageHelper
 					if(filter_var($url, FILTER_VALIDATE_URL)) {
 						$proceed = true;
 						$image->url = $url;
-					} else if(file_exists($image->getRealPath()))
+					} else if(Storage::exists($image->getRealPath(), 'image'))
 						$proceed = true;
 					else
 						$proceed = false;
@@ -300,22 +294,18 @@ class ImageHelper
 							self::createThumbnails($image, $image->type, $originalPath);
 							$ret_val[] = $image;
 						} else {
-							\Yii::trace("Unable to save file informaiton to database for ".$image->slug);
+							\Yii::error("Unable to save file informaiton to database for ".$image->slug."\n".json_encode($image->getErrors()));
 						}
 					} else {
 						\Yii::trace("Unable to save physical file: ".$image->slug);
 					}
-					break;
-
+				} else {
 					//This image exists already lets attach it and update the thumbnails if necessary.
-					default:
 					if($image->save()){
 						$ret_val[] = $image;
 						self::createThumbnails($image, $image->type, $image->url);
 					}
-					break;
 				}
-				break;
 			}
 			unlink($uploadedFile->tempName);
 		}

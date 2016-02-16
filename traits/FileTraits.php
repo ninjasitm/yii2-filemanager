@@ -101,7 +101,7 @@ trait FileTraits
 	/**
 	 * Get the main icon for this entity
 	 */
-	public function url($mode=null)
+	public function url($mode=null, $text=null, $url=null, $options=[])
 	{
 		return \Yii::$app->urlManager->createAbsoluteUrl("/files/get/".$this->geturlKey($mode));
 	}

@@ -85,7 +85,7 @@ class BaseFile extends \nitm\models\Entity
 	public function setHash($hash=null)
 	{
 		$this->hash = !$hash ? $this->getHash() : $hash;
-		return !empty($this->hash);
+		return (bool)!is_null($this->hash);
 	}
 
 	/**
@@ -147,7 +147,7 @@ class BaseFile extends \nitm\models\Entity
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getUser()
+    public function getUser($options=[])
     {
         return $this->hasOne(\nitm\models\User::className(), ['id' => 'user_id']);
     }

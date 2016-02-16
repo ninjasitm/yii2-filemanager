@@ -61,19 +61,23 @@ trait ImageTraits
 		return Icon::show("camera");
 	}
 
-	public static function getHtmlIcon($name)
+	public static function getHtmlIcon($name, $size='2x')
 	{
+		$hasSpecial = preg_match('/[&;]/', $name);
+		if($hasSpecial === 1)
+			return Html::tag('i', $name, ['class' => 'icon icon-'.$size]);
 		switch($name)
 		{
 			case null:
-			$name = 'camera';
+			case '':
+			case 'camera':
+			return Icon::show('camera', ['class' => 'fa fa-2x fa-'.$size]);
 			break;
 
-			case 'text':
-			$name = 'file-text';
+			default:
+			return Icon::show($name, ['class' => 'fa fa-2x fa-'.$size]);
 			break;
 		}
-		return Icon::show($name, ['class' => 'fa fa-2x']);
 	}
 
 	/**
@@ -202,19 +206,23 @@ trait ImageTraits
 	/**
 	 * Get the main icon for this entity
 	 */
-	public function url($size='medium', $mode=null)
+	public function url($size='full', $mode=null, $url=null, $options=[])
 	{
 		//Compensate for finding metadata icon urls here
-		$url = ArrayHelper::getValue($this->metadata(), $size.'.value', ArrayHelper::getValue($this, 'url', ArrayHelper::getValue($this->metadata(), 'medium')));
-		try {
-			$path = \Yii::getAlias($url);
-		} catch (\Exception $e) {
-			$path = '';
+		if($size === 'full')
+			return \Yii::getAlias($this->url);
+		else {
+			$url = ArrayHelper::getValue($this->metadata(), $size.'.value', ArrayHelper::getValue($this, 'url', ArrayHelper::getValue($this->metadata(), 'medium')));
+			try {
+				$path = \Yii::getAlias($url);
+			} catch (\Exception $e) {
+				$path = '';
+			}
+			if(file_exists($path))
+				return \Yii::$app->urlManager->createAbsoluteUrl(["/image/get/".$this->geturlKey($size), 'size' => $size]);
+			else
+				return $url;
 		}
-		if(file_exists($path))
-			return \Yii::$app->urlManager->createAbsoluteUrl(["/image/get/".$this->geturlKey($size), 'size' => $size]);
-		else
-			return $url;
 	}
 
 	public function isDefault()

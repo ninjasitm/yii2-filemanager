@@ -69,7 +69,8 @@ class Thumbnail extends \yii\base\Widget
 
 			case !$url:
 			case $this->model->getIsNewRecord() && isset($this->htmlIcon):
-			$thumbnail = Html::tag('div', Image::getHtmlIcon($this->htmlIcon), $this->options);
+			unset($this->options['class']);
+			$thumbnail = Html::tag('span', Image::getHtmlIcon($this->htmlIcon, $this->size), $this->options);
 			break;
 
 			default:

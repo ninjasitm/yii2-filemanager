@@ -3,11 +3,15 @@
 namespace nitm\filemanager\helpers\storage;
 
 use yii\helpers\FileHelper;
-use yii\helpers\ArrayHelper;
+use nitm\helpers\ArrayHelper;
 use nitm\filemanager\models\File;
 
-class Local extends \nitm\filemanager\helpers\Storage implements StorageInterface
+class Local extends BaseStorage implements StorageInterface
 {
+	public function initClient()
+	{
+		return null;
+	}
 
 	/**
 	 * Save a file or data to a file
@@ -16,18 +20,18 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param array $permissions
 	 * @return boolean
 	 */
-	public static function save($data, $to, $permissions=[])
+	public function save($data, $to, $permissions=[])
 	{
 		$ret_val = false;
 		$to = self::getUrl($to);
 		$data = $data instanceof File ? $data->url : $data;
 		if(!is_dir(dirname($to)))
-			static::createContainer(dirname($to), true);
+			$this->createContainer(dirname($to), true);
 
-		switch(static::isWriteable($to))
+		switch($this->isWriteable($to))
 		{
 			case true:
-			switch(static::exists($data))
+			switch($this->exists($data))
 			{
 				case true:
 				$ret_val = copy($data, $to);
@@ -37,7 +41,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 				$ret_val = file_put_contents($to, $data);
 				break;
 			}
-			static::applyPermissions($to, $permissions);
+			$this->applyPermissions($to, $permissions);
 			break;
 
 			default:
@@ -55,25 +59,25 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param array $permissions
 	 * @return boolean
 	 */
-	public static function move($from, $to, $isUploaded=false, $permissions=[])
+	public function move($from, $to, $isUploaded=false, $permissions=[])
 	{
 		$to = self::getUrl($to);
-		$isFile = static::exists($from);
+		$isFile = $this->exists($from);
 		if($isFile)
 			$from = self::getUrl($from);
 		$ret_val = false;
 
 		if(!is_dir(dirname($to)))
-			static::createContainer(dirname($to), true);
+			$this->createContainer(dirname($to), true);
 
-		switch(static::isWriteable($to))
+		switch($this->isWriteable($to))
 		{
 			case true:
 			if($isFile)
 				$ret_val =  ($isUploaded === true) ? move_uploaded_file($from, $to) : rename($from, $to);
 			else
 				$ret_val = file_put_contents($to, $from) === false ? false : true;
-			static::applyPermissions($to, $permissions);
+			$this->applyPermissions($to, $permissions);
 			break;
 
 			default:
@@ -83,13 +87,18 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 		return $to;
 	}
 
+	public function getContainers($specifically=null)
+	{
+		return \Yii::$app->get('nitm-files')->getPath($specifically);
+	}
+
 	/**
 	 * Delete a file matched by path
 	 * @param string $container
 	 * @param array $options
 	 * @return boolean
 	 */
-	public static function delete($path)
+	public function delete($path)
 	{
 		switch($path)
 		{
@@ -98,7 +107,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 			return false;
 			break;
 		}
-		return static::exists($path) ? unlink(\Yii::getAlias($path)) : false;
+		return $this->exists($path) ? unlink(\Yii::getAlias($path)) : false;
 	}
 
 	/**
@@ -108,12 +117,12 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param array $permissions
 	 * @return boolean
 	 */
-	public static function createContainer($container, $recursive=true, $permissions=[])
+	public function createContainer($container, $recursive=true, $permissions=[])
 	{
 		$ret_val = false;
-		$container = static::getUrl($container);
-		if(FileHelper::createDirectory($container, ArrayHelper::getValue($permissions, 'mode', static::getPermission('directory', 'mode')), $recursive)) {
-			static::applyPermissions($container, $permissions, 'directory');
+		$container = $this->getUrl($container);
+		if(FileHelper::createDirectory($container, ArrayHelper::getValue($permissions, 'mode', $this->getPermission('directory', 'mode')), $recursive)) {
+			$this->applyPermissions($container, $permissions, 'directory');
 			$ret_val = true;
 		}
 		return $ret_val;
@@ -125,9 +134,9 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param array $options
 	 * @return boolean
 	 */
-	public static function removeContainer($container, $options=[])
+	public function removeContainer($container, $options=[])
 	{
-		$container = static::getUrl($container);
+		$container = $this->getUrl($container);
 		return FileHelper::removeDirectory($container, $options);
 	}
 
@@ -136,7 +145,7 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param string $of
 	 * @return string
 	 */
-	public static function getUrl($of)
+	public function getUrl($of)
 	{
 		return \Yii::getAlias($of);
 	}
@@ -146,10 +155,10 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param string $path
 	 * @return boolean
 	 */
-	public static function exists($path)
+	public function exists($path)
 	{
 		try {
-			return is_string($path) && file_exists(static::getUrl($path)) && is_readable(static::getUrl($path));
+			return is_string($path) && file_exists($this->getUrl($path)) && is_readable($this->getUrl($path));
 		} catch (\Exception $e) {
 			return false;
 		}
@@ -160,9 +169,9 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param string $path
 	 * @return boolean
 	 */
-	public static function isWriteable($path)
+	public function isWriteable($path)
 	{
-		return is_writable(dirname(static::getUrl($path)));
+		return is_writable(dirname($this->getUrl($path)));
 	}
 
 	/**
@@ -170,10 +179,10 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param string $path
 	 * @return string Contents of the file
 	 */
-	public static function getContents($path)
+	public function getContents($path)
 	{
 		$ret_val = null;
-		if(static::exists($path))
+		if($this->exists($path))
 			$ret_val = file_get_contents($path);
 		return $ret_val;
 	}
@@ -184,13 +193,13 @@ class Local extends \nitm\filemanager\helpers\Storage implements StorageInterfac
 	 * @param array $permissions Permissions ['mode':mode, 'group':group, 'owner': owner]
 	 * @param string $type File or Directory permissions?
 	 */
-	protected static function applyPermissions($to, $permissions=[], $type='file')
+	protected function applyPermissions($to, $permissions=[], $type='file')
 	{
 		$oldUmask = umask(0);
 		try {
-			chmod($to, ArrayHelper::getValue($permissions, 'mode', static::getPermission($type, 'mode')));
-			chown($to, ArrayHelper::getValue($permissions, 'owner', static::getPermission($type, 'owner')));
-			chgrp($to, ArrayHelper::getValue($permissions, 'group', static::getPermission($type, 'group')));
+			chmod($to, ArrayHelper::getValue($permissions, 'mode', $this->getPermission($type, 'mode')));
+			chown($to, ArrayHelper::getValue($permissions, 'owner', $this->getPermission($type, 'owner')));
+			chgrp($to, ArrayHelper::getValue($permissions, 'group', $this->getPermission($type, 'group')));
 		} catch (\Exception $e) {
 		}
 		umask($oldUmask);
