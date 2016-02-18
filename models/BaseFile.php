@@ -79,7 +79,8 @@ class BaseFile extends \nitm\models\Entity
 		try {
 			$file = \Yii::getAlias($file);
 		} catch (\Exception $e) {}
-		return array_shift(explode(' ', exec("md5sum '".$file."'")));
+		$parts = explode(' ', exec("md5sum '".$file."'"));
+		return array_shift($parts);
 	}
 
 	public function setHash($hash=null)

@@ -62,9 +62,7 @@ class Thumbnail extends \yii\base\Widget
 		switch(true)
 		{
 			case $url && $this->model->getIsNewRecord() && !isset($this->htmlIcon):
-			$thumbnail = Html::tag('div',
-				Html::img($url, $this->imageOptions),
-				$this->options);
+			$thumbnail = Html::tag('div', Html::img($url, $this->imageOptions), $this->options);
 			break;
 
 			case !$url:
@@ -74,9 +72,7 @@ class Thumbnail extends \yii\base\Widget
 			break;
 
 			default:
-			$thumbnail = Html::tag('div',
-				Html::img($url, $this->imageOptions),
-				$this->options);
+			$thumbnail = Html::tag('div', Html::img($url, $this->imageOptions), $this->options);
 			break;
 		}
 		if(isset($this->title))
@@ -90,23 +86,23 @@ class Thumbnail extends \yii\base\Widget
 		{
 			case 'small':
 			case 'tiny':
-			$this->size = 'small';
+			$size = 'small';
 			break;
 
 			case 'medium':
 			case 'normal':
-			$this->size = 'medium';
+			$size = 'medium';
 			break;
 
 			case 'large':
-			$this->size = 'large';
+			$size = 'large';
 			break;
 
 			default:
-			$this->size = 'default';
+			$size = 'default';
 			break;
 		}
-		return $this->size;
+		return $size;
 	}
 
 	/**

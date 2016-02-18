@@ -65,7 +65,7 @@ class BaseUpload extends \dosamigos\fileupload\FileUploadUI
 		 	throw new \yii\base\Exception("The model needs to be set for the form!!");
 		$type = $this->model instanceof \nitm\filemanager\models\File ? $this->model->remote_type : $this->model->isWhat();
 		$id = $this->model instanceof \nitm\filemanager\models\File ? $this->model->remote_id : $this->model->getId();
-	 	$this->url .= $type.'/'.$id;
+	 	$this->url .= '/'.$type.'/'.$id;
 		parent::init();
 	 }
  }

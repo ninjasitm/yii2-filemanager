@@ -68,7 +68,7 @@ if(isset($awsConfig['enable']) && $awsConfig['enable']){
 			</div>
             <div class="display-images" id="imageGridManager">
 				<?=
-					$this->render('view', [
+					$this->render('data', [
 						'options' => [
 							'id' => 'images',
 							'role' => 'imagesContainer'

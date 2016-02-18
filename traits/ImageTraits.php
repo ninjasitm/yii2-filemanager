@@ -212,7 +212,7 @@ trait ImageTraits
 		if($size === 'full')
 			return \Yii::getAlias($this->url);
 		else {
-			$url = ArrayHelper::getValue($this->metadata(), $size.'.value', ArrayHelper::getValue($this, 'url', ArrayHelper::getValue($this->metadata(), 'medium')));
+			$url = ArrayHelper::getValue($this->metadata, $size.'.value', ArrayHelper::getValue($this, 'url', ArrayHelper::getValue($this->metadata, 'medium.value')));
 			try {
 				$path = \Yii::getAlias($url);
 			} catch (\Exception $e) {

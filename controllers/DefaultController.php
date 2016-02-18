@@ -78,7 +78,7 @@ class DefaultController extends \nitm\controllers\DefaultController
      * Lists all File models.
      * @return mixed
      */
-    public function actionIndex($searchClass, $type, $id, $options=[])
+    public function actionIndex($type=null, $id=[], $searchClass=null, $options=[])
     {
 		unset($_GET['type'], $_GET['id']);
 		if(\Yii::$app->request->isAjax) {

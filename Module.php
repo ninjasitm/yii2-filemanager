@@ -379,10 +379,11 @@ class Module extends \yii\base\Module implements \yii\base\BootstrapInterface
 		foreach((array)$this->namespaces as $namespace)
 		{
 			$class = rtrim($namespace, "\\")."\\".\nitm\helpers\ClassHelper::properClassName($modelName);
+			$classParts = explode('\\', $class);
 			if(isset($this->modelMap[$class]))
 				return $this->modelMap[$class];
-			else if(isset($this->modelMap[array_pop(explode('\\', $class))]))
-				return $this->modelMap[array_pop(explode('\\', $class))];
+			else if(isset($this->modelMap[end($classParts)]))
+				return $this->modelMap[end($classParts)];
 			else if(class_exists($class))
 				return $class;
 		}

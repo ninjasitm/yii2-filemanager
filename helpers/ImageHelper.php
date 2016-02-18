@@ -80,8 +80,6 @@ class ImageHelper
 				return false;
 			$uploads = [$file];
 		}
-		print_r($uploads);
-		return;
 		$imageModel = $model instanceof Image ? $model : $model->image();
 		return self::saveInternally($imageModel, $uploads, [
 			'name' => $name,
@@ -127,7 +125,8 @@ class ImageHelper
 						$box =$box->heighten($options['size-y']);
 					$thumb = $imagine->resize($box);
 				}
-				$thumbnail = $thumb->get(array_pop(explode('/', $image->type)), [
+				$imageType = explode('/', $image->type);
+				$thumbnail = $thumb->get(array_pop($imageType), [
 						'quality' => $options['quality'],
 						'format' => pathinfo($thumbStoredPath, \PATHINFO_EXTENSION)
 					]);
@@ -165,7 +164,7 @@ class ImageHelper
 				$metadata->setAttributes($metadataAttrs);
 
 				$metadata->save();
-				$metadatas[] = $metadata;
+				$metadatas[$size] = $metadata;
 			}
 			$image->populateRelation('metadata', $metadatas);
 			break;
@@ -175,8 +174,7 @@ class ImageHelper
 	public static function deleteImages($images)
 	{
 		$images = is_object($images) ? [$images] : $images;
-		foreach($images as $image)
-		{
+		foreach($images as $image) {
 			static::deleteImage($image);
 		}
 		return true;
@@ -186,13 +184,12 @@ class ImageHelper
 	{
 		if($image instanceof Image) {
 			$metadata = $image->getMetadata()->all();
-			foreach($metadata as $data)
-			{
-				Storage::delete($data->value);
+			foreach($metadata as $data) {
+				Storage::delete($data->value, 'image');
 			}
 			ImageMetadata::deleteAll(['image_id' => $image->getId()]);
 			if($image->delete())
-				return Storage::delete($image->getPath());
+				return Storage::delete($image->getPath(), 'image');
 		}
 		return false;
 	}
@@ -245,7 +242,8 @@ class ImageHelper
 
 			$existing = Image::find()->where([
 				"hash" => $image->hash,
-				'remote_type' => $name
+				'remote_type' => $name,
+				'remote_id' => $id
 			])->one();
 
 			if($existing instanceof Image) {
@@ -253,7 +251,7 @@ class ImageHelper
 				$image = $existing;
 				\Yii::trace("Found dangling $name image ".$image->slug);
 				$tempImage->id = $image->getId();
-				self::createThumbnails($image, $image->type, $image->getRealPath());
+				self::createThumbnails($tempImage, $image->type, $image->getRealPath());
 				$existing->remote_id = $id;
 				$existing->save();
 				$ret_val[] = $image;
@@ -291,7 +289,7 @@ class ImageHelper
 							 * Need top fix creating thumbnail sbefore uploading to AWS
 							 */
 							$tempImage->id = $id;
-							self::createThumbnails($image, $image->type, $originalPath);
+							self::createThumbnails($tempImage, $image->type, $originalPath);
 							$ret_val[] = $image;
 						} else {
 							\Yii::error("Unable to save file informaiton to database for ".$image->slug."\n".json_encode($image->getErrors()));
@@ -303,7 +301,7 @@ class ImageHelper
 					//This image exists already lets attach it and update the thumbnails if necessary.
 					if($image->save()){
 						$ret_val[] = $image;
-						self::createThumbnails($image, $image->type, $image->url);
+						self::createThumbnails($tempImage, $image->type, $image->url);
 					}
 				}
 			}
@@ -318,6 +316,6 @@ class ImageHelper
 		if($uploadedName && ($uploadedName === $file->tempName))
 			return true;
 		else
-			return $idx === 1;
+			return false;
 	}
 }

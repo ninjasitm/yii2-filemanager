@@ -68,11 +68,11 @@ class ImageController extends DefaultController
 		]);
 	}
 
-	public function actionIndex($type, $id)
+	public function actionIndex($type=null, $id=[], $modelClass=null, $options=[])
 	{
 		$asset = '\\nitm\\filemanager\\assets\\ImageAsset';
 		$asset::register($this->getView());
-		return parent::actionIndex(ImageSearch::className(), $type, $id);
+		return parent::actionIndex($type, $id, ImageSearch::className(),$options);
 	}
 
 
@@ -141,9 +141,9 @@ class ImageController extends DefaultController
 				$ret_val['files'][] = [
 					'name' => $image->file_name,
 					'size' => $image->size,
-					'url' => $image->url('small'),
+					'url' => $image->url(),
 					'thumbnailUrl' => $image->url('small'),
-					'deleteUrl' => implode(DIRECTORY_SEPARATOR, [
+					'deleteUrl' => '/'.implode(DIRECTORY_SEPARATOR, [
 						$this->id,
 						'delete',
 						$image->getId()
@@ -180,7 +180,7 @@ class ImageController extends DefaultController
 		}
 	}
 
-	public function actionDelete($id)
+	public function actionDelete($id, $modelClass=null)
 	{
 		$this->setResponseFormat('json');
 		$model = $this->findModel(Image::className(), $id);
@@ -197,7 +197,7 @@ class ImageController extends DefaultController
 	 * @param array $options
 	 * @return string | json
 	 */
-	public function actionForm($type, $remoteType, $remoteId)
+	public function actionForm($type, $remoteType=null, $remoteId=[], $returnData=false)
 	{
 		return parent::actionForm($type, $remoteId, [
 			'modelClass' => \Yii::$app->getModule('nitm-files')->getModelClass($remoteType)

@@ -110,8 +110,9 @@ class MicrosoftAzure extends BaseStorage implements StorageInterface
 	{
 		$files = !is_array($files) ? [$files] : $files;
 		foreach($files as $file) {
+			$file = $file instanceof File ? $file->url : $file;
 			try {
-				if($this->exists($file->getRealPath()))
+				if($file && $this->exists($this->blobName($file)))
 					$this->client->deleteBlob($this->getContainer($file), $this->blobName($file));
 			} catch (ServiceException $e) {
 				\Yii::warning($e->getMessage());
@@ -227,7 +228,8 @@ class MicrosoftAzure extends BaseStorage implements StorageInterface
 		$listBlobOptions = new ListBlobsOptions;
 		$listBlobOptions->setPrefix($this->blobName($of));
 		$list = $this->client->listBlobs($this->getContainer($of), $listBlobOptions);
-		$ret_val = array_pop($list->getBlobs())->getUrl();
+		$blobs = $list->getBlobs();
+		$ret_val = array_pop($blobs)->getUrl();
 		return $ret_val;
 	}
 }

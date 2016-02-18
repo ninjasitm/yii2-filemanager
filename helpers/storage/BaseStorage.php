@@ -133,7 +133,7 @@ abstract class BaseStorage extends \yii\base\Object implements StorageInterface
 		$container = false;
 		if($file !== null) {
 			$filePath = is_object($file) ? $file->url : $file;
-			$options = parse_url($filePath, PHP_URL_PATH);
+			$options = ltrim(parse_url($filePath, PHP_URL_PATH), '/');
 			$container = substr($options, 0, strpos($options, '/'));
 			$container = \yii\helpers\Inflector::slug(substr($container, 0, 63));
 		}
