@@ -212,16 +212,20 @@ trait ImageTraits
 		if($size === 'full')
 			return \Yii::getAlias($this->url);
 		else {
-			$url = ArrayHelper::getValue($this->metadata, $size.'.value', ArrayHelper::getValue($this, 'url', ArrayHelper::getValue($this->metadata, 'medium.value')));
-			try {
-				$path = \Yii::getAlias($url);
-			} catch (\Exception $e) {
-				$path = '';
+			if($this->id) {
+				$url = $this->metadata($size.'.value', ArrayHelper::getValue($this, 'url'));
+				try {
+					$path = \Yii::getAlias($url);
+				} catch (\Exception $e) {
+					$path = '';
+				}
+				if(file_exists($path))
+					return \Yii::$app->urlManager->createAbsoluteUrl(["/image/get/".$this->geturlKey($size), 'size' => $size]);
+				else
+					return $url;
+			} else {
+				return null;
 			}
-			if(file_exists($path))
-				return \Yii::$app->urlManager->createAbsoluteUrl(["/image/get/".$this->geturlKey($size), 'size' => $size]);
-			else
-				return $url;
 		}
 	}
 

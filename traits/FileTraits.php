@@ -170,7 +170,7 @@ trait FileTraits
 	 */
 	public function icon()
 	{
-		return \nitm\helpers\Relations::getCachedRelation('id', false, Image::className(), 'icon', [], $this, 120);
+		return $this->resolveRelation('id', Image::className(), true, [], false, 'icon');
 	}
 
 	/**
@@ -178,14 +178,15 @@ trait FileTraits
 	 * @param string $key
 	 * @return mixed
 	 */
-	public function metadata($key=null)
+	public function metadata($key=null, $default=null)
 	{
-		$metadata = \nitm\helpers\Relations::getRelatedRecord('metadata', $this, null, [], true);
+		$parts = explode('.', $key);
+		$metadataClass = $this->getMetadataClass();
+		$metadata = $this->resolveRelation('id', $metadataClass, true, [], true, 'metadata');
 		if($key == null)
 			return $metadata;
 		else {
-			$metadataClass = $this->getMetadataClass();
-			return ArrayHelper::getValue($metadata, $key, (strpos($key, '.') === false ? new $metadataClass : null));
+			return ArrayHelper::getValue($metadata, $key, (strpos($key, '.') === false ?  new $metadataClass : $default));
 		}
 	}
 

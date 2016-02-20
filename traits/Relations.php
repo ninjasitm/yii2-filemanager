@@ -62,15 +62,15 @@ trait Relations
 		return $this->getCachedRelation($idKey, $className, $options, $many, $relation);
 	}
 
-	protected function getFileRelationModel($className, $idKey=null, $many=false, $options=[])
+	protected function getFileRelationModel($className, $relation=null, $idKey=null, $many=false, $options=[])
 	{
-		$relation = \nitm\helpers\Helper::getCallerName();
+		$relation = $relation ?: \nitm\helpers\Helper::getCallerName();
 		$options['construct'] = isset($options['construct']) ? $options['construct'] : [
 			'remote_id' => $this->getId(),
 			'remote_type' => $this->isWhat()
 		];
 		$idKey = is_null($idKey) ? ['getId', 'isWhat'] : $idKey;
-		return RelationsHelper::getRelatedRecord($relation, $this, $className, $options, $many);
+		return $this->resolveRelation($idKey, $className, true, $options, $many, $relation);
 	}
 
 	/**
