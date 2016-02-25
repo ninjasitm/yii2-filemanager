@@ -288,7 +288,11 @@ class ImageHelper
 							/**
 							 * Need top fix creating thumbnail sbefore uploading to AWS
 							 */
-							$tempImage->id = $id;
+							$tempImage->setAttributes([
+								'id' => $image->getId(),
+								'remote_id' => $image->remote_id,
+								'remote_type' => $image->remote_type
+							]);
 							self::createThumbnails($tempImage, $image->type, $originalPath);
 							$ret_val[] = $image;
 						} else {
