@@ -68,7 +68,7 @@ class Thumbnail extends \yii\base\Widget
 			case !$url:
 			case $this->model->getIsNewRecord() && isset($this->htmlIcon):
 			unset($this->options['class']);
-			$thumbnail = Html::tag('span', Image::getHtmlIcon($this->htmlIcon, $this->size), $this->options);
+			$thumbnail = Html::tag('span', Image::getHtmlIcon($this->htmlIcon, $this->iconSize), $this->options);
 			break;
 
 			default:
@@ -100,6 +100,31 @@ class Thumbnail extends \yii\base\Widget
 
 			default:
 			$size = 'default';
+			break;
+		}
+		return $size;
+	}
+
+	protected function getIconSize()
+	{
+		switch($this->size)
+		{
+			case 'small':
+			case 'tiny':
+			$size = '1x';
+			break;
+
+			case 'medium':
+			case 'normal':
+			$size = '2x';
+			break;
+
+			case 'large':
+			$size = '3x';
+			break;
+
+			default:
+			$size = '1x';
 			break;
 		}
 		return $size;

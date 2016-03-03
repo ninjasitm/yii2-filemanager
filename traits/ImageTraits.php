@@ -61,23 +61,26 @@ trait ImageTraits
 		return Icon::show("camera");
 	}
 
-	public static function getHtmlIcon($name, $size='2x')
+	public static function getHtmlIcon($options, $size='2x')
 	{
+		$provider = 'fa';
+		if(is_array($options)) {
+			$name = ArrayHelper::remove($options, 'icon', 'camera');
+			$provider = ArrayHelper::remove($options, 'provider', $provider);
+		} else
+			$name = $options;
+
+		$name = $name ?: 'camera';
+
 		$hasSpecial = preg_match('/[&;]/', $name);
+
 		if($hasSpecial === 1)
 			return Html::tag('i', $name, ['class' => 'icon icon-'.$size]);
-		switch($name)
-		{
-			case null:
-			case '':
-			case 'camera':
-			return Icon::show('camera', ['class' => 'fa fa-2x fa-'.$size]);
-			break;
 
-			default:
-			return Icon::show($name, ['class' => 'fa fa-2x fa-'.$size]);
-			break;
-		}
+		$options = array_merge([
+			'class' => implode(' ', [$provider, $provider.'-'.$size, $provider.'-'.$name])
+		], (array) $options);
+		return Html::tag('i', '', $options);
 	}
 
 	/**
