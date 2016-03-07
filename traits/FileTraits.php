@@ -182,7 +182,7 @@ trait FileTraits
 	{
 		$parts = explode('.', $key);
 		$metadataClass = $this->getMetadataClass();
-		$metadata = $this->resolveRelation('id', $metadataClass, true, [], true, 'metadata');
+		$metadata = $this->resolveRelation('id', $metadataClass, false, [], true, 'metadata');
 		if($key == null)
 			return $metadata;
 		else {
