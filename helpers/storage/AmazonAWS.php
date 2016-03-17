@@ -124,5 +124,20 @@ class AmazonAWS extends BaseStorage implements StorageInterface
 		chmod($container, self::DIR_MODE);
 		umask($oldUmask);*/
 	}
+
+	public function getUrl($of)
+	{
+
+	}
+
+	public function exists($id)
+	{
+
+	}
+
+	public function removeContainer($container, $options=[])
+	{
+
+	}
 }
 ?>

@@ -17,14 +17,6 @@ if(!isset($this->title))
 	$this->title = 'Image';
 $this->params['breadcrumbs'][] = $this->title;
 
-$awsConfig = \Yii::$app->getModule('nitm-files')->getEngine('aws');
-
-if(isset($awsConfig['enable']) && $awsConfig['enable']){
-    $path = $awsConfig['url'];
-}else{
-    $path = '/';
-}
-
 ?>
 <br>
 <div class="image-manager-default-index <?= \Yii::$app->request->isAjax ? '' : 'col-sm-12'; ?>">

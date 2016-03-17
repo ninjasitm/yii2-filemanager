@@ -36,10 +36,6 @@ abstract class BaseStorage extends \yii\base\Object implements StorageInterface
 		$this->initClient();
     }
 
-	abstract function initClient();
-	abstract function exists($id);
-	abstract function getContainers();
-
 	public function getContainer($file=null)
 	{
 		$container = $this->extractContainer($file);

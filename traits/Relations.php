@@ -85,7 +85,7 @@ trait Relations
 
 	public function imageList($idsOnly=false)
 	{
-		return ArrayHelper::filter($this->images(), $idsOnly, function ($image) {
+		return ArrayHelper::filter($this->images, $idsOnly, function ($image) {
 			$thumb = $image->getIcon('medium');
 			if(!$thumb->height || !$thumb->width)
 				$image->updateMetadataSizes('medium');
@@ -181,5 +181,43 @@ trait Relations
     {
         return $this->getFileRelationModelQuery(\nitm\filemanager\models\File::className());
     }
+
+	public function getImageMeta()
+	{
+        return $this->hasOne(Image::className(), ['remote_id' => 'id'])
+            ->select(['remote_type', 'remote_id'])
+    		->where(['remote_type' => $this->isWhat()])
+            ->groupBy(['remote_id', 'remote_id'])
+            ->with([
+                'count'
+            ]);
+	}
+
+	public function imageMeta()
+	{
+    	return $this->resolveRelation('id', Image::className(), false, [
+            'remote_type' => $this->isWhat(),
+            'remote_id' => $this->getId()
+        ], false, 'imageMeta');
+	}
+
+	public function getFileMeta()
+	{
+        return $this->hasOne(Image::className(), ['remote_id' => 'id'])
+            ->select(['remote_type', 'remote_id'])
+    		->where(['remote_type' => $this->isWhat()])
+            ->groupBy(['remote_id', 'remote_id'])
+            ->with([
+                'count'
+            ]);
+	}
+
+	public function fileMeta()
+	{
+    	return $this->resolveRelation('id', Image::className(), false, [
+            'remote_type' => $this->isWhat(),
+            'remote_id' => $this->getId()
+        ], false, 'fileMeta');
+	}
  }
 ?>

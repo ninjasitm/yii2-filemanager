@@ -29,7 +29,7 @@ class FileAsset extends AssetBundle
     ];
     public $depends = [
         'yii\web\JqueryAsset',
-        'nitm\asssets\NitmAsset',
+        'nitm\assets\AppAsset',
         'yii\bootstrap\BootstrapAsset',
     ];
 }

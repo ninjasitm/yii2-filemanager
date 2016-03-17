@@ -58,7 +58,7 @@ class Thumbnail extends \yii\base\Widget
 	{
 		$this->model = $this->model instanceof Image ? $this->model : new Image();
 		$this->options['class'] .= ' '.$this->getSize($this->size);
-		$url = ArrayHelper::getValue($this->model->metadata(), $this->getSize().'.value', false);
+		$url = $this->model->metadata($this->getSize().'.value');
 		switch(true)
 		{
 			case $url && $this->model->getIsNewRecord() && !isset($this->htmlIcon):

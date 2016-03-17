@@ -87,7 +87,6 @@ class Image extends \nitm\filemanager\models\File
 
 		array_push($with, 'metadata');
 		$queryOptions = array_merge([
-			'limit' => 10,
 			'orderBy' => ['is_default' => SORT_DESC],
 			'with' => $with
 		], (array)$queryOptions);

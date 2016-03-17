@@ -13,6 +13,7 @@ class BaseSearch extends \nitm\search\BaseSearch
 {
 	use \nitm\widgets\traits\BaseWidgetModel, \nitm\filemanager\traits\FileTraits, \nitm\traits\Nitm {
 		\nitm\filemanager\traits\FileTraits::url insteadof \nitm\traits\Nitm;
+		\nitm\filemanager\traits\FileTraits::getMetadataClass insteadof \nitm\traits\Nitm;
 		\nitm\filemanager\traits\FileTraits::fields insteadof \nitm\widgets\traits\BaseWidgetModel;
 		\nitm\filemanager\traits\FileTraits::extraFields insteadof \nitm\widgets\traits\BaseWidgetModel;
 	}

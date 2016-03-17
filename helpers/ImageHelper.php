@@ -30,18 +30,18 @@ class ImageHelper
 	 */
 	private static $_sizes = [
 		'small' => [
-			'size-x' => 128,
-			'size-y' => 128,
-			'quality' => 90
-		],
-		'medium' => [
 			'size-x' => 256,
 			'size-y' => 256,
 			'quality' => 90
 		],
+		'medium' => [
+			'size-x' => 512,
+			'size-y' => 512,
+			'quality' => 90
+		],
 		'large' => [
-			'size-x' => 800,
-			'size-y' => 800,
+			'size-x' => 1024,
+			'size-y' => 1024,
 			'quality' => 90
 		]
 	];
@@ -92,10 +92,16 @@ class ImageHelper
 	 */
 	public static function createThumbnails(Image $image, $type, $file=null)
 	{
+		if($image->isNewRecord) {
+			$image->on(\yii\db\ActiveRecord::EVENT_AFTER_INSERT, function ($event) {
+				static::createThumbnails($event->sender, $event->sender->type);
+			});
+			return false;
+		}
 		switch(file_exists($image->getRealPath()) || filter_var($image->url, FILTER_VALIDATE_URL))
 		{
 			case true:
-			$metadatas = [];
+			$metadatas = $image->metadata;
 			$sizes = empty(static::$sizes) ? self::$_sizes : array_intersect_key(self::$_sizes, self::$sizes);
 			//BaseImage::$cachePath = \Yii::getAlias('@media/cache/images');
 			foreach($sizes as $size=>$options)
@@ -139,30 +145,20 @@ class ImageHelper
 				if(file_exists(\Yii::getAlias($thumbStoredPath)))
 					$url = $thumbStoredPath;
 
-				$metadata = ImageMetadata::find()->where([
+				$metadata = ArrayHelper::getValue($metadatas, $size, new ImageMetadata([
+					'scenario' => 'create',
 					'image_id' => $image->getId(),
-					'key' => $size
-				])->one();
+					'key' => $size,
+					'value' => $url,
+				]));
 
 				$metadataAttrs = [
 					'width' => $thumb->getSize()->getWidth(),
 					'height' => $thumb->getSize()->getHeight(),
 					'size' => static::getImageBlobFileSize($thumb)
 				];
-
-				if(!$metadata)
-					$metadata = new ImageMetadata([
-						'scenario' => 'create',
-						'image_id' => $image->getId(),
-						'key' => $size,
-						'value' => $url,
-					]);
-				else {
-					$metadata->setScenario('update');
-				}
-
+				$metadata->setScenario($metadata->isNewRecord ? 'create' : 'update');
 				$metadata->setAttributes($metadataAttrs);
-
 				$metadata->save();
 				$metadatas[$size] = $metadata;
 			}
@@ -214,6 +210,10 @@ class ImageHelper
 		$idx = ($count = $imageModel->getCount()->one()) != null ? $count->count() : 0;
 		foreach($uploads as $uploadedFile)
 		{
+			if($uploadedFile->hasError) {
+				$ret_val[] = new Image();
+				continue;
+			}
 			//We're counting starting from 1
 			$idx++;
 			$image = new Image(['scenario' => 'create']);
@@ -251,7 +251,7 @@ class ImageHelper
 				$image = $existing;
 				\Yii::trace("Found dangling $name image ".$image->slug);
 				$tempImage->id = $image->getId();
-				self::createThumbnails($tempImage, $image->type, $image->getRealPath());
+				self::createThumbnails($image, $image->type, $image->getRealPath());
 				$existing->remote_id = $id;
 				$existing->save();
 				$ret_val[] = $image;
@@ -320,6 +320,6 @@ class ImageHelper
 		if($uploadedName && ($uploadedName === $file->tempName))
 			return true;
 		else
-			return false;
+			return $model->count() == 0;
 	}
 }

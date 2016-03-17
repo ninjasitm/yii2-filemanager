@@ -9,6 +9,12 @@ namespace nitm\filemanager\helpers\storage;
 interface StorageInterface
 {
 	/**
+	 * Initialize the stroage client
+	 * @return mixed stroage client
+	 */
+	public function initClient();
+
+	/**
 	 * Return the storage container locations by type:
 	 * [
 	 *		"image" => "@media/image"

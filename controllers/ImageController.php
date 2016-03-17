@@ -138,19 +138,25 @@ class ImageController extends DefaultController
 			$renderer = \Yii::$app->request->isAjax ? 'renderAjax' : 'render';
 			foreach($imageModels as $image)
 			{
-				$ret_val['files'][] = [
-					'name' => $image->file_name,
-					'size' => $image->size,
-					'url' => $image->url(),
-					'thumbnailUrl' => $image->url('small'),
-					'deleteUrl' => '/'.implode(DIRECTORY_SEPARATOR, [
-						$this->id,
-						'delete',
-						$image->getId()
-					]),
-					'deleteType' => 'POST'
-				];
-				$ret_val['data'] .= $imageWidget->getImage($image);
+				if(!$image->file_name)
+					$ret_val['files'][] = [
+						'error' => true
+					];
+				else {
+					$ret_val['files'][] = [
+						'name' => $image->file_name,
+						'size' => $image->size,
+						'url' => $image->url(),
+						'thumbnailUrl' => $image->url('small'),
+						'deleteUrl' => '/'.implode(DIRECTORY_SEPARATOR, [
+							$this->id,
+							'delete',
+							$image->getId()
+						]),
+						'deleteType' => 'POST'
+					];
+					$ret_val['data'] .= $imageWidget->getImage($image);
+				}
 			}
 			Response::viewOptions([
 				"view" => 'index',
