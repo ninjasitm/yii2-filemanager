@@ -12,6 +12,7 @@ use kartik\icons\Icon;
 use nitm\filemanager\helpers\Storage;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\ImageMetadata;
+use nitm\helpers\Network;
 use Imagick;
 
 /**
@@ -25,13 +26,21 @@ class UploadHelper
 	 * Reads data from an HTTP PUT request. PUT only handles a single file at a time
 	 * @return UploadedFile|null The uploaded file
 	 */
-	public function getDataFromStdIn()
+	public function getFromStdIn()
 	{
 		if(($data = fopen('php://input', 'r')) !== null) {
-			$tmpFile = '/tmp/'.\yii::$app->getSecurity()->generateRandomString(15);
-			fclose(fopen($tmpFile, 'x')); //Create the temportary file
-			$size = 0;
-			if($fp = fopen($tmpFile, 'w')) {
+			return static::createTempFile($data);
+		}
+		return null;
+	}
+
+	protected static function createTempFile($data)
+	{
+		$tmpFile = '/tmp/'.\yii::$app->getSecurity()->generateRandomString(15);
+		fclose(fopen($tmpFile, 'x')); //Create the temportary file
+		$size = $error = 0;
+		if($fp = fopen($tmpFile, 'w')) {
+			if(is_resource($data)) {
 				while ($chunk = fread($data, 8192)) {
 					$length = strlen($chunk);
 					echo "Read $length bytes\n";
@@ -43,7 +52,14 @@ class UploadHelper
 					}
 					$size += $written;
 				}
-				fclose($fp);
+			} else if(is_string($data)) {
+				fwrite($fp, $data);
+				$size = strlen($data);
+			} else {
+				$error = true;
+			}
+			fclose($fp);
+			if(!$error) {
 				$file = new UploadedFile([
 					'tempName' => $tmpFile,
 					'type' => FileHelper::getMimeType($tmpFile),
@@ -52,8 +68,25 @@ class UploadHelper
 				$file->name = $file->getBaseName();
 				return $file;
 			} else {
+				unlink($tmpFile);
 				return null;
 			}
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the $uploadedFile object from a url
+	 * @param string $url
+	 * @param
+	 * @return UploadedFile|null The uploaded file
+	 */
+	public function getFromUrl($url)
+	{
+		if(Network::isValidUrl($url)) {
+			$file = static::createTempFile(file_get_contents($url));
+			$file->name = basename($url);
+			return [$file, getimagesize($url)];
 		}
 		return null;
 	}

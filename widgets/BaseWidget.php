@@ -40,6 +40,8 @@ class BaseWidget extends Widget
 	public function init()
 	{
 		$this->registerAssets();
+		if(!isset($this->options['id']))
+			$this->options['id'] = $this->model->isWhat();
 		$this->options['id'] .= isset($this->model) ? $this->model->getId() : uniqid();
 	}
 

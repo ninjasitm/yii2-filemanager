@@ -13,6 +13,7 @@ use nitm\filemanager\helpers\Storage;
 use nitm\filemanager\models\Image;
 use nitm\filemanager\models\ImageMetadata;
 use nitm\helpers\ArrayHelper;
+use nitm\helpers\Network;
 use Imagick;
 
 /**
@@ -183,7 +184,7 @@ class ImageHelper
 			foreach($metadata as $data) {
 				Storage::delete($data->value, 'image');
 			}
-			ImageMetadata::deleteAll(['image_id' => $image->getId()]);
+			ImageMetadata::deleteAll(['image_id' => $image->id]);
 			if($image->delete())
 				return Storage::delete($image->getPath(), 'image');
 		}
@@ -203,6 +204,9 @@ class ImageHelper
 	protected static function saveInternally($imageModel, $uploads, $options=[])
 	{
 		$ret_val = [];
+		$saveOptions = [
+			'method' => 'move'
+		];
 		extract($options);
 		$pathId = md5(is_null($id) ? uniqid() : $id);
 		$name = Image::getSafeName($name);
@@ -214,11 +218,15 @@ class ImageHelper
 				$ret_val[] = new Image();
 				continue;
 			}
+			if($uploadedFile->type == Image::URL_MIME) {
+				list($uploadedFile, $size) = UploadHelper::getFromUrl(file_get_contents($uploadedFile->tempName));
+			} else {
+				$size = getimagesize($uploadedFile->tempName);
+			}
 			//We're counting starting from 1
 			$idx++;
 			$image = new Image(['scenario' => 'create']);
 			$directory = rtrim(implode(DIRECTORY_SEPARATOR, array_filter([rtrim(static::getDirectory(), DIRECTORY_SEPARATOR), $name, $id])), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
-			$size = getimagesize($uploadedFile->tempName);
 			$image->setAttributes([
 				'width' => $size[0] || 0,
 				'height' => $size[1] || 0,
@@ -281,8 +289,7 @@ class ImageHelper
 					else
 						$proceed = false;
 
-					if($proceed)
-					{
+					if($proceed) {
 						if($image->save()) {
 							\Yii::trace("Saved image ".$image->slug);
 							/**
@@ -293,7 +300,10 @@ class ImageHelper
 								'remote_id' => $image->remote_id,
 								'remote_type' => $image->remote_type
 							]);
-							self::createThumbnails($tempImage, $image->type, $originalPath);
+							$tempImage->setOldAttributes($image->getAttributes());
+							$tempImage->id = $image->id;
+							self::createThumbnails($tempImage, $image->type);
+							$image->populateRelation('metadata', $tempImage->metadata);
 							$ret_val[] = $image;
 						} else {
 							\Yii::error("Unable to save file informaiton to database for ".$image->slug."\n".json_encode($image->getErrors()));
@@ -309,7 +319,8 @@ class ImageHelper
 					}
 				}
 			}
-			unlink($uploadedFile->tempName);
+			if(!Network::isValidUrl($uploadedFile->tempName))
+				unlink($uploadedFile->tempName);
 		}
 		return $ret_val;
 	}

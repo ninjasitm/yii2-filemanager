@@ -72,18 +72,8 @@ class Image extends \nitm\filemanager\models\File
         $ret_val = $model->hasMany(Image::className(), ['remote_id' => 'id']);
 		$with = [];
 
-		switch($default === true)
-		{
-			case true:
+		if($default === true)
 			$ret_val->andWhere(['is_default' => true]);
-			break;
-		}
-		//switch($thumbnails)
-		//{
-		//	case true:
-		//	array_push($with, 'icon');
-		//	break;
-		//}
 
 		array_push($with, 'metadata');
 		$queryOptions = array_merge([
@@ -94,7 +84,7 @@ class Image extends \nitm\filemanager\models\File
 		foreach($queryOptions as $option=>$params)
 			if($ret_val->hasMethod($option))
 				$ret_val->$option($params);
-
+		$ret_val->orderBy(['is_default' => SORT_DESC]);
 		return $ret_val;
 	}
 

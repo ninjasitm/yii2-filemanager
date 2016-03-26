@@ -24,14 +24,18 @@
 .icon {
 }
 
-.icon-sm, .thumbnail-xs {
+.icon-sm, .thumbnail.extra-small {
 	width: 44px;
 }
 
-.icon-sm, .thumbnail-sm {
+.icon-sm, .thumbnail.small {
 	width: 74px;
 }
 
-.icon-lg, .thumbnail-lg {
+.icon-lg, .thumbnail.medium {
 	width: 128px;
+}
+
+.icon-lg, .thumbnail.large {
+	width: 256px;
 }

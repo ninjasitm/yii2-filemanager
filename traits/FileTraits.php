@@ -195,13 +195,11 @@ trait FileTraits
      */
     protected function getMetadataClass()
     {
-		$metadataClass = static::className()."Metadata";
-		switch(class_exists($metadataClass))
-		{
-			case false:
+		$class = array_flip(explode('\\', static::className()));
+		unset($class['search']);
+		$metadataClass = implode('\\', array_flip($class))."Metadata";
+		if(!class_exists($metadataClass))
 			$metadataClass = \nitm\filemanager\models\FileMetadata::className();
-			break;
-		}
 		return $metadataClass;
     }
 }

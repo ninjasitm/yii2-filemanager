@@ -10,6 +10,7 @@ use Yii;
 use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use nitm\filemanager\models\Image;
+use nitm\filemanager\models\search\Image as ImageSearch;
 use nitm\filemanager\helpers\Storage;
 use nitm\helpers\Helper;
 use kartik\widgets\FileInput;
@@ -21,7 +22,7 @@ use kartik\icons\Icon;
  * @author Malcolm Paul <lefteyecc@ninjasitm.com>
  * @since 1.0
  */
-class Thumbnail extends \yii\base\Widget
+class Thumbnail extends BaseWidget
 {
 	public $htmlIcon;
 	public $size = 'default';
@@ -52,28 +53,26 @@ class Thumbnail extends \yii\base\Widget
 				'url' => $this->url
 			]);
 		}
+
+	}
+
+	protected function getAssets()
+	{
+		return [
+			\nitm\filemanager\assets\ImageAsset::className()
+		];
 	}
 
 	public function run()
 	{
-		$this->model = $this->model instanceof Image ? $this->model : new Image();
+		$this->model = $this->model instanceof Image || $this->model instanceof ImageSearch ? $this->model : new Image();
 		$this->options['class'] .= ' '.$this->getSize($this->size);
 		$url = $this->model->metadata($this->getSize().'.value');
-		switch(true)
-		{
-			case $url && $this->model->getIsNewRecord() && !isset($this->htmlIcon):
-			$thumbnail = Html::tag('div', Html::img($url, $this->imageOptions), $this->options);
-			break;
-
-			case !$url:
-			case $this->model->getIsNewRecord() && isset($this->htmlIcon):
+		if(!$url) {
 			unset($this->options['class']);
 			$thumbnail = Html::tag('span', Image::getHtmlIcon($this->htmlIcon, $this->iconSize), $this->options);
-			break;
-
-			default:
+		} else {
 			$thumbnail = Html::tag('div', Html::img($url, $this->imageOptions), $this->options);
-			break;
 		}
 		if(isset($this->title))
 			$thumbnail .= $this->title;

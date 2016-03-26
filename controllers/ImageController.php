@@ -13,8 +13,6 @@ use nitm\filemanager\helpers\Storage;
 
 class ImageController extends DefaultController
 {
-	use \nitm\traits\Controller;
-
 	public function init()
 	{
 		parent::init();
@@ -72,7 +70,15 @@ class ImageController extends DefaultController
 	{
 		$asset = '\\nitm\\filemanager\\assets\\ImageAsset';
 		$asset::register($this->getView());
-		return parent::actionIndex($type, $id, ImageSearch::className(),$options);
+		$options = array_merge([
+		'construct' => [
+			'defaults' => [
+				'orderby' => [
+					'is_default' => SORT_DESC]
+				]
+			]
+		], $options);
+		return parent::actionIndex($type, $id, ImageSearch::className(), $options);
 	}
 
 
@@ -189,7 +195,7 @@ class ImageController extends DefaultController
 	public function actionDelete($id, $modelClass=null)
 	{
 		$this->setResponseFormat('json');
-		$model = $this->findModel(Image::className(), $id);
+		$model = $this->findModel(Image::className(), ['id' => $id]);
 		if($model instanceof Image) {
 			return ImageHelper::deleteImages($model);
 		}

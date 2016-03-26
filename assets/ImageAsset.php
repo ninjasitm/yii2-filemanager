@@ -23,6 +23,7 @@ class ImageAsset extends AssetBundle
 	public $depends = [
         'yii\web\JqueryAsset',
 		'nitm\assets\AppAsset',
+		'nitm\filemanager\assets\FileAsset',
 		'kartik\file\FileInputAsset',
 	];
 }

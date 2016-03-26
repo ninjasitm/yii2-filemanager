@@ -22,8 +22,6 @@ if(isset($model)) {
 } else {
 	$this->title = 'Images';
 }
-echo "Rendering image";
-
 ?>
 <?php
 	if(!isset($noBreadcrumbs) ||
@@ -74,8 +72,12 @@ echo "Rendering image";
 			'attribute' => 'icon',
 			'label' => '',
 			'value' => function ($model) {
-				return Html::a($model->icon->getIconHtml('small', [
-					'class' => 'thumbnail thumbnail-lg '.($model->isDefault() ? 'default' : '')
+				return Html::a(\nitm\filemanager\widgets\Thumbnail::widget([
+					"model" => $model,
+					"size" => "medium",
+					"options" => [
+						"class" => "thumbnail text-center ".($model->isDefault() ? 'default' : ''),
+					]
 				]), $model->url());
 			}
 		],

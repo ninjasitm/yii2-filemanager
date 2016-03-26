@@ -15,7 +15,7 @@ use nitm\filemanager\models\Image;
 use nitm\filemanager\helpers\Storage;
 use nitm\helpers\Helper;
 use nitm\helpers\Icon;
-use dosamigos\fileupload\FileUploadUI;
+use nitm\filemanager\widgets\ImageUpload;
 
 /**
  * Extends the kartik\widgets\FileInput widget.
@@ -97,17 +97,9 @@ class Images extends BaseWidget
 	protected function getUploadUI()
 	{
 		return Html::tag('div',
-			Html::tag('div', '<br>'.FileUploadUI::widget([
+			Html::tag('div', '<br>'.ImageUpload::widget([
 				'model' => $this->imageModel,
-				'attribute' => 'file_name',
 				'url' => '/image/save/'.$this->imageModel->remote_type.'/'.$this->imageModel->remote_id,
-				'options' => [
-					'done'   => 'filemanager',
-					//'enctype' => 'multipart/form-data'
-				],
-				'clientOptions' => [
-					'maxFileSize' => 2000000,
-				]
 			]), [
 				"class" => "upload-images",
 				"id" => "filemanagerUpload",

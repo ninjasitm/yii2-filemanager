@@ -32,32 +32,14 @@ use yii\widgets\InputWidget;
  * @since 0.1
  */
 
-class BaseUpload extends \dosamigos\fileupload\FileUploadUI
+class BaseUpload extends BaseWidget
 {
 	public $model;
+	public $url;
 	public $attribute = 'file_name';
-	public $downloadTemplateView = '@vendor/2amigos/yii2-file-upload-widget/src/views/download';
-	public $uploadTemplateView = '@vendor/2amigos/yii2-file-upload-widget/src/views/upload';
-	public $galleryTemplateView = '@vendor/2amigos/yii2-file-upload-widget/src/views/gallery';
-	public $formView = '@vendor/2amigos/yii2-file-upload-widget/src/views/form';
-	public $clientOptions = [
-		'limitMultipleFileUploads' => 2,
-		'maxFileSize' => 200000000
-	];
-	// Also; you can specify jQuery-File-Upload events
-	// see: https://github.com/blueimp/jQuery-File-Upload/wiki/Options#processing-callback-options
-	public $clientEvents = [
-		'fileuploaddone' => 'function(e, data) {
-		}',
-		'fileuploadfail' => 'function(e, data) {
-			 $([role="fileUploadMessage"]).html(data.message);
-		 }',
-		'fileuploadadd' => 'function (e, data) {
-			 //Only submit if the form is validated properly
-		 }',
-		'fileuploadsubmit' => 'function(e, data) {
-		 }'
-	 ];
+	public $enableUrlUpload = true;
+	public $widgetOptions = [];
+	public $formView = '@nitm/filemanager/views/upload/form';
 
 	 public function init()
 	 {
@@ -66,6 +48,37 @@ class BaseUpload extends \dosamigos\fileupload\FileUploadUI
 		$type = $this->model instanceof \nitm\filemanager\models\File ? $this->model->remote_type : $this->model->isWhat();
 		$id = $this->model instanceof \nitm\filemanager\models\File ? $this->model->remote_id : $this->model->getId();
 	 	$this->url = rtrim($this->url, '/').'/'.$type.'/'.$id;
+		\nitm\filemanager\assets\FileAsset::register($this->view);
+		$this->widgetOptions = array_merge($this->defaultWidgetOptions, $this->widgetOptions);
 		parent::init();
+	 }
+
+	 public function run()
+	 {
+		 return $this->render($this->formView, [
+			 'model' => $this->model,
+			 'widgetOptions' => $this->widgetOptions
+		 ]);
+	 }
+
+	 protected function getDefaultWidgetOptions()
+	 {
+		 return [
+			'model' => $this->model,
+			'url' => $this->url,
+			'attribute' => $this->attribute,
+			"downloadTemplateView" => '@vendor/2amigos/yii2-file-upload-widget/src/views/download',
+			"uploadTemplateView" => '@vendor/2amigos/yii2-file-upload-widget/src/views/upload',
+			"galleryTemplateView" => '@vendor/2amigos/yii2-file-upload-widget/src/views/gallery',
+			'clientOptions' => [
+				'limitMultipleFileUploads' => 2,
+				'maxFileSize' => 200000000
+			],
+			'clientEvents' => [
+				'fileuploadfail' => 'function(e, data) {
+					 $([role="fileUploadMessage"]).html(data.message);
+				 }',
+			 ]
+		 ];
 	 }
  }

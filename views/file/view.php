@@ -30,7 +30,7 @@ if(isset($model)) {
 	'rowOptions' => function ($model) {
 		return [
 			"style" => "border-top:solid medium #CCC",
-			"class" => \nitm\helpers\Statuses::getIndicator($model->getStatus()),
+			"class" => \nitm\helpers\Statuses::getIndicator($model->getStatus()).' '.($model->is_default ? 'default' : ''),
 			'id' => 'file'.$model->getId(),
 			'role' => 'statusIndicator'.$model->getId()
 		];

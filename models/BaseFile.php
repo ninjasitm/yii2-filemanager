@@ -31,6 +31,8 @@ class BaseFile extends \nitm\models\Entity
 		'remote_id' => 'remote_id'
 	];
 
+	const URL_MIME = 'file/url';
+
 	public function init()
 	{
 		$this->setConstraints($this->constrain);

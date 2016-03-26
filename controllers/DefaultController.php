@@ -65,13 +65,12 @@ class DefaultController extends \nitm\controllers\DefaultController
            'tinymce'             => \Yii::$app->urlManager->createUrl('files/tinymce'),
            'properties'          => \Yii::$app->urlManager->createUrl('/files/properties'),
         ];
-        $this->getView()->registerJs("filemanager.init(".json_encode($options).");", \yii\web\View::POS_END, 'my-options');
         return $result;
     }
 
 	protected function getWith()
 	{
-		return array_merge(parent::getWith(), []);
+		return array_merge((array)parent::getWith(), ['metadata']);
 	}
 
     /**
@@ -93,15 +92,15 @@ class DefaultController extends \nitm\controllers\DefaultController
 			'construct' => [
 				'inclusiveSearch' => false,
 				'booleanSearch' => false,
+    			'defaults' => [
+    				'params' => [$this->model->formName() => ['deleted' => 0]]
+    			],
 			],
 			'params' => [
 				$this->model->formName() => [
 					'remote_type' => $type,
 					'remote_id' => $id
 				]
-			],
-			'defaults' => [
-				'params' => [$this->model->formName() => ['deleted' => 0]]
 			],
 			'viewOptions' => [
 				'noBreadcrumbs' => \Yii::$app->request->isAjax,
