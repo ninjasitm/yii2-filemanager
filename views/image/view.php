@@ -50,11 +50,11 @@ if(!is_callable('getUrl')) {
 		</span>
 	</div>
 	<div class="col-md-2 col-lg-2 col-sm-4 text-center">
-		Is default ? : <?= $model->isDefault() ?>
 		<span class="media-middle">
 			<?= Html::a($model->icon->getIconHtml('small', [
-				'class' => 'thumbnail thumbnail-lg media-object '.($model->isDefault() ? 'default' : '')
-			]), $model->url()) ?>
+				'class' => 'thumbnail thumbnail-lg media-object '.($model->isDefault() ? 'default' : ''),
+				'url' => $model->url('small')
+			]), $model->url('small')) ?>
 		</span>
 	</div>
 	<div class="col-md-3 col-lg-3 visible-lg text-center">

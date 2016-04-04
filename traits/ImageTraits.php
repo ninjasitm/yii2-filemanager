@@ -194,7 +194,8 @@ trait ImageTraits
 	public function getIconHtml($size='small', array $options=[], $mode='raw')
 	{
 		$id = $mode=='name' ? $this->file_name : $this->getId();
-		return \yii\helpers\Html::img($this->url($size, $mode), $options);
+		$url = ArrayHelper::remove($options, 'url', $this->url($size, $mode));
+		return \yii\helpers\Html::img($url, $options);
 	}
 
 	/**

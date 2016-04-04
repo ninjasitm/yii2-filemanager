@@ -41,7 +41,7 @@ class BaseWidget extends Widget
 	{
 		$this->registerAssets();
 		if(!isset($this->options['id']))
-			$this->options['id'] = $this->model->isWhat();
+			$this->options['id'] = uniqid();
 		$this->options['id'] .= isset($this->model) ? $this->model->getId() : uniqid();
 	}
 

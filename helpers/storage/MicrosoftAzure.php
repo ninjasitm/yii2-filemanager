@@ -64,6 +64,7 @@ class MicrosoftAzure extends BaseStorage implements StorageInterface
 
     public function save($file, $name = null, $thumb=false, $path=null, $type=null)
 	{
+		$path = str_replace($this->client->getUri(), '', $path);
 		list($container, $path, $relativePath, $name, $filePath) = parent::beforeAction($file, $name, $thumb, $path, $type);
 
 		$url = false;

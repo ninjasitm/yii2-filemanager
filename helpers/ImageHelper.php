@@ -302,7 +302,7 @@ class ImageHelper
 							]);
 							$tempImage->setOldAttributes($image->getAttributes());
 							$tempImage->id = $image->id;
-							self::createThumbnails($tempImage, $image->type);
+							self::createThumbnails($tempImage, $image->type, $image->url);
 							$image->populateRelation('metadata', $tempImage->metadata);
 							$ret_val[] = $image;
 						} else {
