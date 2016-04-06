@@ -16,7 +16,8 @@ $options = isset($options) ? $options : [
 	'role' => 'imagesContainer'
 ];
 
-$this->title = $model->file_name;
+if(!isset($this->title))
+	$this->title = $model->file_name;
 
 if(!isset($noBreadcrumbs) || (isset($noBreadcrumbs) && !$noBreadcrumbs))
 	echo \yii\widgets\Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]);

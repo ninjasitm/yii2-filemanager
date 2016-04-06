@@ -84,7 +84,7 @@ class UploadHelper
 	public function getFromUrl($url)
 	{
 		if(Network::isValidUrl($url)) {
-			$file = static::createTempFile(file_get_contents($url));
+			$file = static::createTempFile(\nitm\helpers\Network::getCurlData($url));
 			$file->name = basename($url);
 			return [$file, getimagesize($url)];
 		}
