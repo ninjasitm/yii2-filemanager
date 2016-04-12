@@ -36,7 +36,7 @@ class UploadHelper
 
 	protected static function createTempFile($data)
 	{
-		$tmpFile = '/tmp/'.\yii::$app->getSecurity()->generateRandomString(15);
+		$tmpFile = '/tmp/php'.\yii::$app->getSecurity()->generateRandomString(6);
 		fclose(fopen($tmpFile, 'x')); //Create the temportary file
 		$size = $error = 0;
 		if($fp = fopen($tmpFile, 'w')) {
@@ -62,7 +62,6 @@ class UploadHelper
 			if(!$error) {
 				$file = new UploadedFile([
 					'tempName' => $tmpFile,
-					'type' => FileHelper::getMimeType($tmpFile),
 					'size' => $size
 				]);
 				$file->name = $file->getBaseName();
@@ -86,6 +85,7 @@ class UploadHelper
 		if(Network::isValidUrl($url)) {
 			$file = static::createTempFile(\nitm\helpers\Network::getCurlData($url));
 			$file->name = basename($url);
+			$file->type = FileHelper::getMimeTypeByExtension($file->name);
 			return [$file, getimagesize($url)];
 		}
 		return null;

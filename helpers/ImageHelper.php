@@ -119,19 +119,14 @@ class ImageHelper
 				/**
 				 * To save we're using ob contents to get the outputed image from memory
 				 */
-				if($size == 'small' || $size == 'medium') {
-					//In these cases we create cropped thumbnails
-					$thumb = BaseImage::thumbnail($image->getRealPath(), $options['size-x'], $options['size-y']);
-				} else {
-					//Here we create proportional images
-				    $imagine = BaseImage::getImagine()->open($image->getRealPath());
-				    $box = $imagine->getSize();
-					if($options['size-x'] < $box->getWidth())
-						$box = $box->widen($options['size-x']);
-					else
-						$box =$box->heighten($options['size-y']);
-					$thumb = $imagine->resize($box);
-				}
+				//Here we create proportional images
+			    $imagine = BaseImage::getImagine()->load(file_get_contents($image->getRealPath()));
+			    $box = $imagine->getSize();
+				if($options['size-x'] < $box->getWidth())
+					$box = $box->widen($options['size-x']);
+				else
+					$box =$box->heighten($options['size-y']);
+				$thumb = $imagine->resize($box);
 				$imageType = explode('/', $image->type);
 				$thumbnail = $thumb->get(array_pop($imageType), [
 						'quality' => $options['quality'],
