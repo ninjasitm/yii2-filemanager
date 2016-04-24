@@ -87,10 +87,10 @@ trait Relations
 	{
 		return ArrayHelper::filter($this->images, $idsOnly, function ($image) {
 			$thumb = $image->getIcon('medium');
-			if(!$thumb->height || !$thumb->width)
+			/*if(!$thumb->height || !$thumb->width)
 				$image->updateMetadataSizes('medium');
 			if(!$image->height || !$image->width)
-				$image->updateSizes();
+				$image->updateSizes();*/
 			return [
 				'id' => $image->getId(),
 				'title' => ucfirst($image->remote_type).' Image',
