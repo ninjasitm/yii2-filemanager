@@ -76,7 +76,7 @@ class ImageHelper
 	public static function saveFromStdIn($model, $name, $id, $uploads=null)
 	{
 		if(!is_array($uploads)) {
-			$file = UploadHelper::getDataFromStdIn();
+			$file = UploadHelper::getFromStdIn();
 			if(is_null($file))
 				return false;
 			$uploads = [$file];
