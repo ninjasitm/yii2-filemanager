@@ -45,7 +45,9 @@ trait FileTraits
 
 	public function getSize()
 	{
-		return \Yii::$app->formatter->asShortSize($this->size);
+		if(is_numeric($this->size))
+			return \Yii::$app->formatter->asShortSize($this->size);
+		return $this->size;
 	}
 
 	public function getUrl($action='view')

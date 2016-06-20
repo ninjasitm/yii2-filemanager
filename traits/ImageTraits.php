@@ -213,9 +213,13 @@ trait ImageTraits
 	public function url($size='full', $mode=null, $url=null, $options=[])
 	{
 		//Compensate for finding metadata icon urls here
-		if($size === 'full')
-			return \Yii::getAlias($this->url);
-		else {
+		if($size === 'full') {
+			try {
+				return \Yii::getAlias($this->url);
+			} catch (\Exception $e) {
+				return '';
+			}
+		} else {
 			if($this->id) {
 				$url = $this->metadata($size.'.value', ArrayHelper::getValue($this, 'url'));
 				try {

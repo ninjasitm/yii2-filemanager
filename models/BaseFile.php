@@ -21,9 +21,9 @@ use nitm\helpers\Cache;
 
 class BaseFile extends \nitm\models\Entity
 {
-	use \nitm\widgets\traits\BaseWidgetModel, \nitm\filemanager\traits\FileTraits {
-		\nitm\filemanager\traits\FileTraits::fields insteadof \nitm\widgets\traits\BaseWidgetModel;
-		\nitm\filemanager\traits\FileTraits::extraFields insteadof \nitm\widgets\traits\BaseWidgetModel;
+	use \nitm\traits\RemoteRelations, \nitm\filemanager\traits\FileTraits {
+		\nitm\filemanager\traits\FileTraits::fields insteadof \nitm\traits\RemoteRelations;
+		\nitm\filemanager\traits\FileTraits::extraFields insteadof \nitm\traits\RemoteRelations;
 	}
 
 	protected $link = [
@@ -81,7 +81,9 @@ class BaseFile extends \nitm\models\Entity
 		try {
 			$file = \Yii::getAlias($file);
 		} catch (\Exception $e) {}
-		$parts = explode(' ', exec("md5sum '".$file."'"));
+		$parts = [];
+		if(file_exists($file))
+			$parts = explode(' ', @exec("md5sum '".$file."'"));
 		return array_shift($parts);
 	}
 
