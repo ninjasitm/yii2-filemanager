@@ -35,6 +35,9 @@ use yii\widgets\InputWidget;
 class ImageUpload extends BaseUpload
 {
 	public $url = '/image/save/';
+	public $useFullUI = true;
+	public $enableUrlUpload = false;
+    public $enableTabs = true;
 	public $uploadTemplateId = 'image-template-upload';
 	public $downloadTemplateId = 'image-template-download';
 	public $downloadTemplateView = '@nitm/filemanager/views/image/template/download';
@@ -44,4 +47,29 @@ class ImageUpload extends BaseUpload
 		'id' => 'image-upload',
 		'name' => 'file_name'
 	];
+
+	public function init()
+	{
+		$this->model = $this->model instanceof \nitm\filemanager\models\Image ? $this->model : $this->model->image();
+		$this->formView = $this->useFullUI ? '@nitm/filemanager/views/upload/form' : '@nitm/filemanager/views/upload/form-single';
+		parent::init();
+	}
+
+	protected function getDefaultWidgetOptions()
+	{
+		return [
+		   'model' => $this->model,
+		   'url' => $this->url,
+		   'attribute' => $this->attribute,
+		   'clientOptions' => [
+			   'limitMultipleFileUploads' => 2,
+			   'maxFileSize' => 200000000
+		   ],
+		   'clientEvents' => [
+			   'fileuploadfail' => 'function(e, data) {
+					$([role="fileUploadMessage"]).html(data.message);
+				}',
+			]
+		];
+	}
  }

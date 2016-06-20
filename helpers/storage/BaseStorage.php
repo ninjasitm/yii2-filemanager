@@ -38,8 +38,10 @@ abstract class BaseStorage extends \yii\base\Object implements StorageInterface
 
 	public function getContainer($file=null)
 	{
-		$container = $this->extractContainer($file);
-		return $container ?: $this->_container;
+		if(!isset($this->_container)) {
+			$this->_container = $this->extractContainer($file);
+		}
+		return $this->_container;
 	}
 
 	public function setContainer($container)
@@ -103,20 +105,30 @@ abstract class BaseStorage extends \yii\base\Object implements StorageInterface
 	{
 		$filePath = is_string($file) ? $file : $file->url;
         if(empty($path)) {
-            $path = ArrayHelper::getValue(\Yii::$app->getModule('nitm-files')->path, $filePath, '');
+            $path = ArrayHelper::getValue(\Yii::$app->getModule('nitm-files')->path, $filePath, $this->container);
         }
 
         if(is_null($name)){
             $name = basename($filePath);
         }
 
-        if($thumb){
-            $path = rtrim($path, '/').'/thumbs/';
-        }
+        //if($thumb){
+        //    $path = rtrim($path, '/').'/thumbs/';
+        //}
 
 		$this->_container = $this->getContainer($path.$name);
+		if($path) {
+			if($path !== $this->_container) {
+				$fullPath = '/'.trim(dirname($path), '/').'/'.$name;
+				//$fullPath = $path == $this->_container ? $name : substr($path.$name, strlen($this->_container)+1);
+			} else {
+				$fullPath = $name;
+			}
+		} else {
+			$fullPath = substr($name, strlen($this->_container)+1);
+		}
 
-		return [$this->_container, $path, substr($path.$name, strlen($this->_container)+1), $name, $filePath];
+		return [$this->_container, $path, $fullPath, $name, $filePath];
 	}
 
 	/**

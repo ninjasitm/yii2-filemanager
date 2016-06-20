@@ -83,13 +83,18 @@ class AmazonAWS extends BaseStorage implements StorageInterface
     public function delete($files)
 	{
 		$this->client->get('S3');
-		foreach((array)$files as $file)
-		{
-			$this->client->deleteObjects([
-				'Bucket' => $this->_config['bucket'],
-				'key' => $file->url,
-			]);
-		}
+		$this->client->deleteObjects([
+			'Bucket' => $this->_config['bucket'],
+			'Objects' => array_map(function ($file) {
+				$url = is_object($file) ? $file->url : $file;
+				$filePath = $url;
+				if(\nitm\helpers\Network::isValidUrl($file))
+					$filePath = parse_url($url, PHP_URL_PATH);
+				return [
+					'Key' => $filePath
+				];
+			}, (array)$files)
+		]);
 		return true;
     }
 
@@ -103,7 +108,7 @@ class AmazonAWS extends BaseStorage implements StorageInterface
 				]);
 		} catch(\Exception $e) {}
 
-		$ret_val = $this->save($from, basename($to), $thumb, dirname($to), $type);
+		$ret_val = $this->save($from, basename($to), $thumb, $isUploaded ? pathinfo($to, PATHINFO_DIRNAME) : $to, $type);
 
 		if($ret_val) {
 			if(is_object($from))

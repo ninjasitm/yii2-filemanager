@@ -47,7 +47,7 @@ class ImageHelper
 		]
 	];
 
-	public function getDirectory($getAlias=false)
+	public static function getDirectory($getAlias=false)
 	{
 		$dir = \Yii::$app->getModule('nitm-files')->getPath('image');
 		if($getAlias)
@@ -108,14 +108,10 @@ class ImageHelper
 			foreach($sizes as $size=>$options)
 			{
 				$file = is_null($file) ?  $image->getRealPath() : $file;
-				$basename = pathinfo($file, PATHINFO_BASENAME);
-				$filename = pathinfo($file, PATHINFO_FILENAME);
-				$basePath = DIRECTORY_SEPARATOR.$filename.DIRECTORY_SEPARATOR.$size.'-'.$basename;
-				$thumbRealPath = dirname($file).$basePath;
-				$thumbStoredPath = dirname($file).$basePath;
+				list($thumbStoredPath, $baseName, $fileName, $basePath) = static::getStoredPath($file, $size);
 
-				if(!filter_var($image->url, FILTER_VALIDATE_URL) && !Storage::containerExists(dirname($thumbRealPath), 'image'))
-					Storage::createContainer(dirname($thumbRealPath), true, [], 'image');
+				if(!filter_var($image->url, FILTER_VALIDATE_URL) && !Storage::containerExists(dirname($thumbStoredPath), 'image'))
+					Storage::createContainer(dirname($thumbStoredPath), true, [], 'image');
 				/**
 				 * To save we're using ob contents to get the outputed image from memory
 				 */
@@ -136,9 +132,9 @@ class ImageHelper
 				/**
 				 * The Storage engine should understand how to save a stream to a file;
 				 */
-				$url = Storage::move($thumbnail, $thumbStoredPath, false, true, $type, 'image');
+				$url = Storage::move($thumbnail, $thumbStoredPath, !\nitm\helpers\Network::isValidUrl($file), true, 'image');
 
-				if(file_exists(\Yii::getAlias($thumbStoredPath)))
+				if(!\nitm\helpers\Network::isValidUrl($thumbStoredPath) && file_exists(\Yii::getAlias($thumbStoredPath)))
 					$url = $thumbStoredPath;
 
 				$metadata = ArrayHelper::getValue($metadatas, $size, new ImageMetadata([
@@ -161,6 +157,21 @@ class ImageHelper
 			$image->populateRelation('metadata', $metadatas);
 			break;
 		}
+	}
+
+	protected static function getStoredPath($file, $size=null)
+	{
+		if(\nitm\helpers\Network::isValidUrl($file)) {
+			$file = parse_url($file, PHP_URL_PATH);
+		}
+		$fileName = pathinfo($file, PATHINFO_BASENAME);
+		$baseName = pathinfo($file, PATHINFO_FILENAME);
+		$basePath = DIRECTORY_SEPARATOR;
+		if($size !== null) {
+			$basePath .= 'thumbs'.DIRECTORY_SEPARATOR.$baseName.DIRECTORY_SEPARATOR.$size.'-';
+		}
+		$basePath .= $fileName;
+		return [dirname($file).$basePath, $basePath, $baseName, $fileName];
 	}
 
 	public static function deleteImages($images)

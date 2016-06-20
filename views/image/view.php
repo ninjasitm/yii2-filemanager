@@ -23,8 +23,8 @@ if(!isset($noBreadcrumbs) || (isset($noBreadcrumbs) && !$noBreadcrumbs))
 	echo \yii\widgets\Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]);
 
 if(!is_callable('getUrl')) {
-	function getUrl($action, $model) {
-		return '/'.$model->isWhat().'/'.$action.'/'.$model->getId();
+	function getUrl($action, $model, $options=[]) {
+		return \Yii::$app->urlManager->createUrl(array_merge(['/'.$model->isWhat().'/'.$action.'/'.$model->getId()], $options));
 	}
 }
 ?>
@@ -37,8 +37,8 @@ if(!is_callable('getUrl')) {
 	]);
 ?>
 
-	<div class="col-md-1 col-lg-1 col-sm-2 text-center">
-		<span class="media-middle">
+	<div class="media">
+		<div class="media-left media-middle">
 			<?php
 				if(\Yii::$app->user->identity->lastActive() < strtotime($model->created_at)
 					|| \Yii::$app->user->identity->lastActive() < strtotime($model->updated_at))
@@ -47,36 +47,26 @@ if(!is_callable('getUrl')) {
 							'size' => 'large',
 					]);
 			?>
-			<?= Html::tag('strong', $model->getId(), ['style' => 'font-size: 24px']) ?>
-		</span>
-	</div>
-	<div class="col-md-2 col-lg-2 col-sm-4 text-center">
-		<span class="media-middle">
 			<?= Html::a($model->icon->getIconHtml('small', [
-				'class' => 'thumbnail thumbnail-lg media-object '.($model->isDefault() ? 'default' : ''),
+				'class' => 'thumbnail thumbnail small media-object '.($model->isDefault() ? 'default' : ''),
 				'url' => $model->url('small')
 			]), $model->url('small')) ?>
-		</span>
-	</div>
-	<div class="col-md-3 col-lg-3 visible-lg text-center">
-		<span class="media-middle">
-			<?= Html::tag('strong', $model->file_name) ?>
-		</span>
-	</div>
-	<div class="col-md-2 col-lg-2 col-sm-2 visible-lg text-center">
-		<span class="media-middle">
-			<?= $model->getSize(); ?>
-		</span>
-	</div>
-	<div class="col-md-4 col-lg-4 col-sm-4 text-center">
-		<span class="media-middle">
+		</div>
+		<div class="media-body">
+			<?= Html::tag('h4', $model->file_name) ?>
+			<?php /* Html::tag('strong', $model->getId(), ['style' => 'font-size: 24px']); */ ?>
+			<div class="media-middle">
+				<?= $model->getSize(); ?>
+			</div>
+		</div>
+		<div class="media-right media-middle" style="min-width: 30%">
 			<?= ButtonGroup::widget([
 				'encodeLabels' => false,
 				'buttons' => [
 					'delete' => [
 						'tagName' => 'a',
-						'label' => Icon::forAction('delete').Html::tag('span', ' Delete', [
-							'class' => 'hidden-sm'
+						'label' => Icon::forAction('trash').Html::tag('span', ' Delete', [
+							'class' => 'visible-lg'
 						]),
 						'options' => [
 							'class' => 'btn btn-danger',
@@ -86,12 +76,12 @@ if(!is_callable('getUrl')) {
 							'data-parent' => '#image'.$model->getId(),
 							'data-method' => 'post',
 							'data-action' => 'delete',
-							'data-url' => \Yii::$app->urlManager->createUrl([getUrl('delete', $model), '__format' => 'json'])
+							'data-url' => getUrl('delete', $model, ['__format' => 'json'])
 						]
 					],
 					'info' => [
-						'label' => Icon::forAction('info').Html::tag('span', ' Info', [
-							'class' => 'hidden-sm'
+						'label' => Icon::forAction('info-sign').Html::tag('span', ' Info', [
+							'class' => 'visible-lg'
 						]),
 						'options' => [
 							'class' => 'btn btn-info',
@@ -103,8 +93,8 @@ if(!is_callable('getUrl')) {
 					],
 					'default' => [
 						'tagName' => 'a',
-						'label' => Icon::forAction('thumb-tack').Html::tag('span', ' Default', [
-							'class' => 'hidden-sm'
+						'label' => Icon::forAction('check').Html::tag('span', ' Default', [
+							'class' => 'visible-lg'
 						]),
 						'options' => [
 							'class' => 'btn btn-success '.($model->isDefault() ? 'hidden' : ''),
@@ -119,7 +109,7 @@ if(!is_callable('getUrl')) {
 					'get' => [
 						'tagName' => 'a',
 						'label' => Icon::forAction('download').Html::tag('span', ' Download', [
-							'class' => 'hidden-sm'
+							'class' => 'visible-lg'
 						]),
 						'options' => [
 							'class' => 'btn btn-default',
@@ -134,7 +124,7 @@ if(!is_callable('getUrl')) {
 					],
 				],
 			]); ?>
-		</span>
+		</div>
 	</div>
 	<div class="col-sm-12 hidden" id='image-info<?=$model->getId();?>'>
 		<h2>Metadata Information</h2>

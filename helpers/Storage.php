@@ -171,7 +171,7 @@ class Storage extends \yii\base\Component
 		return \Yii::$app->getModule('nitm-files')->getPermission($type, $for);
 	}
 
-	private function getEngine($type)
+	private static function getEngine($type)
 	{
 		return \Yii::$app->getModule('nitm-files')->getEngine($type);
 	}

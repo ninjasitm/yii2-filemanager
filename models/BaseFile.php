@@ -74,9 +74,9 @@ class BaseFile extends \nitm\models\Entity
 	/**
 	 * @param string file
 	 */
-	public function getHash($file=null)
+	public static function getHash($file=null)
 	{
-		if(!$file)
+		if(!$file && isset($this))
 			$file = $this->url;
 		try {
 			$file = \Yii::getAlias($file);

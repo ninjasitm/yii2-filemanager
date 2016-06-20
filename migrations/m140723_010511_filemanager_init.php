@@ -10,7 +10,7 @@ class m140723_010511_filemanager_init extends Migration
 		$tableSchema = \Yii::$app->db->getTableSchema('files');
 		if($tableSchema)
 			return true;
-        
+
         $tableOptions = null;
         if ($this->db->driverName === 'mysql') {
             $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=InnoDB';
@@ -23,16 +23,17 @@ class m140723_010511_filemanager_init extends Migration
             'owner_id' => Schema::TYPE_INTEGER . ' NULL',
             'url' => Schema::TYPE_STRING . '(555) NULL',
             'thumbnail_url' => Schema::TYPE_STRING . '(555) NULL',
-            'file_name' => Schema::TYPE_STRING . '(555) NULL',
+            'file_name' => Schema::TYPE_STRING . '(255) NULL',
             'remote_id' => Schema::TYPE_INTEGER . ' NOT NULL',
             'remote_type' => Schema::TYPE_STRING . '(45) NULL',
             'remote_class' => Schema::TYPE_STRING . '(45) NULL',
-            'type' => Schema::TYPE_STRING . '(45) NULL',
-            'title' => Schema::TYPE_STRING . '(45) NULL',
+            'type' => Schema::TYPE_STRING . '(64) NULL',
+            'slug' => Schema::TYPE_STRING . '(64)',
+            'title' => Schema::TYPE_STRING . '(64) NULL',
             'size' => Schema::TYPE_INTEGER . ' NULL',
             'width' => Schema::TYPE_INTEGER  . ' NULL',
             'height' => Schema::TYPE_INTEGER  . ' NULL',
-            'signature' => Schema::TYPE_STRING  . ' ',
+            'hash' => Schema::TYPE_STRING.' ',
             'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
             'updated_at' => Schema::TYPE_TIMESTAMP  . ' NULL',
             'date' => Schema::TYPE_DATETIME  . ' NULL',
@@ -43,7 +44,7 @@ class m140723_010511_filemanager_init extends Migration
             'deleted_at' => Schema::TYPE_DATETIME  . ' NULL',
             'deleted' => Schema::TYPE_BOOLEAN  . ' NULL',
         ], $tableOptions);
-		
+
 		$this->createIndex('files_unique', '{{%files}}', [
 			'remote_id', 'remote_type', 'author_id', 'signature'
 		], true);
@@ -58,10 +59,10 @@ class m140723_010511_filemanager_init extends Migration
             'created_at' => Schema::TYPE_TIMESTAMP  . ' DEFAULT NOW()',
             'updated_at' => Schema::TYPE_TIMESTAMP  . ' NULL',
         ], $tableOptions);
-        
+
         $this->addForeignKey('FK_files_metadata','{{%files_metadata}}','file_id','{{%files}}','id');
         $this->addForeignKey('FK_files_author','{{%files}}','author_id','{{%user}}','id');
-        
+
     }
 
     public function down()
@@ -69,6 +70,6 @@ class m140723_010511_filemanager_init extends Migration
         $this->dropForeignKey('FK_files_terms','{{%files_metadata}}');
         $this->dropForeignKey('FK_files_users','{{%files}}');
         $this->dropTable('{{%files}}');
-        $this->dropTable('{{%files_metadata}}');   
+        $this->dropTable('{{%files_metadata}}');
     }
 }

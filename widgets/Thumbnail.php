@@ -98,7 +98,7 @@ class Thumbnail extends BaseWidget
 			break;
 
 			default:
-			$size = 'default';
+			$size = 'medium';
 			break;
 		}
 		return $size;

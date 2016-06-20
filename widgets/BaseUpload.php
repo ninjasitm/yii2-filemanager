@@ -47,9 +47,9 @@ class BaseUpload extends BaseWidget
 		 	throw new \yii\base\Exception("The model needs to be set for the form!!");
 		$type = $this->model instanceof \nitm\filemanager\models\File ? $this->model->remote_type : $this->model->isWhat();
 		$id = $this->model instanceof \nitm\filemanager\models\File ? $this->model->remote_id : $this->model->getId();
-		$urlKey = '/'.$type.'/'.$id;
+		$urlKey = 'image/save/'.$type.'/'.$id;
 		if(strpos($this->url, $urlKey) === false)
-	 		$this->url = rtrim($this->url, '/').$urlKey;
+	 		$this->url = rtrim($this->url, '/').'/'.$urlKey;
 		\nitm\filemanager\assets\FileAsset::register($this->view);
 		$this->widgetOptions = array_merge($this->defaultWidgetOptions, $this->widgetOptions);
 		parent::init();
@@ -59,6 +59,7 @@ class BaseUpload extends BaseWidget
 	 {
 		 return $this->render($this->formView, [
 			 'model' => $this->model,
+			 'widget' => $this,
 			 'widgetOptions' => $this->widgetOptions
 		 ]);
 	 }

@@ -203,9 +203,14 @@ class NitmFileManagerFiles extends NitmEntity
 		switch(confirm("Are you sure you want to delete this image?"))
 		{
 			case true:
+			$($element.data('parent')).slideUp();
 			$.post($element.data('url') || $element.attr('href'), function(result) {
-				if(result)
-					$($element.data('parent')).fadeOut().remove();
+				if(!result) {
+					$($element.data('parent')).slideDown();
+					$nitm.m('utils').notify("Couldn't delete this image", 'danger');
+				} else {
+					$($element.data('parent')).remove();
+				}
 			});
 			break;
 		}

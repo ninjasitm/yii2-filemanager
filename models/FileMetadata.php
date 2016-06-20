@@ -18,7 +18,7 @@ use yii\db\ActiveRecord;
  */
 class FileMetadata extends \nitm\models\Entity
 {
-	
+
     /**
      * @inheritdoc
      */
@@ -26,7 +26,7 @@ class FileMetadata extends \nitm\models\Entity
     {
 		return 'files_metadata';
     }
-	
+
 	public function behaviors()
 	{
 		$behaviors = [
@@ -52,7 +52,7 @@ class FileMetadata extends \nitm\models\Entity
 	 * The link that signifies the metadata connection
      * @return array
      */
-    public function metadataLink()
+    public static function metadataLink()
     {
         return ['id' => 'id'];
     }

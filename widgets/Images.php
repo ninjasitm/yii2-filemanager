@@ -26,6 +26,9 @@ use nitm\filemanager\widgets\ImageUpload;
 class Images extends BaseWidget
 {
 
+    public $saveUrl;
+    public $enableTabs;
+
     /**
      * @var array the HTML attributes for the extra image wrapper.
      */
@@ -96,10 +99,14 @@ class Images extends BaseWidget
 
 	protected function getUploadUI()
 	{
+        $urlKey = 'image/save/'.$this->imageModel->remote_type.'/'.$this->imageModel->remote_id;
+        if(strpos($this->saveUrl, $urlKey) === false)
+            $this->saveUrl = rtrim($this->saveUrl, '/').'/'.$urlKey;
 		return Html::tag('div',
 			Html::tag('div', '<br>'.ImageUpload::widget([
 				'model' => $this->imageModel,
-				'url' => '/image/save/'.$this->imageModel->remote_type.'/'.$this->imageModel->remote_id,
+                'enableTabs' => $this->enableTabs,
+				'url' => $this->saveUrl,
 			]), [
 				"class" => "upload-images",
 				"id" => "filemanagerUpload",
@@ -233,6 +240,7 @@ class Images extends BaseWidget
 		$defaultOptions['role'] .= ' '.($image->isDefault() ? 'defaultImage' : 'extraImage');
 		return \Yii::$app->getView()->render("@nitm/filemanager/views/image/view", [
 			'model' => $image,
+            'widget' => $this,
 			"actions" => $this->getActions(),
 			'wrapperOptions' => $defaultOptions,
 			'pluginOptions' => $this->pluginExtraOptions,
